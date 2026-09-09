@@ -14,7 +14,8 @@ jobs:
   lint-build-test:
     name: Lint → Build → Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aljama?schema=public
 
     steps:
       - name: Checkout code
@@ -31,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter api prisma:generate
 
       - name: Lint
         run: pnpm lint

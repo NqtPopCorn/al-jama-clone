@@ -4,6 +4,7 @@
   "private": true,
   "description": "AL-JAMA Backend API (NestJS Modular Monolith)",
   "scripts": {
+    "prebuild": "prisma generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
