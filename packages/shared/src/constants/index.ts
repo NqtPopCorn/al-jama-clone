@@ -6,76 +6,76 @@ export const MAX_PAGE_SIZE = 100;
 
 // License Types (QT-08, BR-REV-04, DB Schema)
 export enum LicenseType {
-  FULL = 'full',
-  REVIEWER_LIMITED = 'reviewer_limited',
+  FULL = 'FULL',
+  REVIEWER_LIMITED = 'REVIEWER_LIMITED',
 }
 
 // User Status
 export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
 }
 
 // Project Roles (3.2 BRD)
 export enum ProjectRole {
-  ADMINISTRATOR = 'administrator',
-  MEMBER = 'member',
+  ADMINISTRATOR = 'ADMINISTRATOR',
+  MEMBER = 'MEMBER',
 }
 
 // Project Status
 export enum ProjectStatus {
-  ACTIVE = 'active',
-  ARCHIVED = 'archived',
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
 }
 
 // Field Types
 export enum FieldType {
-  TEXT = 'text',
-  RICHTEXT = 'richtext',
-  NUMBER = 'number',
-  DATE = 'date',
-  DROPDOWN = 'dropdown',
-  USER = 'user',
-  MULTI_SELECT = 'multi_select',
+  TEXT = 'TEXT',
+  RICHTEXT = 'RICHTEXT',
+  NUMBER = 'NUMBER',
+  DATE = 'DATE',
+  DROPDOWN = 'DROPDOWN',
+  USER = 'USER',
+  MULTI_SELECT = 'MULTI_SELECT',
 }
 
 // Item Status
 export enum ItemStatus {
-  DRAFT = 'draft',
-  IN_REVIEW = 'in_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  DEPRECATED = 'deprecated',
+  DRAFT = 'Draft',
+  IN_REVIEW = 'In Review',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  DEPRECATED = 'Deprecated',
 }
 
 // Item Priority
 export enum ItemPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical',
+  LOW = 'Low',
+  MEDIUM = 'Medium',
+  HIGH = 'High',
+  CRITICAL = 'Critical',
 }
 
 // Review Status (3.1 Delivery Plan)
 export enum ReviewStatus {
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  CLOSED_FOR_FEEDBACK = 'closed_for_feedback',
-  ARCHIVED = 'archived',
-  FINALIZED = 'finalized',
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  CLOSED_FOR_FEEDBACK = 'CLOSED_FOR_FEEDBACK',
+  ARCHIVED = 'ARCHIVED',
+  FINALIZED = 'FINALIZED',
 }
 
 // Review Roles (per review)
 export enum ReviewRole {
-  MODERATOR = 'moderator',
-  APPROVER = 'approver',
-  REVIEWER = 'reviewer',
+  MODERATOR = 'MODERATOR',
+  APPROVER = 'APPROVER',
+  REVIEWER = 'REVIEWER',
 }
 
 // Review Item Status (QT-04)
 export enum ReviewItemStatusValue {
-  NOT_REVIEWED = 'not_reviewed',
-  REVIEWED = 'reviewed',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
+  NOT_REVIEWED = 'NOT_REVIEWED',
+  REVIEWED = 'REVIEWED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
