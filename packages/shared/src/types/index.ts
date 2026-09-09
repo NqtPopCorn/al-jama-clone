@@ -88,6 +88,7 @@ export interface ItemSummary {
     fullName: string;
   } | null;
   lockedAt?: string | null;
+  hasSuspect?: boolean;
   customFields?: Record<string, unknown> | null;
   updatedAt: string;
   createdAt: string;
@@ -203,4 +204,96 @@ export interface BulkUpdateItemsDto {
 export interface ReuseItemDto {
   targetFolderId?: string | null;
   namePrefix?: string;
+}
+
+// -----------------------------------------------------------------------------
+// TRACEABILITY (EPIC E3)
+// -----------------------------------------------------------------------------
+
+export interface RelationshipTypeSummary {
+  id: string;
+  projectId?: string | null;
+  name: string;
+  inverseName: string;
+  isRequiredDefault: boolean;
+  suspectOnUpstreamChange: boolean;
+}
+
+export interface RelatedItemSummary {
+  id: string;
+  itemKey: string;
+  name: string;
+  itemTypeId: string;
+  itemTypeKey: string;
+  itemTypeName: string;
+  itemTypeIcon?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  currentVersion: number;
+}
+
+export interface ItemRelationshipSummary {
+  id: string;
+  projectId: string;
+  direction: 'upstream' | 'downstream';
+  relatedItem: RelatedItemSummary;
+  relationshipType: RelationshipTypeSummary;
+  isSuspect: boolean;
+  suspectFlaggedAt?: string | null;
+  suspectReason?: string | null;
+  clearedBy?: { id: string; fullName: string } | null;
+  clearedAt?: string | null;
+  createdBy: { id: string; fullName: string };
+  createdAt: string;
+}
+
+export interface CreateRelationshipDto {
+  upstreamItemId: string;
+  downstreamItemId: string;
+  relationshipTypeId: string;
+}
+
+export interface ImpactAnalysisNode {
+  id: string;
+  itemKey: string;
+  name: string;
+  itemTypeKey: string;
+  itemTypeName: string;
+  status?: string | null;
+  depth: number;
+  direction: 'root' | 'upstream' | 'downstream';
+  relationshipPhrase: string;
+  isSuspect: boolean;
+  suspectReason?: string | null;
+  children: ImpactAnalysisNode[];
+}
+
+export interface ImpactAnalysisResult {
+  rootItem: RelatedItemSummary;
+  upstreamNodes: ImpactAnalysisNode[];
+  downstreamNodes: ImpactAnalysisNode[];
+  totalImpactedCount: number;
+  suspectCount: number;
+}
+
+export interface TraceMatrixRow {
+  sourceItem: RelatedItemSummary;
+  linkedItems: Array<{
+    relationshipId: string;
+    item: RelatedItemSummary;
+    relationshipTypeName: string;
+    direction?: 'upstream' | 'downstream';
+    isSuspect: boolean;
+    isRequired: boolean;
+  }>;
+  isCovered: boolean;
+}
+
+export interface TraceMatrixResult {
+  sourceType: { id: string; key: string; name: string };
+  targetType: { id: string; key: string; name: string };
+  rows: TraceMatrixRow[];
+  totalSourceItems: number;
+  coveredItemsCount: number;
+  coveragePercentage: number;
 }

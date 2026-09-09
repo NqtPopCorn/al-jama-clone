@@ -66,4 +66,5 @@ graph TD
 ### Milestone 1.5: Tích hợp & Nghiệm thu Phase 1
 
 - **Branch:** `chore/phase-1-verification`
+- Chạy unit test backend
 - Chạy E2E tests, nghiệm thu toàn bộ tiêu chí AC-01 (Lock item) và AC-02 (Suspect flag lan 1 cấp).

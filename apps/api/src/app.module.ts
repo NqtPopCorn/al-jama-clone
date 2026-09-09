@@ -6,6 +6,7 @@ import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectModule } from './modules/project/project.module';
 import { ItemModule } from './modules/item/item.module';
+import { TraceabilityModule } from './modules/traceability/traceability.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -21,6 +22,7 @@ import { AppService } from './app.service';
     AuthModule,
     ProjectModule,
     ItemModule,
+    TraceabilityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

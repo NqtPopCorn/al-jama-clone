@@ -11,9 +11,9 @@ import { ExplorerSidebar } from '../../features/explorer/ExplorerSidebar';
 import { ListView } from '../../features/item/ListView';
 import { ReadingView } from '../../features/item/ReadingView';
 import { ProjectDashboard } from '../../features/project/ProjectDashboard';
-import { FilterToolbar } from '../../features/item/components/FilterToolbar';
 import { ItemDetailView } from '../../features/item/components/item-detail-view';
 import { CreateItemModal } from '../../features/item/components/create-item-modal';
+import { TraceView } from '../../features/traceability/components/TraceView';
 import { useProjectMeta } from '../../features/item/hooks/use-project-meta';
 import { ProjectSummary, LicenseType } from '@aljama/shared';
 
@@ -27,18 +27,17 @@ export const AppShell: React.FC = () => {
     activeView,
     searchQuery,
     isSidebarOpen,
+    itemTypeFilter,
+    statusFilter,
+    priorityFilter,
+    lastModifiedFilter,
   } = useProjectStore();
 
   // Navigation and perspective states
   const [mainNavTab, setMainNavTab] = useState<MainNavTab>('projects');
   const [perspective, setPerspective] = useState<WorkspaceTabId>('workspace');
   const [openTabs, setOpenTabs] = useState<WorkspaceTabId[]>(['welcome', 'dashboard', 'workspace']);
-  const [showFilterBar, setShowFilterBar] = useState(false);
 
-  // Local filter states for items
-  const [itemTypeFilter, setItemTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState('updatedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -93,6 +92,7 @@ export const AppShell: React.FC = () => {
       itemTypeFilter,
       statusFilter,
       priorityFilter,
+      lastModifiedFilter,
       searchQuery,
       page,
       sortBy,
@@ -111,6 +111,7 @@ export const AppShell: React.FC = () => {
       if (itemTypeFilter) params.append('itemTypeId', itemTypeFilter);
       if (statusFilter) params.append('status', statusFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
+      if (lastModifiedFilter) params.append('lastModified', lastModifiedFilter);
       if (searchQuery) params.append('search', searchQuery);
 
       const res = await api.get(`/projects/${projectId}/items?${params.toString()}`);
@@ -140,13 +141,6 @@ export const AppShell: React.FC = () => {
       setSortBy(column);
       setSortOrder('asc');
     }
-  };
-
-  const handleResetFilters = () => {
-    setItemTypeFilter('');
-    setStatusFilter('');
-    setPriorityFilter('');
-    setPage(1);
   };
 
   const handleOpenProject = (projId: string) => {
@@ -310,44 +304,35 @@ export const AppShell: React.FC = () => {
                 /* Welcome Perspective inside workspace tab */
                 <HomeView projects={projectsData} onOpenProject={handleOpenProject} />
               ) : (
-                /* Project Workspace: List View or Reading View */
-                <div className="flex-1 flex flex-col overflow-hidden">
-                  {showFilterBar && (
-                    <FilterToolbar
-                      itemTypeFilter={itemTypeFilter}
-                      statusFilter={statusFilter}
-                      priorityFilter={priorityFilter}
-                      onItemTypeChange={setItemTypeFilter}
-                      onStatusChange={setStatusFilter}
-                      onPriorityChange={setPriorityFilter}
-                      onResetFilters={handleResetFilters}
+                /* Project Workspace: List View, Reading View or Traceability */
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  {activeView === 'list' && (
+                    <ListView
+                      data={itemsData}
+                      isLoading={isLoadingItems}
+                      page={page}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      onPageChange={setPage}
+                      onSortChange={handleSortChange}
+                      onOpenItem={handleOpenItem}
+                      onOpenCreateItem={() => setIsCreateItemOpen(true)}
                     />
                   )}
 
-                  <div className="flex-1 overflow-hidden flex flex-col">
-                    {activeView === 'list' && (
-                      <ListView
-                        data={itemsData}
-                        isLoading={isLoadingItems}
-                        page={page}
-                        sortBy={sortBy}
-                        sortOrder={sortOrder}
-                        onPageChange={setPage}
-                        onSortChange={handleSortChange}
-                        onOpenFilter={() => setShowFilterBar(!showFilterBar)}
-                        onOpenItem={handleOpenItem}
-                        onOpenCreateItem={() => setIsCreateItemOpen(true)}
-                      />
-                    )}
+                  {activeView === 'reading' && (
+                    <ReadingView items={readingItems || []} isLoading={isLoadingReading} />
+                  )}
 
-                    {activeView === 'reading' && (
-                      <ReadingView
-                        items={readingItems || []}
-                        isLoading={isLoadingReading}
-                        onOpenFilter={() => setShowFilterBar(!showFilterBar)}
-                      />
-                    )}
-                  </div>
+                  {activeView === 'trace' && projectId && (
+                    <TraceView
+                      projectId={projectId}
+                      onNavigateToItem={id => {
+                        const it = itemsData?.items?.find((i: { id: string }) => i.id === id);
+                        handleOpenItem(id, it?.itemKey || 'Item', it?.name || '');
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </main>

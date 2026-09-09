@@ -127,12 +127,17 @@ export class ItemService {
           locker: {
             select: { id: true, fullName: true },
           },
+          downstreamRelationships: {
+            where: { isSuspect: true },
+            select: { id: true },
+          },
         },
       }),
     ]);
 
     const mappedItems: ItemSummary[] = items.map(item => {
       const activeLock = this.isLockActive(item.lockedBy, item.lockedAt);
+      const hasSuspect = (item.downstreamRelationships?.length || 0) > 0;
       return {
         id: item.id,
         projectId: item.projectId,
@@ -163,6 +168,7 @@ export class ItemService {
               }
             : null,
         lockedAt: activeLock && item.lockedAt ? item.lockedAt.toISOString() : null,
+        hasSuspect,
         customFields: (item.customFields as Record<string, unknown>) || null,
         updatedAt: item.updatedAt.toISOString(),
         createdAt: item.createdAt.toISOString(),

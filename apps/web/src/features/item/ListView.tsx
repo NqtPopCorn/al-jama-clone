@@ -9,6 +9,7 @@ import {
   FileText,
   Settings,
   ChevronDown,
+  ChevronUp,
   Users,
   User,
   Zap,
@@ -26,6 +27,7 @@ import { Button } from '../../components/ui/button';
 import { BulkActionBar } from './components/bulk-action-bar';
 import { BulkUpdateModal } from './components/bulk-update-modal';
 import { useProjectMeta } from './hooks/use-project-meta';
+import { FilterSidebar } from './components/FilterSidebar';
 
 interface ListViewProps {
   data?: PaginatedResult<ItemSummary> | null;
@@ -52,7 +54,15 @@ export const ListView: React.FC<ListViewProps> = ({
   onOpenItem,
   onOpenCreateItem,
 }) => {
-  const { currentProject, selectedItemId, setSelectedItemId, setActiveView } = useProjectStore();
+  const {
+    currentProject,
+    setActiveView,
+    isFilterSidebarOpen,
+    toggleFilterSidebar,
+    setFilterSidebarOpen,
+    selectedItemId,
+    setSelectedItemId,
+  } = useProjectStore();
   const { headerTheme } = useThemeStore();
   const isDark = headerTheme === 'dark';
 
@@ -214,11 +224,12 @@ export const ListView: React.FC<ListViewProps> = ({
           id: item.id,
           itemKey: item.itemKey,
           name: item.name,
+          itemTypeId: item.itemTypeId,
           itemTypeKey: item.itemTypeKey,
           status: item.status,
           priority: item.priority,
           isLocked: item.isLocked,
-          hasSuspect: false,
+          hasSuspect: item.hasSuspect ?? false,
           connectedUser: item.assignee?.fullName || 'User',
         }))
       : defaultItems;
@@ -279,11 +290,15 @@ export const ListView: React.FC<ListViewProps> = ({
           </span>
           <button
             type="button"
-            onClick={onOpenFilter}
-            className="flex items-center gap-1 text-xs text-[#0088cc] hover:underline font-medium"
+            onClick={toggleFilterSidebar}
+            className="flex items-center gap-1 text-xs text-[#0088cc] hover:underline font-medium cursor-pointer"
           >
-            <ChevronDown className="w-3.5 h-3.5" />
-            <span>Filter Results</span>
+            {isFilterSidebarOpen ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+            <span>{isFilterSidebarOpen ? 'Hide Filters' : 'Filter Results'}</span>
           </button>
         </div>
 
@@ -318,6 +333,14 @@ export const ListView: React.FC<ListViewProps> = ({
               title="Reading View (Image 4)"
             >
               <FileText className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('trace')}
+              className="p-1 rounded text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              title="Traceability Matrix (BR-TRACE-06)"
+            >
+              <Layers className="w-3.5 h-3.5 text-purple-600" />
             </button>
           </div>
 
@@ -370,313 +393,330 @@ export const ListView: React.FC<ListViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Spreadsheet Table matching Image 3 */}
-      <div className="flex-1 overflow-auto relative">
-        <table className="w-full text-left border-collapse font-sans text-xs">
-          {/* Table Header: Dark gray background #808080 or #8b929a matching Jama Connect */}
-          <thead
-            className={`sticky top-0 font-bold z-10 select-none ${
-              isDark
-                ? 'bg-[#21262d] text-slate-200 border-b border-[#30363d]'
-                : 'bg-[#8c949e] text-white'
-            }`}
-          >
-            <tr>
-              {/* Checkbox */}
-              <th
-                className={`py-2 px-2.5 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+      {/* 2. Main Content: Filter Sidebar on Left + Spreadsheet Table & Pagination on Right */}
+      <div className="flex-1 flex overflow-hidden">
+        {isFilterSidebarOpen && (
+          <FilterSidebar
+            projectId={currentProject?.id || ''}
+            items={items}
+            onClose={() => setFilterSidebarOpen(false)}
+          />
+        )}
+
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Spreadsheet Table matching Image 3 */}
+          <div className="flex-1 overflow-auto relative">
+            <table className="w-full text-left border-collapse font-sans text-xs">
+              {/* Table Header: Dark gray background #808080 or #8b929a matching Jama Connect */}
+              <thead
+                className={`sticky top-0 font-bold z-10 select-none ${
+                  isDark
+                    ? 'bg-[#21262d] text-slate-200 border-b border-[#30363d]'
+                    : 'bg-[#8c949e] text-white'
+                }`}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedRowIds.size > 0 && selectedRowIds.size === items.length}
-                  onChange={handleToggleSelectAll}
-                  className="rounded border-slate-400 text-blue-600 focus:ring-0 h-3.5 w-3.5"
-                />
-              </th>
-
-              {/* Suspect Flag Column ($ / lightning) */}
-              <th
-                className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
-                title="Suspect Link Indicator"
-              >
-                <Zap className="w-3.5 h-3.5 mx-auto" />
-              </th>
-
-              {/* Lock Column */}
-              <th
-                className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
-                title="Item Locked (QT-01)"
-              >
-                <Lock className="w-3.5 h-3.5 mx-auto" />
-              </th>
-
-              {/* ID Column */}
-              {visibleColumns.itemKey && (
-                <th
-                  onClick={() => onSortChange('itemKey')}
-                  className={`py-2 px-3 w-32 border-r cursor-pointer ${
-                    isDark
-                      ? 'border-[#30363d] hover:bg-[#282e38]'
-                      : 'border-slate-400/40 hover:bg-slate-600/30'
-                  }`}
-                >
-                  ID
-                </th>
-              )}
-
-              {/* Name Column */}
-              {visibleColumns.name && (
-                <th
-                  onClick={() => onSortChange('name')}
-                  className={`py-2 px-3 border-r cursor-pointer ${
-                    isDark
-                      ? 'border-[#30363d] hover:bg-[#282e38]'
-                      : 'border-slate-400/40 hover:bg-slate-600/30'
-                  }`}
-                >
-                  Name
-                </th>
-              )}
-
-              {/* Optional Status Column */}
-              {visibleColumns.status && (
-                <th
-                  className={`py-2 px-3 w-28 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
-                >
-                  Status
-                </th>
-              )}
-
-              {/* Optional Priority Column */}
-              {visibleColumns.priority && (
-                <th
-                  className={`py-2 px-3 w-24 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
-                >
-                  Priority
-                </th>
-              )}
-
-              {/* Optional Assignee Column */}
-              {visibleColumns.assignee && (
-                <th
-                  className={`py-2 px-3 w-36 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
-                >
-                  Assignee
-                </th>
-              )}
-
-              {/* Connected Users Column matching Image 3 */}
-              <th className="py-2 px-3 w-16 text-center" title="Connected Users">
-                <Users className="w-4 h-4 mx-auto" />
-              </th>
-            </tr>
-          </thead>
-
-          {/* Table Rows matching Image 3 */}
-          <tbody
-            className={`divide-y transition-colors ${
-              isDark ? 'bg-[#0d1117] divide-[#30363d]' : 'bg-white divide-slate-200'
-            }`}
-          >
-            {isLoading ? (
-              <tr>
-                <td colSpan={9} className="py-12 text-center text-slate-500 font-medium">
-                  <div className="w-5 h-5 border-2 border-slate-400 border-t-blue-600 rounded-full animate-spin mx-auto mb-2" />
-                  Loading project items...
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="py-12 text-center text-slate-500">
-                  No items found in selected project.
-                </td>
-              </tr>
-            ) : (
-              items.map(item => {
-                const isSelected = selectedRowIds.has(item.id) || selectedItemId === item.id;
-
-                return (
-                  <tr
-                    key={item.id}
-                    onClick={() => setSelectedItemId(isSelected ? null : item.id)}
-                    onDoubleClick={() => onOpenItem && onOpenItem(item.id, item.itemKey, item.name)}
-                    className={`cursor-pointer transition-colors border-b ${
-                      isSelected
-                        ? isDark
-                          ? 'bg-[#1f3a5f] text-white'
-                          : 'bg-[#e7f3ff]'
-                        : isDark
-                          ? 'hover:bg-[#161b22] text-slate-300 border-[#21262d]'
-                          : 'hover:bg-[#f3f7fb] border-slate-100'
-                    }`}
+                <tr>
+                  {/* Checkbox */}
+                  <th
+                    className={`py-2 px-2.5 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
                   >
-                    {/* Row Checkbox */}
-                    <td className="py-2 px-2.5 text-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedRowIds.has(item.id)}
-                        onClick={e => handleToggleRow(item.id, e)}
-                        onChange={() => {}}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-0 h-3.5 w-3.5"
-                      />
-                    </td>
+                    <input
+                      type="checkbox"
+                      checked={selectedRowIds.size > 0 && selectedRowIds.size === items.length}
+                      onChange={handleToggleSelectAll}
+                      className="rounded border-slate-400 text-blue-600 focus:ring-0 h-3.5 w-3.5"
+                    />
+                  </th>
 
-                    {/* Suspect Flag */}
-                    <td className="py-2 px-2 text-center">
-                      {item.hasSuspect ? (
-                        <span title="Suspect link detected (QT-02)">
-                          <Zap className="w-3.5 h-3.5 text-amber-500 mx-auto fill-amber-400" />
-                        </span>
-                      ) : null}
-                    </td>
+                  {/* Suspect Flag Column ($ / lightning) */}
+                  <th
+                    className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                    title="Suspect Link Indicator"
+                  >
+                    <Zap className="w-3.5 h-3.5 mx-auto" />
+                  </th>
 
-                    {/* Lock status */}
-                    <td className="py-2 px-2 text-center">
-                      {item.isLocked ? (
-                        <span title="Locked for editing (QT-01)">
-                          <Lock className="w-3.5 h-3.5 text-amber-600 mx-auto" />
-                        </span>
-                      ) : null}
-                    </td>
+                  {/* Lock Column */}
+                  <th
+                    className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                    title="Item Locked (QT-01)"
+                  >
+                    <Lock className="w-3.5 h-3.5 mx-auto" />
+                  </th>
 
-                    {/* ID with Type Icon */}
-                    {visibleColumns.itemKey && (
-                      <td className="py-2 px-3 font-medium whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {renderTypeIcon(item.itemTypeKey)}
-                          <span
-                            onClick={e => {
-                              e.stopPropagation();
-                              if (onOpenItem) onOpenItem(item.id, item.itemKey, item.name);
-                            }}
-                            className="text-[#0088cc] hover:underline font-bold cursor-pointer"
-                          >
-                            {item.itemKey}
-                          </span>
-                        </div>
-                      </td>
-                    )}
+                  {/* ID Column */}
+                  {visibleColumns.itemKey && (
+                    <th
+                      onClick={() => onSortChange('itemKey')}
+                      className={`py-2 px-3 w-32 border-r cursor-pointer ${
+                        isDark
+                          ? 'border-[#30363d] hover:bg-[#282e38]'
+                          : 'border-slate-400/40 hover:bg-slate-600/30'
+                      }`}
+                    >
+                      ID
+                    </th>
+                  )}
 
-                    {/* Name */}
-                    {visibleColumns.name && (
-                      <td
-                        className={`py-2 px-3 truncate max-w-md font-normal ${
-                          isDark ? 'text-slate-200' : 'text-slate-800'
-                        }`}
-                      >
-                        {item.name}
-                      </td>
-                    )}
+                  {/* Name Column */}
+                  {visibleColumns.name && (
+                    <th
+                      onClick={() => onSortChange('name')}
+                      className={`py-2 px-3 border-r cursor-pointer ${
+                        isDark
+                          ? 'border-[#30363d] hover:bg-[#282e38]'
+                          : 'border-slate-400/40 hover:bg-slate-600/30'
+                      }`}
+                    >
+                      Name
+                    </th>
+                  )}
 
-                    {/* Status */}
-                    {visibleColumns.status && (
-                      <td
-                        className={`py-2 px-3 font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}
-                      >
-                        {item.status}
-                      </td>
-                    )}
+                  {/* Optional Status Column */}
+                  {visibleColumns.status && (
+                    <th
+                      className={`py-2 px-3 w-28 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                    >
+                      Status
+                    </th>
+                  )}
 
-                    {/* Priority */}
-                    {visibleColumns.priority && (
-                      <td className={`py-2 px-3 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                        {item.priority}
-                      </td>
-                    )}
+                  {/* Optional Priority Column */}
+                  {visibleColumns.priority && (
+                    <th
+                      className={`py-2 px-3 w-24 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                    >
+                      Priority
+                    </th>
+                  )}
 
-                    {/* Assignee */}
-                    {visibleColumns.assignee && (
-                      <td
-                        className={`py-2 px-3 truncate ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
-                      >
-                        {item.connectedUser || 'Unassigned'}
-                      </td>
-                    )}
+                  {/* Optional Assignee Column */}
+                  {visibleColumns.assignee && (
+                    <th
+                      className={`py-2 px-3 w-36 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                    >
+                      Assignee
+                    </th>
+                  )}
 
-                    {/* Connected Users Silhouette icon matching Image 3 */}
-                    <td className="py-2 px-3 text-center">
-                      <div
-                        className="flex items-center justify-center text-cyan-500"
-                        title="Connected Users"
-                      >
-                        <User className="w-3.5 h-3.5" />
-                      </div>
+                  {/* Connected Users Column matching Image 3 */}
+                  <th className="py-2 px-3 w-16 text-center" title="Connected Users">
+                    <Users className="w-4 h-4 mx-auto" />
+                  </th>
+                </tr>
+              </thead>
+
+              {/* Table Rows matching Image 3 */}
+              <tbody
+                className={`divide-y transition-colors ${
+                  isDark ? 'bg-[#0d1117] divide-[#30363d]' : 'bg-white divide-slate-200'
+                }`}
+              >
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-slate-500 font-medium">
+                      <div className="w-5 h-5 border-2 border-slate-400 border-t-blue-600 rounded-full animate-spin mx-auto mb-2" />
+                      Loading project items...
                     </td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                ) : items.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-slate-500">
+                      No items found in selected project.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map(item => {
+                    const isSelected = selectedRowIds.has(item.id) || selectedItemId === item.id;
 
-        {/* 3. Floating Bottom-Right Pagination Bar matching Image 3 & 4 */}
-        <div
-          className={`absolute right-4 bottom-4 rounded shadow-md px-2 py-1 flex items-center gap-1.5 text-xs z-20 border transition-colors ${
-            isDark
-              ? 'bg-[#161b22] border-[#30363d] text-slate-200'
-              : 'bg-white border-slate-300 text-slate-700'
-          }`}
-        >
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => onPageChange(1)}
-            className={`p-1 disabled:opacity-30 rounded transition-colors ${
-              isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-            }`}
-            title="First Page"
-          >
-            <ChevronsLeft className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-            className={`p-1 disabled:opacity-30 rounded transition-colors ${
-              isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-            }`}
-            title="Previous Page"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
+                    return (
+                      <tr
+                        key={item.id}
+                        onClick={() => setSelectedItemId(isSelected ? null : item.id)}
+                        onDoubleClick={() =>
+                          onOpenItem && onOpenItem(item.id, item.itemKey, item.name)
+                        }
+                        className={`cursor-pointer transition-colors border-b ${
+                          isSelected
+                            ? isDark
+                              ? 'bg-[#1f3a5f] text-white'
+                              : 'bg-[#e7f3ff]'
+                            : isDark
+                              ? 'hover:bg-[#161b22] text-slate-300 border-[#21262d]'
+                              : 'hover:bg-[#f3f7fb] border-slate-100'
+                        }`}
+                      >
+                        {/* Row Checkbox */}
+                        <td className="py-2 px-2.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedRowIds.has(item.id)}
+                            onClick={e => handleToggleRow(item.id, e)}
+                            onChange={() => {}}
+                            className="rounded border-slate-300 text-blue-600 focus:ring-0 h-3.5 w-3.5"
+                          />
+                        </td>
 
-          <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>Page</span>
-          <input
-            type="text"
-            readOnly
-            value={page}
-            className={`w-7 text-center rounded py-0.5 text-xs font-semibold border ${
-              isDark
-                ? 'bg-[#0d1117] border-[#30363d] text-white'
-                : 'bg-white border-slate-300 text-slate-900'
-            }`}
-          />
-          <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>
-            of {totalPages}
-          </span>
+                        {/* Suspect Flag */}
+                        <td className="py-2 px-2 text-center">
+                          {item.hasSuspect ? (
+                            <span title="Suspect link detected (QT-02)">
+                              <Zap className="w-3.5 h-3.5 text-amber-500 mx-auto fill-amber-400" />
+                            </span>
+                          ) : null}
+                        </td>
 
-          <button
-            type="button"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-            className={`p-1 disabled:opacity-30 rounded transition-colors ${
-              isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-            }`}
-            title="Next Page"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(totalPages)}
-            className={`p-1 disabled:opacity-30 rounded transition-colors ${
-              isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-            }`}
-            title="Last Page"
-          >
-            <ChevronsRight className="w-3.5 h-3.5" />
-          </button>
+                        {/* Lock status */}
+                        <td className="py-2 px-2 text-center">
+                          {item.isLocked ? (
+                            <span title="Locked for editing (QT-01)">
+                              <Lock className="w-3.5 h-3.5 text-amber-600 mx-auto" />
+                            </span>
+                          ) : null}
+                        </td>
+
+                        {/* ID with Type Icon */}
+                        {visibleColumns.itemKey && (
+                          <td className="py-2 px-3 font-medium whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              {renderTypeIcon(item.itemTypeKey)}
+                              <span
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  if (onOpenItem) onOpenItem(item.id, item.itemKey, item.name);
+                                }}
+                                className="text-[#0088cc] hover:underline font-bold cursor-pointer"
+                              >
+                                {item.itemKey}
+                              </span>
+                            </div>
+                          </td>
+                        )}
+
+                        {/* Name */}
+                        {visibleColumns.name && (
+                          <td
+                            className={`py-2 px-3 truncate max-w-md font-normal ${
+                              isDark ? 'text-slate-200' : 'text-slate-800'
+                            }`}
+                          >
+                            {item.name}
+                          </td>
+                        )}
+
+                        {/* Status */}
+                        {visibleColumns.status && (
+                          <td
+                            className={`py-2 px-3 font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}
+                          >
+                            {item.status}
+                          </td>
+                        )}
+
+                        {/* Priority */}
+                        {visibleColumns.priority && (
+                          <td
+                            className={`py-2 px-3 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
+                          >
+                            {item.priority}
+                          </td>
+                        )}
+
+                        {/* Assignee */}
+                        {visibleColumns.assignee && (
+                          <td
+                            className={`py-2 px-3 truncate ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
+                          >
+                            {item.connectedUser || 'Unassigned'}
+                          </td>
+                        )}
+
+                        {/* Connected Users Silhouette icon matching Image 3 */}
+                        <td className="py-2 px-3 text-center">
+                          <div
+                            className="flex items-center justify-center text-cyan-500"
+                            title="Connected Users"
+                          >
+                            <User className="w-3.5 h-3.5" />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+
+            {/* 3. Floating Bottom-Right Pagination Bar matching Image 3 & 4 */}
+            <div
+              className={`absolute right-4 bottom-4 rounded shadow-md px-2 py-1 flex items-center gap-1.5 text-xs z-20 border transition-colors ${
+                isDark
+                  ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+                  : 'bg-white border-slate-300 text-slate-700'
+              }`}
+            >
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => onPageChange(1)}
+                className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                }`}
+                title="First Page"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => onPageChange(page - 1)}
+                className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                }`}
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>Page</span>
+              <input
+                type="text"
+                readOnly
+                value={page}
+                className={`w-7 text-center rounded py-0.5 text-xs font-semibold border ${
+                  isDark
+                    ? 'bg-[#0d1117] border-[#30363d] text-white'
+                    : 'bg-white border-slate-300 text-slate-900'
+                }`}
+              />
+              <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>
+                of {totalPages}
+              </span>
+
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => onPageChange(page + 1)}
+                className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                }`}
+                title="Next Page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => onPageChange(totalPages)}
+                className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                }`}
+                title="Last Page"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

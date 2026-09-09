@@ -7,6 +7,8 @@ import { useProjectMeta } from '../hooks/use-project-meta';
 import { itemApi } from '../api/item.api';
 import { ItemRightBar, RightBarPanel } from './item-right-bar';
 import { ItemVersionsDrawer } from './item-versions-drawer';
+import { ItemRelationshipsDrawer } from '../../traceability/components/item-relationships-drawer';
+import { ResizableBottomDrawer } from '../../../components/common/resizable-bottom-drawer';
 import { VersionDiffCanvas } from './version-diff-canvas';
 import { TiptapEditor } from '../../../components/editor/tiptap-editor';
 import { Button } from '../../../components/ui/button';
@@ -24,7 +26,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   User,
-  GitFork,
   MessageSquare,
   Activity,
   Trash2,
@@ -594,121 +595,81 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({
         />
 
         {/* Relationships Panel Drawer */}
-        {activePanel === 'relationships' && (
-          <div
-            className={`border-t p-4 flex flex-col max-h-56 overflow-y-auto text-xs ${
-              isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between pb-2 border-b mb-3">
-              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <GitFork className="w-4 h-4 text-purple-600 rotate-90" />
-                <span>Traceability Relationships</span>
-              </span>
-              <button
-                onClick={() => setActivePanel(null)}
-                className="text-xs text-slate-400 hover:underline"
-              >
-                Close
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 border rounded border-slate-200 dark:border-slate-800">
-                <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">
-                  Upstream Items
-                </span>
-                <p className="text-slate-400 italic">No upstream relationships connected yet.</p>
-              </div>
-              <div className="p-3 border rounded border-slate-200 dark:border-slate-800">
-                <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">
-                  Downstream Items
-                </span>
-                <p className="text-slate-400 italic">No downstream relationships connected yet.</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <ItemRelationshipsDrawer
+          isOpen={activePanel === 'relationships'}
+          onClose={() => setActivePanel(null)}
+          itemId={item.id}
+          itemKey={item.itemKey}
+          itemName={item.name}
+          projectId={projectId}
+        />
 
         {/* Connected Users Panel Drawer */}
-        {activePanel === 'connected_users' && (
-          <div
-            className={`border-t p-4 flex flex-col max-h-56 overflow-y-auto text-xs ${
-              isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between pb-2 border-b mb-3">
-              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <User className="w-4 h-4 text-blue-600" />
-                <span>Connected Users ({item.connectedUsersCount})</span>
-              </span>
-              <button
-                onClick={() => setActivePanel(null)}
-                className="text-xs text-slate-400 hover:underline"
-              >
-                Close
-              </button>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2.5 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center">
-                  {item.creator.fullName[0]}
-                </div>
-                <div>
-                  <span className="font-semibold block">{item.creator.fullName}</span>
-                  <span className="text-[10px] text-slate-400">Creator</span>
-                </div>
+        <ResizableBottomDrawer
+          isOpen={activePanel === 'connected_users'}
+          onClose={() => setActivePanel(null)}
+          title="Connected Users"
+          icon={<User className="w-4 h-4 text-blue-600" />}
+          badge={
+            <span className="text-[11px] text-slate-500">
+              ({item.connectedUsersCount || 1} active)
+            </span>
+          }
+          storageKey="users_drawer"
+          defaultHeight={220}
+          minHeight={130}
+        >
+          <div className="p-3">
+            <div className="flex items-center gap-2.5 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/40">
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+                {item.creator.fullName[0]}
+              </div>
+              <div>
+                <span className="font-semibold block text-xs">{item.creator.fullName}</span>
+                <span className="text-[10px] text-slate-400">Creator & Editor</span>
               </div>
             </div>
           </div>
-        )}
+        </ResizableBottomDrawer>
 
         {/* Comments Panel Drawer */}
-        {activePanel === 'comments' && (
-          <div
-            className={`border-t p-4 flex flex-col max-h-56 overflow-y-auto text-xs ${
-              isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between pb-2 border-b mb-3">
-              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <MessageSquare className="w-4 h-4 text-blue-600" />
-                <span>Item Stream & Comments</span>
-              </span>
-              <button
-                onClick={() => setActivePanel(null)}
-                className="text-xs text-slate-400 hover:underline"
-              >
-                Close
-              </button>
-            </div>
-            <p className="text-slate-400 italic">No comments on this item yet.</p>
+        <ResizableBottomDrawer
+          isOpen={activePanel === 'comments'}
+          onClose={() => setActivePanel(null)}
+          title="Item Stream & Comments"
+          icon={<MessageSquare className="w-4 h-4 text-blue-600" />}
+          storageKey="comments_drawer"
+          defaultHeight={240}
+          minHeight={140}
+        >
+          <div className="p-4 text-xs text-slate-400 italic">
+            No comments on this item yet. You can collaborate and mention colleagues using the
+            stream panel.
           </div>
-        )}
+        </ResizableBottomDrawer>
 
         {/* Activity Panel Drawer */}
-        {activePanel === 'activity' && (
-          <div
-            className={`border-t p-4 flex flex-col max-h-56 overflow-y-auto text-xs ${
-              isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between pb-2 border-b mb-3">
-              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Activity className="w-4 h-4 text-emerald-600" />
-                <span>Recent Activities</span>
+        <ResizableBottomDrawer
+          isOpen={activePanel === 'activity'}
+          onClose={() => setActivePanel(null)}
+          title="Recent Activities"
+          icon={<Activity className="w-4 h-4 text-emerald-600" />}
+          storageKey="activity_drawer"
+          defaultHeight={220}
+          minHeight={130}
+        >
+          <div className="p-4 text-xs space-y-2">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>
+                Version {item.currentVersion} published by <strong>{item.creator.fullName}</strong>
               </span>
-              <button
-                onClick={() => setActivePanel(null)}
-                className="text-xs text-slate-400 hover:underline"
-              >
-                Close
-              </button>
             </div>
-            <p className="text-slate-400 italic">
-              Item created at {new Date(item.createdAt).toLocaleString()}.
-            </p>
+            <div className="text-[11px] text-slate-400 ml-4">
+              Created at {new Date(item.createdAt).toLocaleString()}
+            </div>
           </div>
-        )}
+        </ResizableBottomDrawer>
       </div>
 
       {/* 4. Right Action Bar with circular icon buttons strictly matching Image 4 */}

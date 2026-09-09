@@ -85,7 +85,7 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
   useEffect(() => {
     if (!scrollContainerRef.current) return;
     const activeEl = scrollContainerRef.current.querySelector<HTMLElement>(
-      `[data-tab-id="${activePerspective}"]`
+      `[data-tab-id="${activePerspective}"]`,
     );
     if (activeEl) {
       activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
@@ -262,7 +262,9 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
             title={`Dashboard: ${currentProject?.name || 'Project'}`}
           >
             <BarChart2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-            <span className="truncate font-medium">Dashboard: {currentProject?.name || 'Project'}</span>
+            <span className="truncate font-medium">
+              Dashboard: {currentProject?.name || 'Project'}
+            </span>
             <button
               type="button"
               onClick={e => {
@@ -474,7 +476,9 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
                       <span className="truncate">Welcome</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {activePerspective === 'welcome' && <Check className="w-3.5 h-3.5 text-blue-500" />}
+                      {activePerspective === 'welcome' && (
+                        <Check className="w-3.5 h-3.5 text-blue-500" />
+                      )}
                       <button
                         type="button"
                         onClick={e => {
@@ -511,7 +515,9 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
                       <span className="truncate">Dashboard: {currentProject?.name}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {activePerspective === 'dashboard' && <Check className="w-3.5 h-3.5 text-blue-500" />}
+                      {activePerspective === 'dashboard' && (
+                        <Check className="w-3.5 h-3.5 text-blue-500" />
+                      )}
                       <button
                         type="button"
                         onClick={e => {
@@ -548,7 +554,9 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
                       <span className="truncate">{currentProject?.name || 'Workspace'}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {activePerspective === 'workspace' && <Check className="w-3.5 h-3.5 text-blue-500" />}
+                      {activePerspective === 'workspace' && (
+                        <Check className="w-3.5 h-3.5 text-blue-500" />
+                      )}
                       <button
                         type="button"
                         onClick={e => {
@@ -622,4 +630,3 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
     </div>
   );
 };
-

@@ -144,7 +144,29 @@ async function main() {
 
   console.log('✅ Assigned project members with roles');
 
-  // 5. Create Item Types (Requirement, Use Case, Test Case — Q5 confirmed)
+  // 5. Create Item Types (User Need, Requirement, Use Case, Test Case)
+  const unType = await prisma.itemType.create({
+    data: {
+      projectId: project.id,
+      key: 'UN',
+      name: 'User Need',
+      description: 'Stakeholder clinical need and operational workflow requirement',
+      icon: 'Target',
+      isSystem: true,
+      fields: {
+        create: [
+          {
+            fieldKey: 'clinical_stakeholder',
+            fieldLabel: 'Clinical Stakeholder',
+            fieldType: FieldType.TEXT,
+            isRequired: true,
+            displayOrder: 1,
+          },
+        ],
+      },
+    },
+  });
+
   const reqType = await prisma.itemType.create({
     data: {
       projectId: project.id,
@@ -228,7 +250,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Created 3 Item Types (REQ, UC, TC) with custom fields');
+  console.log('✅ Created 4 Item Types (UN, REQ, UC, TC) with custom fields');
 
   // 6. Create Relationship Types (Forward/Inverse phrases, required/optional defaults)
   const relVerifies = await prisma.relationshipType.create({
@@ -264,11 +286,19 @@ async function main() {
   console.log('✅ Created 3 Relationship Types');
 
   // 7. Create Folders (Tree Explorer hierarchy)
+  const folderNeeds = await prisma.folder.create({
+    data: {
+      projectId: project.id,
+      name: '0. User Needs & Clinical Specs',
+      orderIndex: 0,
+    },
+  });
+
   const folderReq = await prisma.folder.create({
     data: {
       projectId: project.id,
       name: '1. System Requirements',
-      orderIndex: 0,
+      orderIndex: 1,
     },
   });
 
@@ -300,6 +330,38 @@ async function main() {
   console.log('✅ Created Explorer Folder tree');
 
   // 8. Create Sample Items
+  // UN-001 (User Need - Upstream Root)
+  const item0 = await prisma.item.create({
+    data: {
+      projectId: project.id,
+      folderId: folderNeeds.id,
+      itemTypeId: unType.id,
+      itemKey: 'MED-UN-001',
+      name: 'Continuous Bedside Infusion During Patient Transport',
+      description:
+        '<p>Clinical staff requires the infusion workstation to maintain continuous, uninterrupted medicine delivery without restart delays when transporting patients between hospital departments.</p>',
+      status: 'Approved',
+      priority: 'High',
+      assigneeId: memberUser.id,
+      customFields: {
+        clinical_stakeholder: 'Head of Anesthesiology & ICU',
+      },
+      currentVersion: 1,
+      createdBy: adminUser.id,
+      updatedBy: adminUser.id,
+    },
+  });
+
+  await prisma.itemVersion.create({
+    data: {
+      itemId: item0.id,
+      versionNumber: 1,
+      snapshot: item0 as any,
+      changeComment: 'Initial clinical baseline creation',
+      changedBy: adminUser.id,
+    },
+  });
+
   // REQ-001
   const item1 = await prisma.item.create({
     data: {
@@ -466,7 +528,20 @@ async function main() {
 
   console.log('✅ Created 5 sample items across folders with versions');
 
-  // 9. Create Traceability Relationship: REQ-001 (Upstream) -> TC-001 (Downstream)
+  // 9. Create Traceability Relationships
+  // 9.1 UPSTREAM: UN-001 -> REQ-001 (Satisfies: REQ-001 satisfies clinical need UN-001)
+  await prisma.itemRelationship.create({
+    data: {
+      projectId: project.id,
+      upstreamItemId: item0.id,
+      downstreamItemId: item1.id,
+      relationshipTypeId: relSatisfies.id,
+      isSuspect: false,
+      createdBy: adminUser.id,
+    },
+  });
+
+  // 9.2 DOWNSTREAM: REQ-001 -> TC-001 (Verifies: TC-001 verifies REQ-001)
   await prisma.itemRelationship.create({
     data: {
       projectId: project.id,
@@ -478,7 +553,49 @@ async function main() {
     },
   });
 
-  console.log('✅ Linked REQ-001 --(Verifies)--> TC-001');
+  // 9.3 DOWNSTREAM: REQ-001 -> UC-001 (Satisfies: UC-001 satisfies REQ-001)
+  await prisma.itemRelationship.create({
+    data: {
+      projectId: project.id,
+      upstreamItemId: item1.id,
+      downstreamItemId: item4.id,
+      relationshipTypeId: relSatisfies.id,
+      isSuspect: false,
+      createdBy: adminUser.id,
+    },
+  });
+
+  // 9.4 DOWNSTREAM / LATERAL: REQ-001 -> REQ-002 (Relates to)
+  await prisma.itemRelationship.create({
+    data: {
+      projectId: project.id,
+      upstreamItemId: item1.id,
+      downstreamItemId: item2.id,
+      relationshipTypeId: relRelates.id,
+      isSuspect: false,
+      createdBy: adminUser.id,
+    },
+  });
+
+  // 9.5 DOWNSTREAM: REQ-002 -> TC-001 (Verifies ⚡Suspect: TC-001 verifies REQ-002)
+  await prisma.itemRelationship.create({
+    data: {
+      projectId: project.id,
+      upstreamItemId: item2.id,
+      downstreamItemId: item5.id,
+      relationshipTypeId: relVerifies.id,
+      isSuspect: true,
+      suspectFlaggedAt: new Date(),
+      suspectReason: 'Upstream item modified (new version published)',
+      createdBy: adminUser.id,
+    },
+  });
+
+  console.log('✅ Linked UN-001  <--(Satisfies)-- REQ-001 (Upstream)');
+  console.log('✅ Linked REQ-001 --(Verifies)--> TC-001 (Downstream)');
+  console.log('✅ Linked REQ-001 --(Satisfies)--> UC-001 (Downstream)');
+  console.log('✅ Linked REQ-001 --(Relates to)--> REQ-002');
+  console.log('✅ Linked REQ-002 --(Verifies ⚡Suspect)--> TC-001');
   console.log('🎉 Seed completed successfully!');
 }
 
