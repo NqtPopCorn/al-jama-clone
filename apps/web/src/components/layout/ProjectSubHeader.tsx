@@ -43,7 +43,7 @@ export const ProjectSubHeader: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search..."
             className="w-44 lg:w-56 bg-transparent text-xs focus:outline-none placeholder-slate-400"
           />

@@ -1,4 +1,10 @@
-import { SetMetadata, Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  SetMetadata,
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { LicenseType } from '@aljama/shared';
 
@@ -10,10 +16,10 @@ export class LicenseGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredLicense = this.reflector.getAllAndOverride<LicenseType>(
-      REQUIRE_LICENSE_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredLicense = this.reflector.getAllAndOverride<LicenseType>(REQUIRE_LICENSE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (!requiredLicense) {
       return true;

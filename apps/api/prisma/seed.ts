@@ -1,4 +1,11 @@
-import { PrismaClient, LicenseType, UserStatus, ProjectRole, ProjectStatus, FieldType } from '@prisma/client';
+import {
+  PrismaClient,
+  LicenseType,
+  UserStatus,
+  ProjectRole,
+  ProjectStatus,
+  FieldType,
+} from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -105,7 +112,8 @@ async function main() {
     data: {
       key: 'MED',
       name: 'Medical Device Control System',
-      description: 'Infusion pump embedded safety requirement management system and ISO 13485 verification specifications.',
+      description:
+        'Infusion pump embedded safety requirement management system and ISO 13485 verification specifications.',
       status: ProjectStatus.ACTIVE,
       createdBy: adminUser.id,
     },
@@ -300,7 +308,8 @@ async function main() {
       itemTypeId: reqType.id,
       itemKey: 'MED-REQ-001',
       name: 'Battery Backup Operation',
-      description: '<p>The infusion pump shall operate on internal battery backup for at least <strong>4 continuous hours</strong> upon sudden loss of AC mains power, while maintaining nominal delivery accuracy within ±5%.</p>',
+      description:
+        '<p>The infusion pump shall operate on internal battery backup for at least <strong>4 continuous hours</strong> upon sudden loss of AC mains power, while maintaining nominal delivery accuracy within ±5%.</p>',
       status: 'Approved',
       priority: 'High',
       assigneeId: memberUser.id,
@@ -332,7 +341,8 @@ async function main() {
       itemTypeId: reqType.id,
       itemKey: 'MED-REQ-002',
       name: 'Air-in-Line Detection Threshold',
-      description: '<p>The optical bubble detection sensor shall detect any single air bubble volume exceeding <strong>50 microliters</strong> and halt liquid infusion within 100ms.</p>',
+      description:
+        '<p>The optical bubble detection sensor shall detect any single air bubble volume exceeding <strong>50 microliters</strong> and halt liquid infusion within 100ms.</p>',
       status: 'Draft',
       priority: 'High',
       assigneeId: memberUser.id,
@@ -364,7 +374,8 @@ async function main() {
       itemTypeId: reqType.id,
       itemKey: 'MED-REQ-003',
       name: 'Occlusion Audio-Visual Alarm Signaling',
-      description: '<p>An audible alarm signal of at least <strong>65 dBA at 1 meter</strong> and flashing red LED beacon shall trigger within 5 seconds of downstream occlusion detection.</p>',
+      description:
+        '<p>An audible alarm signal of at least <strong>65 dBA at 1 meter</strong> and flashing red LED beacon shall trigger within 5 seconds of downstream occlusion detection.</p>',
       status: 'In Review',
       priority: 'Medium',
       assigneeId: memberUser.id,
@@ -396,7 +407,8 @@ async function main() {
       itemTypeId: ucType.id,
       itemKey: 'MED-UC-001',
       name: 'Initialize Infusion Session',
-      description: '<p>Clinical staff logs into device terminal, scans patient barcode ID, verifies drug library profile, and initiates programmed titration flow.</p>',
+      description:
+        '<p>Clinical staff logs into device terminal, scans patient barcode ID, verifies drug library profile, and initiates programmed titration flow.</p>',
       status: 'Approved',
       priority: 'High',
       assigneeId: memberUser.id,
@@ -428,7 +440,8 @@ async function main() {
       itemTypeId: tcType.id,
       itemKey: 'MED-TC-001',
       name: 'Verify Battery Discharge Curve at Maximum Load',
-      description: '<p>Disconnect AC power while pump runs at 1200 mL/hr against 10 psi backpressure. Record operational endurance until low-battery warning tone fires.</p>',
+      description:
+        '<p>Disconnect AC power while pump runs at 1200 mL/hr against 10 psi backpressure. Record operational endurance until low-battery warning tone fires.</p>',
       status: 'Draft',
       priority: 'High',
       assigneeId: memberUser.id,
@@ -470,7 +483,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌ Error during database seeding:', e);
     process.exit(1);
   })

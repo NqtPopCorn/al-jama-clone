@@ -12,6 +12,9 @@ import { ListView } from '../../features/item/ListView';
 import { ReadingView } from '../../features/item/ReadingView';
 import { ProjectDashboard } from '../../features/project/ProjectDashboard';
 import { FilterToolbar } from '../../features/item/components/FilterToolbar';
+import { ItemDetailView } from '../../features/item/components/item-detail-view';
+import { CreateItemModal } from '../../features/item/components/create-item-modal';
+import { useProjectMeta } from '../../features/item/hooks/use-project-meta';
 import { ProjectSummary, LicenseType } from '@aljama/shared';
 
 export const AppShell: React.FC = () => {
@@ -20,6 +23,7 @@ export const AppShell: React.FC = () => {
     currentProject,
     setCurrentProject,
     selectedFolderId,
+    setSelectedFolderId,
     activeView,
     searchQuery,
     isSidebarOpen,
@@ -146,25 +150,78 @@ export const AppShell: React.FC = () => {
   };
 
   const handleOpenProject = (projId: string) => {
-    const selected = projectsData?.find((p) => p.id === projId);
+    const selected = projectsData?.find(p => p.id === projId);
     if (selected) {
       setCurrentProject(selected);
       setMainNavTab('projects');
       setPerspective('workspace');
       if (!openTabs.includes('workspace')) {
-        setOpenTabs((prev) => [...prev, 'workspace']);
+        setOpenTabs(prev => [...prev, 'workspace']);
       }
     }
   };
 
+  // Local item tabs and create item modal states
+  const [openItemTabs, setOpenItemTabs] = useState<
+    Array<{ id: string; key: string; name: string }>
+  >([]);
+  const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
+
+  // Fetch project meta (itemTypes, folders, members)
+  const { itemTypes, folders, members } = useProjectMeta(projectId);
+
+  const handleOpenItem = (id: string, key: string, name: string) => {
+    setOpenItemTabs(prev => {
+      if (prev.some(t => t.id === id)) return prev;
+      return [...prev, { id, key, name }];
+    });
+    setPerspective(`item:${id}`);
+  };
+
+  const handleSelectRootDashboard = () => {
+    if (!openTabs.includes('dashboard')) {
+      setOpenTabs(prev => [...prev, 'dashboard']);
+    }
+    setPerspective('dashboard');
+    setSelectedFolderId(null);
+  };
+
+  const handleSelectFolder = (folderId: string | null) => {
+    setSelectedFolderId(folderId);
+    if (perspective === 'dashboard' || perspective === 'welcome') {
+      if (!openTabs.includes('workspace')) {
+        setOpenTabs(prev => [...prev, 'workspace']);
+      }
+      setPerspective('workspace');
+    }
+  };
+
   const handleCloseTab = (tabToClose: WorkspaceTabId) => {
-    const nextTabs = openTabs.filter((t) => t !== tabToClose);
+    if (typeof tabToClose === 'string' && tabToClose.startsWith('item:')) {
+      const itemId = tabToClose.replace('item:', '');
+      const nextItemTabs = openItemTabs.filter(t => t.id !== itemId);
+      setOpenItemTabs(nextItemTabs);
+      if (perspective === tabToClose) {
+        if (nextItemTabs.length > 0) {
+          setPerspective(`item:${nextItemTabs[nextItemTabs.length - 1].id}`);
+        } else if (openTabs.length > 0) {
+          setPerspective(openTabs[openTabs.length - 1]);
+        } else {
+          setMainNavTab('home');
+        }
+      }
+      return;
+    }
+
+    const nextTabs = openTabs.filter(t => t !== tabToClose);
     setOpenTabs(nextTabs);
 
     // If the closed tab was the active one, activate the last remaining tab
     if (perspective === tabToClose) {
       if (nextTabs.length > 0) {
         setPerspective(nextTabs[nextTabs.length - 1]);
+      } else if (openItemTabs.length > 0) {
+        setPerspective(`item:${openItemTabs[openItemTabs.length - 1].id}`);
       } else {
         // If all workspace tabs are closed, go to Home
         setMainNavTab('home');
@@ -176,7 +233,7 @@ export const AppShell: React.FC = () => {
     setMainNavTab(tab);
     if (tab === 'projects') {
       if (!openTabs.includes('workspace')) {
-        setOpenTabs((prev) => [...prev, 'workspace']);
+        setOpenTabs(prev => [...prev, 'workspace']);
       }
       setPerspective('workspace');
     }
@@ -203,6 +260,7 @@ export const AppShell: React.FC = () => {
             projects={projectsData}
             activePerspective={perspective}
             openTabs={openTabs}
+            itemTabs={openItemTabs}
             onPerspectiveChange={setPerspective}
             onCloseTab={handleCloseTab}
           />
@@ -215,16 +273,38 @@ export const AppShell: React.FC = () => {
                 isSidebarOpen ? 'w-72' : 'w-0'
               } overflow-hidden`}
             >
-              <ExplorerSidebar nodes={explorerTree} isLoading={isLoadingTree} />
+              <ExplorerSidebar
+                nodes={explorerTree}
+                isLoading={isLoadingTree}
+                activePerspective={perspective}
+                onSelectRootDashboard={handleSelectRootDashboard}
+                onSelectFolder={handleSelectFolder}
+                onSelectItem={handleOpenItem}
+              />
             </aside>
 
-            {/* Right Main Content Area: Dashboard, List View, or Reading View */}
+            {/* Right Main Content Area: Dashboard, List View, Reading View, or Item Detail */}
             <main className="flex-1 flex flex-col overflow-hidden bg-white">
-              {perspective === 'dashboard' ? (
+              {typeof perspective === 'string' && perspective.startsWith('item:') ? (
+                /* Item Detail View (Matching Jama Connect Image 4 & 5) */
+                <ItemDetailView
+                  itemId={perspective.replace('item:', '')}
+                  projectId={projectId || ''}
+                  projectName={currentProject?.name}
+                  onCloseTab={() => handleCloseTab(perspective)}
+                  onOpenCreateItem={() => setIsCreateItemOpen(true)}
+                />
+              ) : perspective === 'dashboard' ? (
                 /* Dashboard with Explorer tree visible on the left */
                 <ProjectDashboard
                   projectDetails={projectDetails}
                   isLoading={isLoadingDetails}
+                  onOpenListView={() => {
+                    if (!openTabs.includes('workspace')) {
+                      setOpenTabs(prev => [...prev, 'workspace']);
+                    }
+                    setPerspective('workspace');
+                  }}
                 />
               ) : perspective === 'welcome' ? (
                 /* Welcome Perspective inside workspace tab */
@@ -255,6 +335,8 @@ export const AppShell: React.FC = () => {
                         onPageChange={setPage}
                         onSortChange={handleSortChange}
                         onOpenFilter={() => setShowFilterBar(!showFilterBar)}
+                        onOpenItem={handleOpenItem}
+                        onOpenCreateItem={() => setIsCreateItemOpen(true)}
                       />
                     )}
 
@@ -275,11 +357,11 @@ export const AppShell: React.FC = () => {
         /* Other Navigation Tabs (Stream, Reviews, Admin) */
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white">
           <div className="max-w-md space-y-3">
-            <h2 className="text-xl font-bold text-slate-800 capitalize">
-              {mainNavTab} Center
-            </h2>
+            <h2 className="text-xl font-bold text-slate-800 capitalize">{mainNavTab} Center</h2>
             <p className="text-xs text-slate-500 leading-relaxed">
-              The {mainNavTab} center is configured in the modular architecture. Stream conversations and review cycles are accessible directly from individual items and projects.
+              The {mainNavTab} center is configured in the modular architecture. Stream
+              conversations and review cycles are accessible directly from individual items and
+              projects.
             </p>
             <button
               type="button"
@@ -293,6 +375,23 @@ export const AppShell: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Create Item Modal */}
+      {projectId && currentProject && (
+        <CreateItemModal
+          isOpen={isCreateItemOpen}
+          onClose={() => setIsCreateItemOpen(false)}
+          projectId={projectId}
+          projectName={currentProject.name}
+          defaultFolderId={selectedFolderId}
+          itemTypes={itemTypes}
+          folders={folders}
+          members={members}
+          onItemCreated={_newItemId => {
+            // Can optionally focus the newly created item or list will refetch
+          }}
+        />
       )}
     </div>
   );

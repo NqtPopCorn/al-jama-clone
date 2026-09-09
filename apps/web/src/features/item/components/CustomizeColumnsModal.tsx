@@ -70,14 +70,18 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
 
   const selectedCount = Object.values(visibleColumns).filter(Boolean).length;
 
-  const filteredColumns = ALL_COLUMNS.filter((col) => {
+  const filteredColumns = ALL_COLUMNS.filter(col => {
     if (filterMode === 'selected' && !visibleColumns[col.id]) return false;
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'common') return col.category === 'common';
-    if (selectedCategory === 'requirement') return col.category === 'requirement' || col.category === 'common';
-    if (selectedCategory === 'use_case') return col.category === 'use_case' || col.category === 'common';
-    if (selectedCategory === 'test_case') return col.category === 'test_case' || col.category === 'common';
-    if (selectedCategory === 'defect') return col.category === 'defect' || col.category === 'common';
+    if (selectedCategory === 'requirement')
+      return col.category === 'requirement' || col.category === 'common';
+    if (selectedCategory === 'use_case')
+      return col.category === 'use_case' || col.category === 'common';
+    if (selectedCategory === 'test_case')
+      return col.category === 'test_case' || col.category === 'common';
+    if (selectedCategory === 'defect')
+      return col.category === 'defect' || col.category === 'common';
     return true;
   });
 
@@ -85,7 +89,9 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[1px] select-none font-sans">
       <div
         className={`w-[780px] max-w-[95vw] rounded-lg shadow-2xl border flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 transition-colors ${
-          isDark ? 'bg-[#161b22] border-[#30363d] text-slate-100' : 'bg-white border-slate-300 text-slate-900'
+          isDark
+            ? 'bg-[#161b22] border-[#30363d] text-slate-100'
+            : 'bg-white border-slate-300 text-slate-900'
         }`}
       >
         {/* Modal Top Header (Matching Image 5) */}
@@ -118,7 +124,9 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
               type="button"
               onClick={onClose}
               className={`p-1 rounded transition-colors ml-1 ${
-                isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200'
+                isDark
+                  ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200'
               }`}
             >
               <X className="w-4 h-4" />
@@ -134,7 +142,7 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
               isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-[#f1f5f9] border-slate-200'
             }`}
           >
-            {categories.map((cat) => {
+            {categories.map(cat => {
               const isActive = selectedCategory === cat.id;
               return (
                 <button
@@ -147,8 +155,8 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
                         ? 'bg-[#21262d] text-white border-[#00a3e0] font-bold'
                         : 'bg-white text-slate-900 border-[#00a3e0] font-bold shadow-xs'
                       : isDark
-                      ? 'border-transparent text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
-                      : 'border-transparent text-slate-600 hover:bg-slate-200/70 hover:text-slate-800'
+                        ? 'border-transparent text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
+                        : 'border-transparent text-slate-600 hover:bg-slate-200/70 hover:text-slate-800'
                   }`}
                 >
                   {cat.label}
@@ -168,11 +176,11 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
                 isDark ? 'text-slate-200 border-[#30363d]' : 'text-slate-700 border-slate-100'
               }`}
             >
-              {categories.find((c) => c.id === selectedCategory)?.label || 'All Fields'}
+              {categories.find(c => c.id === selectedCategory)?.label || 'All Fields'}
             </h4>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {filteredColumns.map((col) => {
+              {filteredColumns.map(col => {
                 const isChecked = !!visibleColumns[col.id];
                 return (
                   <label
@@ -184,8 +192,8 @@ export const CustomizeColumnsModal: React.FC<CustomizeColumnsModalProps> = ({
                           ? 'bg-[#1f3a5f] border-blue-500/60 text-white font-medium shadow-2xs'
                           : 'bg-slate-50 border-slate-300 text-slate-900 font-medium shadow-2xs'
                         : isDark
-                        ? 'bg-[#161b22] border-[#30363d] text-slate-300 hover:bg-[#21262d] hover:border-slate-600'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                          ? 'bg-[#161b22] border-[#30363d] text-slate-300 hover:bg-[#21262d] hover:border-slate-600'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                     }`}
                   >
                     <input

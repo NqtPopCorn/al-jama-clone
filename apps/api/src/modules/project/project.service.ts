@@ -1,6 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ExplorerNode, ProjectRole, ProjectStatus, ProjectSummary } from '@aljama/shared';
+import {
+  ExplorerNode,
+  FolderSummary,
+  ItemTypeWithFields,
+  ProjectMemberSummary,
+  ProjectRole,
+  ProjectStatus,
+  ProjectSummary,
+} from '@aljama/shared';
 
 @Injectable()
 export class ProjectService {
@@ -29,7 +37,7 @@ export class ProjectService {
       },
     });
 
-    return memberships.map((m) => ({
+    return memberships.map(m => ({
       id: m.project.id,
       key: m.project.key,
       name: m.project.name,
@@ -83,8 +91,8 @@ export class ProjectService {
       select: { id: true, key: true, name: true, icon: true },
     });
 
-    const typeCountMap = itemTypeCounts.map((tc) => {
-      const it = itemTypes.find((t) => t.id === tc.itemTypeId);
+    const typeCountMap = itemTypeCounts.map(tc => {
+      const it = itemTypes.find(t => t.id === tc.itemTypeId);
       return {
         itemTypeId: tc.itemTypeId,
         key: it?.key || 'UNKNOWN',
@@ -105,7 +113,7 @@ export class ProjectService {
         totalItems: project._count.items,
         totalFolders: project._count.folders,
         totalItemTypes: project._count.itemTypes,
-        statusBreakdown: itemStatusCounts.map((sc) => ({
+        statusBreakdown: itemStatusCounts.map(sc => ({
           status: sc.status || 'Unspecified',
           count: sc._count.id,
         })),
@@ -149,8 +157,8 @@ export class ProjectService {
     // Helper to get items for a given folder
     const getItemsForFolder = (folderId: string): ExplorerNode[] => {
       return items
-        .filter((item) => item.folderId === folderId)
-        .map((item) => ({
+        .filter(item => item.folderId === folderId)
+        .map(item => ({
           id: item.id,
           key: item.itemKey,
           name: item.name,
@@ -166,9 +174,7 @@ export class ProjectService {
 
     // Recursive folder builder
     const buildFolderNode = (folder: (typeof folders)[0]): ExplorerNode => {
-      const childFolders = folders
-        .filter((f) => f.parentFolderId === folder.id)
-        .map(buildFolderNode);
+      const childFolders = folders.filter(f => f.parentFolderId === folder.id).map(buildFolderNode);
       const folderItems = getItemsForFolder(folder.id);
 
       return {
@@ -182,14 +188,12 @@ export class ProjectService {
     };
 
     // Top-level folders (parentFolderId is null)
-    const rootFolders = folders
-      .filter((f) => f.parentFolderId === null)
-      .map(buildFolderNode);
+    const rootFolders = folders.filter(f => f.parentFolderId === null).map(buildFolderNode);
 
     // Items without folder (root items)
     const unassignedItems = items
-      .filter((item) => !item.folderId)
-      .map((item) => ({
+      .filter(item => !item.folderId)
+      .map(item => ({
         id: item.id,
         key: item.itemKey,
         name: item.name,
@@ -203,5 +207,75 @@ export class ProjectService {
       }));
 
     return [...rootFolders, ...unassignedItems];
+  }
+
+  async getItemTypesWithFields(projectId: string): Promise<ItemTypeWithFields[]> {
+    const types = await this.prisma.itemType.findMany({
+      where: { projectId },
+      orderBy: { key: 'asc' },
+      include: {
+        fields: {
+          orderBy: { displayOrder: 'asc' },
+        },
+      },
+    });
+
+    return types.map(t => ({
+      id: t.id,
+      key: t.key,
+      name: t.name,
+      icon: t.icon,
+      description: t.description,
+      fields: t.fields.map(f => ({
+        id: f.id,
+        fieldLabel: f.fieldLabel,
+        name: f.fieldLabel,
+        fieldKey: f.fieldKey,
+        fieldType: f.fieldType,
+        isRequired: f.isRequired,
+        options: f.options,
+        displayOrder: f.displayOrder,
+      })),
+    }));
+  }
+
+  async getProjectMembers(projectId: string): Promise<ProjectMemberSummary[]> {
+    const members = await this.prisma.projectMember.findMany({
+      where: { projectId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            username: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { user: { fullName: 'asc' } },
+    });
+
+    return members.map(m => ({
+      id: m.id,
+      userId: m.user.id,
+      fullName: m.user.fullName,
+      username: m.user.username,
+      avatarUrl: m.user.avatarUrl,
+      projectRole: m.projectRole,
+    }));
+  }
+
+  async getProjectFolders(projectId: string): Promise<FolderSummary[]> {
+    const folders = await this.prisma.folder.findMany({
+      where: { projectId },
+      orderBy: [{ parentFolderId: 'asc' }, { orderIndex: 'asc' }],
+    });
+
+    return folders.map(f => ({
+      id: f.id,
+      name: f.name,
+      parentFolderId: f.parentFolderId,
+      orderIndex: f.orderIndex,
+    }));
   }
 }

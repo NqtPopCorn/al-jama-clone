@@ -35,9 +35,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
           title="Go to Home"
         >
           <svg viewBox="0 0 100 100" className="w-6 h-6 text-[#0088cc]" fill="currentColor">
-            <path d="M50 15 C45 15, 38 25, 36 38 C34 50, 42 62, 50 62 C58 62, 66 50, 64 38 C62 25, 55 15, 50 15 Z" fill="#0284c7" />
-            <path d="M22 68 C22 62, 32 58, 44 65 C55 72, 58 84, 52 90 C46 96, 32 94, 25 85 C20 78, 22 71, 22 68 Z" fill="#0369a1" />
-            <path d="M78 68 C78 62, 68 58, 56 65 C45 72, 42 84, 48 90 C54 96, 68 94, 75 85 C80 78, 78 71, 78 68 Z" fill="#38bdf8" />
+            <path
+              d="M50 15 C45 15, 38 25, 36 38 C34 50, 42 62, 50 62 C58 62, 66 50, 64 38 C62 25, 55 15, 50 15 Z"
+              fill="#0284c7"
+            />
+            <path
+              d="M22 68 C22 62, 32 58, 44 65 C55 72, 58 84, 52 90 C46 96, 32 94, 25 85 C20 78, 22 71, 22 68 Z"
+              fill="#0369a1"
+            />
+            <path
+              d="M78 68 C78 62, 68 58, 56 65 C45 72, 42 84, 48 90 C54 96, 68 94, 75 85 C80 78, 78 71, 78 68 Z"
+              fill="#38bdf8"
+            />
           </svg>
         </div>
 
@@ -51,8 +60,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
                 ? 'bg-[#2a3038] text-white border-[#0088cc]'
                 : 'bg-white text-blue-700 border-blue-600 shadow-sm'
               : isDark
-              ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
-              : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
+                ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
+                : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
           }`}
           title="Home Overview (BR-NAV-02)"
         >
@@ -69,8 +78,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
                 ? 'bg-[#2a3038] text-white border-[#0088cc]'
                 : 'bg-white text-blue-700 border-blue-600 shadow-sm'
               : isDark
-              ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
-              : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
+                ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
+                : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
           }`}
         >
           Stream
@@ -86,8 +95,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
                 ? 'bg-[#2a3038] text-white border-[#0088cc]'
                 : 'bg-white text-blue-700 border-blue-600 shadow-sm'
               : isDark
-              ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
-              : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
+                ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
+                : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
           }`}
         >
           Projects
@@ -103,8 +112,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
                 ? 'bg-[#2a3038] text-white border-[#0088cc]'
                 : 'bg-white text-blue-700 border-blue-600 shadow-sm'
               : isDark
-              ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
-              : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
+                ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
+                : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
           }`}
         >
           Reviews
@@ -120,8 +129,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
                 ? 'bg-[#2a3038] text-white border-[#0088cc]'
                 : 'bg-white text-blue-700 border-blue-600 shadow-sm'
               : isDark
-              ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
-              : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
+                ? 'text-slate-300 hover:bg-[#252b33] hover:text-white border-transparent'
+                : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border-transparent'
           }`}
         >
           Admin
@@ -131,7 +140,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
       {/* Right User & Utility Area (Matching Jama Connect) */}
       <div className="flex items-center gap-4 text-xs font-normal">
         {/* Org Name */}
-        <span className={`font-semibold hidden sm:inline ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+        <span
+          className={`font-semibold hidden sm:inline ${isDark ? 'text-slate-200' : 'text-slate-800'}`}
+        >
           Jama Software
         </span>
 
@@ -165,10 +176,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
         </span>
 
         {/* Action Links: Reports | Help | Log Out */}
-        <div className={`flex items-center gap-2 text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+        <div
+          className={`flex items-center gap-2 text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+        >
           <a
             href="#reports"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               alert('Reports view is available in Project Dashboard and Trace View.');
             }}
@@ -179,7 +192,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
           <span>|</span>
           <a
             href="#help"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               alert('AL-JAMA Documentation and User Guides available in docs/.');
             }}

@@ -1,4 +1,10 @@
-import { SetMetadata, Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  SetMetadata,
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ProjectRole } from '@aljama/shared';
 import { PrismaService } from '../../prisma/prisma.service';

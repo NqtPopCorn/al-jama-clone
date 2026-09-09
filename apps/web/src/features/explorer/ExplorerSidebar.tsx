@@ -28,9 +28,20 @@ import {
 interface ExplorerSidebarProps {
   nodes?: ExplorerNode[];
   isLoading?: boolean;
+  activePerspective?: string;
+  onSelectRootDashboard?: () => void;
+  onSelectFolder?: (folderId: string | null) => void;
+  onSelectItem?: (itemId: string, key: string, name: string) => void;
 }
 
-export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], isLoading }) => {
+export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
+  nodes = [],
+  isLoading,
+  activePerspective,
+  onSelectRootDashboard,
+  onSelectFolder,
+  onSelectItem,
+}) => {
   const { user } = useAuthStore();
   const {
     currentProject,
@@ -43,10 +54,12 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
   const { headerTheme } = useThemeStore();
   const isDark = headerTheme === 'dark';
 
-  const [activeTab, setActiveTab] = useState<'explorer' | 'filter' | 'bookmarks' | 'views'>('explorer');
+  const [activeTab, setActiveTab] = useState<'explorer' | 'filter' | 'bookmarks' | 'views'>(
+    'explorer',
+  );
   const [tagTab, setTagTab] = useState<'cloud' | 'list'>('cloud');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
-    new Set(['root', 'f-mobile', 'f-req'])
+    new Set(['root', 'f-mobile', 'f-req']),
   );
 
   // License check: Reviewer Limited (QT-08)
@@ -54,18 +67,23 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
     return (
       <div
         className={`h-full flex flex-col p-4 border-r text-xs select-none ${
-          isDark ? 'bg-[#161b22] border-[#30363d] text-slate-200' : 'bg-[#f1f3f5] border-slate-300 text-slate-800'
+          isDark
+            ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+            : 'bg-[#f1f3f5] border-slate-300 text-slate-800'
         }`}
       >
         <div
           className={`p-4 border rounded-md text-center space-y-2 shadow-xs ${
-            isDark ? 'bg-[#21262d] border-amber-500/40 text-slate-200' : 'bg-white border-amber-300 text-slate-800'
+            isDark
+              ? 'bg-[#21262d] border-amber-500/40 text-slate-200'
+              : 'bg-white border-amber-300 text-slate-800'
           }`}
         >
           <Lock className="w-6 h-6 text-amber-500 mx-auto" />
           <h4 className="font-bold">Explorer Restricted</h4>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            Reviewer Limited users (QT-08) cannot access project hierarchy. Assigned items will appear in Review Center.
+            Reviewer Limited users (QT-08) cannot access project hierarchy. Assigned items will
+            appear in Review Center.
           </p>
         </div>
       </div>
@@ -73,7 +91,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
   }
 
   const toggleFolder = (folderKey: string) => {
-    setExpandedFolders((prev) => {
+    setExpandedFolders(prev => {
       const next = new Set(prev);
       if (next.has(folderKey)) {
         next.delete(folderKey);
@@ -84,10 +102,37 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
     });
   };
 
+  const isRootActive = activePerspective === 'dashboard';
+
+  const handleRootClick = () => {
+    if (onSelectRootDashboard) {
+      onSelectRootDashboard();
+    } else {
+      setSelectedFolderId(null);
+    }
+  };
+
+  const handleFolderClick = (folderId: string) => {
+    setSelectedFolderId(folderId);
+    setSelectedItemId(null);
+    if (onSelectFolder) {
+      onSelectFolder(folderId);
+    }
+  };
+
+  const handleItemClick = (itemId: string, itemKey: string, itemName: string) => {
+    setSelectedItemId(itemId);
+    if (onSelectItem) {
+      onSelectItem(itemId, itemKey, itemName);
+    }
+  };
+
   return (
     <div
       className={`h-full flex flex-col border-r text-xs select-none transition-colors duration-200 ${
-        isDark ? 'bg-[#161b22] border-[#30363d] text-slate-200' : 'bg-[#f5f6f8] border-slate-300 text-slate-800'
+        isDark
+          ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+          : 'bg-[#f5f6f8] border-slate-300 text-slate-800'
       }`}
     >
       {/* 1. Top Tab Strip (Explorer | Filter | Bookmarks | Views) matching Image 3 */}
@@ -105,8 +150,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
                 ? 'bg-[#161b22] text-white border-t border-l border-r border-[#30363d] shadow-2xs'
                 : 'bg-white text-slate-900 border-t border-l border-r border-slate-300 shadow-2xs'
               : isDark
-              ? 'text-slate-400 hover:text-slate-200 hover:bg-[#282e38]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-[#282e38]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
           }`}
         >
           <Folder className="w-3.5 h-3.5 text-blue-500" />
@@ -122,8 +167,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
                 ? 'bg-[#161b22] text-blue-400'
                 : 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
               : activeTab === 'filter'
-              ? 'bg-white shadow-2xs text-blue-600'
-              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                ? 'bg-white shadow-2xs text-blue-600'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title="Filter Results"
         >
@@ -139,8 +184,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
                 ? 'bg-[#161b22] text-blue-400'
                 : 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
               : activeTab === 'bookmarks'
-              ? 'bg-white shadow-2xs text-blue-600'
-              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                ? 'bg-white shadow-2xs text-blue-600'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title="Bookmarks"
         >
@@ -156,8 +201,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
                 ? 'bg-[#161b22] text-blue-400'
                 : 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
               : activeTab === 'views'
-              ? 'bg-white shadow-2xs text-blue-600'
-              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                ? 'bg-white shadow-2xs text-blue-600'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title="Views Layout"
         >
@@ -189,7 +234,9 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
           <button
             type="button"
             className={`p-1 rounded transition-colors ${
-              isDark ? 'hover:bg-slate-700 text-slate-400 hover:text-slate-200' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
+              isDark
+                ? 'hover:bg-slate-700 text-slate-400 hover:text-slate-200'
+                : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
             }`}
             title="Explorer Settings"
           >
@@ -213,63 +260,80 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
           isDark ? 'bg-[#0d1117]' : 'bg-white'
         }`}
       >
-        {/* Root Node: Project Name */}
+        {/* Root Node: Project Name -> Links to Project Dashboard */}
         <div
-          onClick={() => setSelectedFolderId(null)}
+          onClick={handleRootClick}
           className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer transition-colors ${
-            selectedFolderId === null
+            isRootActive
               ? isDark
                 ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                 : 'bg-[#e0efff] text-blue-900 font-semibold'
               : isDark
-              ? 'hover:bg-[#1f242c] text-slate-200'
-              : 'hover:bg-slate-100 text-slate-800'
+                ? 'hover:bg-[#1f242c] text-slate-200'
+                : 'hover:bg-slate-100 text-slate-800'
           }`}
+          title={`${currentProject?.name || 'Project'} (Dashboard)`}
         >
           <button
             type="button"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               toggleFolder('root');
             }}
-            className={`w-3.5 h-3.5 flex items-center justify-center border text-[10px] rounded-2xs font-mono ${
-              isDark ? 'border-slate-600 bg-[#161b22] text-slate-300 hover:bg-[#21262d]' : 'border-slate-400 bg-white text-slate-600 hover:bg-slate-100'
+            className={`w-3.5 h-3.5 flex items-center justify-center border text-[10px] rounded-2xs font-mono shrink-0 ${
+              isDark
+                ? 'border-slate-600 bg-[#161b22] text-slate-300 hover:bg-[#21262d]'
+                : 'border-slate-400 bg-white text-slate-600 hover:bg-slate-100'
             }`}
           >
-            {expandedFolders.has('root') ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
+            {expandedFolders.has('root') ? (
+              <Minus className="w-2.5 h-2.5" />
+            ) : (
+              <Plus className="w-2.5 h-2.5" />
+            )}
           </button>
 
-          <Folder className="w-3.5 h-3.5 text-slate-400" />
-          <span className="truncate">{currentProject?.name || 'Medical Device Control System'}</span>
+          <Folder className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+          <span className="truncate">
+            {currentProject?.name || 'Medical Device Control System'}
+          </span>
         </div>
 
         {/* Tree Items when Root Expanded */}
         {expandedFolders.has('root') && (
-          <div className={`pl-4 space-y-0.5 border-l ml-2 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}>
+          <div
+            className={`pl-4 space-y-0.5 border-l ml-2 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}
+          >
             {/* 1. Business Requirements */}
             <div
-              onClick={() => setSelectedFolderId('f-req')}
+              onClick={() => handleFolderClick('f-req')}
               className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer transition-colors ${
                 selectedFolderId === 'f-req'
                   ? isDark
                     ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                     : 'bg-[#e0efff] text-blue-900 font-semibold'
                   : isDark
-                  ? 'hover:bg-[#1f242c] text-slate-200'
-                  : 'hover:bg-slate-100 text-slate-800'
+                    ? 'hover:bg-[#1f242c] text-slate-200'
+                    : 'hover:bg-slate-100 text-slate-800'
               }`}
             >
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   toggleFolder('f-req');
                 }}
                 className={`w-3.5 h-3.5 flex items-center justify-center border text-[10px] rounded-2xs font-mono ${
-                  isDark ? 'border-slate-600 bg-[#161b22] text-slate-300' : 'border-slate-400 bg-white text-slate-600'
+                  isDark
+                    ? 'border-slate-600 bg-[#161b22] text-slate-300'
+                    : 'border-slate-400 bg-white text-slate-600'
                 }`}
               >
-                {expandedFolders.has('f-req') ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
+                {expandedFolders.has('f-req') ? (
+                  <Minus className="w-2.5 h-2.5" />
+                ) : (
+                  <Plus className="w-2.5 h-2.5" />
+                )}
               </button>
               <BarChart2 className="w-3.5 h-3.5 text-blue-500" />
               <span className="truncate">Business Requirements</span>
@@ -277,23 +341,33 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
             {/* Sub items under Business Requirements */}
             {expandedFolders.has('f-req') && (
-              <div className={`pl-4 space-y-0.5 border-l ml-2 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}>
+              <div
+                className={`pl-4 space-y-0.5 border-l ml-2 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}
+              >
                 <div
-                  onClick={() => setSelectedItemId('item-txt-1')}
+                  onClick={() => handleItemClick('item-txt-1', 'MKP-TXT-1', 'Problem Statement')}
                   className={`flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer text-[11px] ${
-                    isDark ? 'hover:bg-[#1f242c] text-slate-400' : 'hover:bg-slate-100 text-slate-600'
+                    isDark
+                      ? 'hover:bg-[#1f242c] text-slate-400'
+                      : 'hover:bg-slate-100 text-slate-600'
                   }`}
                 >
-                  <span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] text-slate-500 font-mono">T</span>
+                  <span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] text-slate-500 font-mono">
+                    T
+                  </span>
                   <span className="truncate">Problem Statement</span>
                 </div>
                 <div
-                  onClick={() => setSelectedItemId('item-txt-2')}
+                  onClick={() => handleItemClick('item-txt-2', 'MKP-TXT-2', 'Position Statement')}
                   className={`flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer text-[11px] ${
-                    isDark ? 'hover:bg-[#1f242c] text-slate-400' : 'hover:bg-slate-100 text-slate-600'
+                    isDark
+                      ? 'hover:bg-[#1f242c] text-slate-400'
+                      : 'hover:bg-slate-100 text-slate-600'
                   }`}
                 >
-                  <span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] text-slate-500 font-mono">T</span>
+                  <span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] text-slate-500 font-mono">
+                    T
+                  </span>
                   <span className="truncate">Position Statement</span>
                 </div>
               </div>
@@ -301,28 +375,34 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
             {/* 2. Desktop Browser */}
             <div
-              onClick={() => setSelectedFolderId('f-desktop')}
+              onClick={() => handleFolderClick('f-desktop')}
               className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer transition-colors ${
                 selectedFolderId === 'f-desktop'
                   ? isDark
                     ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                     : 'bg-[#e0efff] text-blue-900 font-semibold'
                   : isDark
-                  ? 'hover:bg-[#1f242c] text-slate-200'
-                  : 'hover:bg-slate-100 text-slate-800'
+                    ? 'hover:bg-[#1f242c] text-slate-200'
+                    : 'hover:bg-slate-100 text-slate-800'
               }`}
             >
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   toggleFolder('f-desktop');
                 }}
                 className={`w-3.5 h-3.5 flex items-center justify-center border text-[10px] rounded-2xs font-mono ${
-                  isDark ? 'border-slate-600 bg-[#161b22] text-slate-300' : 'border-slate-400 bg-white text-slate-600'
+                  isDark
+                    ? 'border-slate-600 bg-[#161b22] text-slate-300'
+                    : 'border-slate-400 bg-white text-slate-600'
                 }`}
               >
-                {expandedFolders.has('f-desktop') ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
+                {expandedFolders.has('f-desktop') ? (
+                  <Minus className="w-2.5 h-2.5" />
+                ) : (
+                  <Plus className="w-2.5 h-2.5" />
+                )}
               </button>
               <Monitor className="w-3.5 h-3.5 text-amber-500" />
               <span className="truncate">Desktop Browser</span>
@@ -330,28 +410,34 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
             {/* 3. Mobile Browser (Expanded in Image 3) */}
             <div
-              onClick={() => setSelectedFolderId('f-mobile')}
+              onClick={() => handleFolderClick('f-mobile')}
               className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer transition-colors ${
                 selectedFolderId === 'f-mobile'
                   ? isDark
                     ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                     : 'bg-[#e0efff] text-blue-900 font-semibold'
                   : isDark
-                  ? 'hover:bg-[#1f242c] text-slate-200'
-                  : 'hover:bg-slate-100 text-slate-800'
+                    ? 'hover:bg-[#1f242c] text-slate-200'
+                    : 'hover:bg-slate-100 text-slate-800'
               }`}
             >
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   toggleFolder('f-mobile');
                 }}
                 className={`w-3.5 h-3.5 flex items-center justify-center border text-[10px] rounded-2xs font-mono ${
-                  isDark ? 'border-slate-600 bg-[#161b22] text-slate-300' : 'border-slate-400 bg-white text-slate-600'
+                  isDark
+                    ? 'border-slate-600 bg-[#161b22] text-slate-300'
+                    : 'border-slate-400 bg-white text-slate-600'
                 }`}
               >
-                {expandedFolders.has('f-mobile') ? <Minus className="w-2.5 h-2.5" /> : <Plus className="w-2.5 h-2.5" />}
+                {expandedFolders.has('f-mobile') ? (
+                  <Minus className="w-2.5 h-2.5" />
+                ) : (
+                  <Plus className="w-2.5 h-2.5" />
+                )}
               </button>
               <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
               <span className="truncate">Mobile Browser</span>
@@ -359,22 +445,28 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
             {/* Sub-items under Mobile Browser */}
             {expandedFolders.has('f-mobile') && (
-              <div className={`pl-4 space-y-0.5 border-l ml-2 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}>
+              <div
+                className={`pl-4 space-y-0.5 border-l ml-2 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}
+              >
                 {/* Use Cases */}
                 <div
-                  onClick={() => setSelectedFolderId('f-uc')}
+                  onClick={() => handleFolderClick('f-uc')}
                   className={`flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer ${
-                    isDark ? 'hover:bg-[#1f242c] text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                    isDark
+                      ? 'hover:bg-[#1f242c] text-slate-300'
+                      : 'hover:bg-slate-100 text-slate-700'
                   }`}
                 >
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       toggleFolder('f-uc');
                     }}
                     className={`w-3 h-3 flex items-center justify-center border text-[9px] font-mono ${
-                      isDark ? 'border-slate-600 bg-[#161b22] text-slate-300' : 'border-slate-300 bg-white text-slate-600'
+                      isDark
+                        ? 'border-slate-600 bg-[#161b22] text-slate-300'
+                        : 'border-slate-300 bg-white text-slate-600'
                     }`}
                   >
                     <Plus className="w-2 h-2" />
@@ -385,19 +477,23 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
                 {/* Functional Requirements */}
                 <div
-                  onClick={() => setSelectedFolderId('f-func')}
+                  onClick={() => handleFolderClick('f-func')}
                   className={`flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer ${
-                    isDark ? 'hover:bg-[#1f242c] text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                    isDark
+                      ? 'hover:bg-[#1f242c] text-slate-300'
+                      : 'hover:bg-slate-100 text-slate-700'
                   }`}
                 >
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       toggleFolder('f-func');
                     }}
                     className={`w-3 h-3 flex items-center justify-center border text-[9px] font-mono ${
-                      isDark ? 'border-slate-600 bg-[#161b22] text-slate-300' : 'border-slate-300 bg-white text-slate-600'
+                      isDark
+                        ? 'border-slate-600 bg-[#161b22] text-slate-300'
+                        : 'border-slate-300 bg-white text-slate-600'
                     }`}
                   >
                     <Plus className="w-2 h-2" />
@@ -408,9 +504,11 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
                 {/* Test Cases */}
                 <div
-                  onClick={() => setSelectedFolderId('f-tc')}
+                  onClick={() => handleFolderClick('f-tc')}
                   className={`flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer ${
-                    isDark ? 'hover:bg-[#1f242c] text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                    isDark
+                      ? 'hover:bg-[#1f242c] text-slate-300'
+                      : 'hover:bg-slate-100 text-slate-700'
                   }`}
                 >
                   <span className="w-3" />
@@ -420,9 +518,11 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
                 {/* Defects */}
                 <div
-                  onClick={() => setSelectedFolderId('f-defects')}
+                  onClick={() => handleFolderClick('f-defects')}
                   className={`flex items-center gap-1.5 py-0.5 px-1 rounded cursor-pointer ${
-                    isDark ? 'hover:bg-[#1f242c] text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                    isDark
+                      ? 'hover:bg-[#1f242c] text-slate-300'
+                      : 'hover:bg-slate-100 text-slate-700'
                   }`}
                 >
                   <span className="w-3" />
@@ -434,25 +534,27 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
 
             {/* 4. Change Requests */}
             <div
-              onClick={() => setSelectedFolderId('f-cr')}
+              onClick={() => handleFolderClick('f-cr')}
               className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer transition-colors ${
                 selectedFolderId === 'f-cr'
                   ? isDark
                     ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                     : 'bg-[#e0efff] text-blue-900 font-semibold'
                   : isDark
-                  ? 'hover:bg-[#1f242c] text-slate-200'
-                  : 'hover:bg-slate-100 text-slate-800'
+                    ? 'hover:bg-[#1f242c] text-slate-200'
+                    : 'hover:bg-slate-100 text-slate-800'
               }`}
             >
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   toggleFolder('f-cr');
                 }}
                 className={`w-3.5 h-3.5 flex items-center justify-center border text-[10px] rounded-2xs font-mono ${
-                  isDark ? 'border-slate-600 bg-[#161b22] text-slate-300' : 'border-slate-400 bg-white text-slate-600'
+                  isDark
+                    ? 'border-slate-600 bg-[#161b22] text-slate-300'
+                    : 'border-slate-400 bg-white text-slate-600'
                 }`}
               >
                 <Plus className="w-2.5 h-2.5" />
@@ -518,7 +620,9 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
             <button
               type="button"
               className={`p-0.5 transition-colors ${
-                isDark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-400 hover:text-slate-700'
+                isDark
+                  ? 'text-slate-500 hover:text-slate-200'
+                  : 'text-slate-400 hover:text-slate-700'
               }`}
             >
               <Settings className="w-3 h-3" />
@@ -531,10 +635,14 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({ nodes = [], is
           <span className="text-lg font-bold text-[#0088cc] cursor-pointer hover:underline">
             cart(3)
           </span>
-          <span className={`text-xs cursor-pointer hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          <span
+            className={`text-xs cursor-pointer hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+          >
             product detail(0)
           </span>
-          <span className={`text-xs cursor-pointer hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          <span
+            className={`text-xs cursor-pointer hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+          >
             product listing(0)
           </span>
           <span className="text-sm font-semibold text-[#0284c7] cursor-pointer hover:underline">

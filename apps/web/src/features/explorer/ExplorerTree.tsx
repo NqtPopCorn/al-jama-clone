@@ -29,7 +29,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(() => {
     // Expand top-level folders by default
     const set = new Set<string>();
-    nodes.forEach((n) => {
+    nodes.forEach(n => {
       if (n.type === 'folder') set.add(n.id);
     });
     return set;
@@ -46,7 +46,8 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
         </div>
         <h4 className="text-xs font-semibold text-slate-200">Explorer Restricted (QT-08)</h4>
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          Your account has a <strong>Reviewer Limited</strong> license. Direct project explorer access is disabled. You may only review assigned items via Review Center.
+          Your account has a <strong>Reviewer Limited</strong> license. Direct project explorer
+          access is disabled. You may only review assigned items via Review Center.
         </p>
       </div>
     );
@@ -54,7 +55,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
 
   const toggleExpand = (folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedFolderIds((prev) => {
+    setExpandedFolderIds(prev => {
       const next = new Set(prev);
       if (next.has(folderId)) {
         next.delete(folderId);
@@ -81,9 +82,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
   const renderNode = (node: ExplorerNode, depth = 0) => {
     const isFolder = node.type === 'folder';
     const isExpanded = expandedFolderIds.has(node.id);
-    const isSelected = isFolder
-      ? selectedFolderId === node.id
-      : selectedItemId === node.id;
+    const isSelected = isFolder ? selectedFolderId === node.id : selectedItemId === node.id;
 
     // Filter check
     const matchesFilter =
@@ -112,7 +111,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
             <>
               <button
                 type="button"
-                onClick={(e) => toggleExpand(node.id, e)}
+                onClick={e => toggleExpand(node.id, e)}
                 className="w-4 h-4 flex items-center justify-center text-slate-500 hover:text-slate-200"
               >
                 {isExpanded ? (
@@ -148,7 +147,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
         {/* Children render */}
         {isFolder && isExpanded && node.children && node.children.length > 0 && (
           <div className="border-l border-slate-800/80 ml-4">
-            {node.children.map((child) => renderNode(child, depth + 1))}
+            {node.children.map(child => renderNode(child, depth + 1))}
           </div>
         )}
       </div>
@@ -164,7 +163,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
           <input
             type="text"
             value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
+            onChange={e => setFilterText(e.target.value)}
             placeholder="Search hierarchy..."
             className="w-full pl-8 pr-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
           />
@@ -184,7 +183,7 @@ export const ExplorerTree: React.FC<ExplorerTreeProps> = ({ nodes, isLoading }) 
             No folders or items found in project.
           </div>
         ) : (
-          nodes.map((node) => renderNode(node, 0))
+          nodes.map(node => renderNode(node, 0))
         )}
       </div>
 

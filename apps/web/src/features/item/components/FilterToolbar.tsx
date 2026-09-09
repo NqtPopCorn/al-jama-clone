@@ -23,8 +23,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
 }) => {
   const { activeView, setActiveView, searchQuery, setSearchQuery } = useProjectStore();
 
-  const hasActiveFilters =
-    !!searchQuery || !!itemTypeFilter || !!statusFilter || !!priorityFilter;
+  const hasActiveFilters = !!searchQuery || !!itemTypeFilter || !!statusFilter || !!priorityFilter;
 
   return (
     <div className="p-3 border-b border-slate-800 bg-slate-900/70 flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -36,7 +35,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search items by name, ID, text..."
             className="w-full pl-9 pr-8 py-1.5 bg-slate-950/70 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 transition-colors"
           />
@@ -55,7 +54,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <Filter className="w-3 h-3 text-slate-500" />
           <select
             value={itemTypeFilter}
-            onChange={(e) => onItemTypeChange(e.target.value)}
+            onChange={e => onItemTypeChange(e.target.value)}
             className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer"
           >
             <option value="" className="bg-slate-900 text-slate-200">
@@ -76,7 +75,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
         {/* Status Filter */}
         <select
           value={statusFilter}
-          onChange={(e) => onStatusChange(e.target.value)}
+          onChange={e => onStatusChange(e.target.value)}
           className="bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 text-xs focus:outline-none cursor-pointer"
         >
           <option value="" className="bg-slate-900 text-slate-200">
@@ -96,7 +95,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
         {/* Priority Filter */}
         <select
           value={priorityFilter}
-          onChange={(e) => onPriorityChange(e.target.value)}
+          onChange={e => onPriorityChange(e.target.value)}
           className="bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 text-xs focus:outline-none cursor-pointer"
         >
           <option value="" className="bg-slate-900 text-slate-200">

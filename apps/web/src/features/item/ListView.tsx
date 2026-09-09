@@ -23,8 +23,9 @@ import {
 } from 'lucide-react';
 import { CustomizeColumnsModal } from './components/CustomizeColumnsModal';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { Input } from '../../components/ui/input';
+import { BulkActionBar } from './components/bulk-action-bar';
+import { BulkUpdateModal } from './components/bulk-update-modal';
+import { useProjectMeta } from './hooks/use-project-meta';
 
 interface ListViewProps {
   data?: PaginatedResult<ItemSummary> | null;
@@ -35,6 +36,8 @@ interface ListViewProps {
   onPageChange: (page: number) => void;
   onSortChange: (sortBy: string) => void;
   onOpenFilter?: () => void;
+  onOpenItem?: (itemId: string, itemKey: string, itemName: string) => void;
+  onOpenCreateItem?: () => void;
 }
 
 export const ListView: React.FC<ListViewProps> = ({
@@ -46,13 +49,17 @@ export const ListView: React.FC<ListViewProps> = ({
   onPageChange,
   onSortChange,
   onOpenFilter,
+  onOpenItem,
+  onOpenCreateItem,
 }) => {
-  const { currentProject, selectedItemId, setSelectedItemId, setActiveView } =
-    useProjectStore();
+  const { currentProject, selectedItemId, setSelectedItemId, setActiveView } = useProjectStore();
   const { headerTheme } = useThemeStore();
   const isDark = headerTheme === 'dark';
 
+  const { folders, members } = useProjectMeta(currentProject?.id);
+
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   // Visible columns state
@@ -68,7 +75,7 @@ export const ListView: React.FC<ListViewProps> = ({
   });
 
   const toggleColumn = (colId: string) => {
-    setVisibleColumns((prev) => ({
+    setVisibleColumns(prev => ({
       ...prev,
       [colId]: !prev[colId],
     }));
@@ -78,14 +85,14 @@ export const ListView: React.FC<ListViewProps> = ({
     if (selectedRowIds.size > 0) {
       setSelectedRowIds(new Set());
     } else {
-      const allIds = items.map((i) => i.id);
+      const allIds = items.map(i => i.id);
       setSelectedRowIds(new Set(allIds));
     }
   };
 
   const handleToggleRow = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedRowIds((prev) => {
+    setSelectedRowIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -201,19 +208,20 @@ export const ListView: React.FC<ListViewProps> = ({
   ];
 
   // Merge API items with demo items to achieve exact look
-  const items = apiItems.length > 0
-    ? apiItems.map((item) => ({
-        id: item.id,
-        itemKey: item.itemKey,
-        name: item.name,
-        itemTypeKey: item.itemTypeKey,
-        status: item.status,
-        priority: item.priority,
-        isLocked: item.isLocked,
-        hasSuspect: false,
-        connectedUser: item.assignee?.fullName || 'User',
-      }))
-    : defaultItems;
+  const items =
+    apiItems.length > 0
+      ? apiItems.map(item => ({
+          id: item.id,
+          itemKey: item.itemKey,
+          name: item.name,
+          itemTypeKey: item.itemTypeKey,
+          status: item.status,
+          priority: item.priority,
+          isLocked: item.isLocked,
+          hasSuspect: false,
+          connectedUser: item.assignee?.fullName || 'User',
+        }))
+      : defaultItems;
 
   const totalCount = data?.total || 96;
   const totalPages = data?.totalPages || 2;
@@ -353,6 +361,7 @@ export const ListView: React.FC<ListViewProps> = ({
             type="button"
             variant="jama"
             size="sm"
+            onClick={onOpenCreateItem}
             className="h-7 px-3 gap-1 font-semibold text-xs text-slate-700"
           >
             <span>Add</span>
@@ -367,12 +376,16 @@ export const ListView: React.FC<ListViewProps> = ({
           {/* Table Header: Dark gray background #808080 or #8b929a matching Jama Connect */}
           <thead
             className={`sticky top-0 font-bold z-10 select-none ${
-              isDark ? 'bg-[#21262d] text-slate-200 border-b border-[#30363d]' : 'bg-[#8c949e] text-white'
+              isDark
+                ? 'bg-[#21262d] text-slate-200 border-b border-[#30363d]'
+                : 'bg-[#8c949e] text-white'
             }`}
           >
             <tr>
               {/* Checkbox */}
-              <th className={`py-2 px-2.5 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}>
+              <th
+                className={`py-2 px-2.5 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+              >
                 <input
                   type="checkbox"
                   checked={selectedRowIds.size > 0 && selectedRowIds.size === items.length}
@@ -382,12 +395,18 @@ export const ListView: React.FC<ListViewProps> = ({
               </th>
 
               {/* Suspect Flag Column ($ / lightning) */}
-              <th className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`} title="Suspect Link Indicator">
+              <th
+                className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                title="Suspect Link Indicator"
+              >
                 <Zap className="w-3.5 h-3.5 mx-auto" />
               </th>
 
               {/* Lock Column */}
-              <th className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`} title="Item Locked (QT-01)">
+              <th
+                className={`py-2 px-2 w-8 text-center border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                title="Item Locked (QT-01)"
+              >
                 <Lock className="w-3.5 h-3.5 mx-auto" />
               </th>
 
@@ -396,7 +415,9 @@ export const ListView: React.FC<ListViewProps> = ({
                 <th
                   onClick={() => onSortChange('itemKey')}
                   className={`py-2 px-3 w-32 border-r cursor-pointer ${
-                    isDark ? 'border-[#30363d] hover:bg-[#282e38]' : 'border-slate-400/40 hover:bg-slate-600/30'
+                    isDark
+                      ? 'border-[#30363d] hover:bg-[#282e38]'
+                      : 'border-slate-400/40 hover:bg-slate-600/30'
                   }`}
                 >
                   ID
@@ -408,7 +429,9 @@ export const ListView: React.FC<ListViewProps> = ({
                 <th
                   onClick={() => onSortChange('name')}
                   className={`py-2 px-3 border-r cursor-pointer ${
-                    isDark ? 'border-[#30363d] hover:bg-[#282e38]' : 'border-slate-400/40 hover:bg-slate-600/30'
+                    isDark
+                      ? 'border-[#30363d] hover:bg-[#282e38]'
+                      : 'border-slate-400/40 hover:bg-slate-600/30'
                   }`}
                 >
                   Name
@@ -417,17 +440,29 @@ export const ListView: React.FC<ListViewProps> = ({
 
               {/* Optional Status Column */}
               {visibleColumns.status && (
-                <th className={`py-2 px-3 w-28 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}>Status</th>
+                <th
+                  className={`py-2 px-3 w-28 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                >
+                  Status
+                </th>
               )}
 
               {/* Optional Priority Column */}
               {visibleColumns.priority && (
-                <th className={`py-2 px-3 w-24 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}>Priority</th>
+                <th
+                  className={`py-2 px-3 w-24 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                >
+                  Priority
+                </th>
               )}
 
               {/* Optional Assignee Column */}
               {visibleColumns.assignee && (
-                <th className={`py-2 px-3 w-36 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}>Assignee</th>
+                <th
+                  className={`py-2 px-3 w-36 border-r ${isDark ? 'border-[#30363d]' : 'border-slate-400/40'}`}
+                >
+                  Assignee
+                </th>
               )}
 
               {/* Connected Users Column matching Image 3 */}
@@ -457,21 +492,22 @@ export const ListView: React.FC<ListViewProps> = ({
                 </td>
               </tr>
             ) : (
-              items.map((item) => {
+              items.map(item => {
                 const isSelected = selectedRowIds.has(item.id) || selectedItemId === item.id;
 
                 return (
                   <tr
                     key={item.id}
                     onClick={() => setSelectedItemId(isSelected ? null : item.id)}
+                    onDoubleClick={() => onOpenItem && onOpenItem(item.id, item.itemKey, item.name)}
                     className={`cursor-pointer transition-colors border-b ${
                       isSelected
                         ? isDark
                           ? 'bg-[#1f3a5f] text-white'
                           : 'bg-[#e7f3ff]'
                         : isDark
-                        ? 'hover:bg-[#161b22] text-slate-300 border-[#21262d]'
-                        : 'hover:bg-[#f3f7fb] border-slate-100'
+                          ? 'hover:bg-[#161b22] text-slate-300 border-[#21262d]'
+                          : 'hover:bg-[#f3f7fb] border-slate-100'
                     }`}
                   >
                     {/* Row Checkbox */}
@@ -479,7 +515,7 @@ export const ListView: React.FC<ListViewProps> = ({
                       <input
                         type="checkbox"
                         checked={selectedRowIds.has(item.id)}
-                        onClick={(e) => handleToggleRow(item.id, e)}
+                        onClick={e => handleToggleRow(item.id, e)}
                         onChange={() => {}}
                         className="rounded border-slate-300 text-blue-600 focus:ring-0 h-3.5 w-3.5"
                       />
@@ -508,7 +544,13 @@ export const ListView: React.FC<ListViewProps> = ({
                       <td className="py-2 px-3 font-medium whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {renderTypeIcon(item.itemTypeKey)}
-                          <span className="text-[#0088cc] hover:underline font-bold">
+                          <span
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (onOpenItem) onOpenItem(item.id, item.itemKey, item.name);
+                            }}
+                            className="text-[#0088cc] hover:underline font-bold cursor-pointer"
+                          >
                             {item.itemKey}
                           </span>
                         </div>
@@ -528,7 +570,9 @@ export const ListView: React.FC<ListViewProps> = ({
 
                     {/* Status */}
                     {visibleColumns.status && (
-                      <td className={`py-2 px-3 font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      <td
+                        className={`py-2 px-3 font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}
+                      >
                         {item.status}
                       </td>
                     )}
@@ -542,14 +586,19 @@ export const ListView: React.FC<ListViewProps> = ({
 
                     {/* Assignee */}
                     {visibleColumns.assignee && (
-                      <td className={`py-2 px-3 truncate ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                      <td
+                        className={`py-2 px-3 truncate ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
+                      >
                         {item.connectedUser || 'Unassigned'}
                       </td>
                     )}
 
                     {/* Connected Users Silhouette icon matching Image 3 */}
                     <td className="py-2 px-3 text-center">
-                      <div className="flex items-center justify-center text-cyan-500" title="Connected Users">
+                      <div
+                        className="flex items-center justify-center text-cyan-500"
+                        title="Connected Users"
+                      >
                         <User className="w-3.5 h-3.5" />
                       </div>
                     </td>
@@ -563,7 +612,9 @@ export const ListView: React.FC<ListViewProps> = ({
         {/* 3. Floating Bottom-Right Pagination Bar matching Image 3 & 4 */}
         <div
           className={`absolute right-4 bottom-4 rounded shadow-md px-2 py-1 flex items-center gap-1.5 text-xs z-20 border transition-colors ${
-            isDark ? 'bg-[#161b22] border-[#30363d] text-slate-200' : 'bg-white border-slate-300 text-slate-700'
+            isDark
+              ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+              : 'bg-white border-slate-300 text-slate-700'
           }`}
         >
           <button
@@ -595,10 +646,14 @@ export const ListView: React.FC<ListViewProps> = ({
             readOnly
             value={page}
             className={`w-7 text-center rounded py-0.5 text-xs font-semibold border ${
-              isDark ? 'bg-[#0d1117] border-[#30363d] text-white' : 'bg-white border-slate-300 text-slate-900'
+              isDark
+                ? 'bg-[#0d1117] border-[#30363d] text-white'
+                : 'bg-white border-slate-300 text-slate-900'
             }`}
           />
-          <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>of {totalPages}</span>
+          <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>
+            of {totalPages}
+          </span>
 
           <button
             type="button"
@@ -633,6 +688,26 @@ export const ListView: React.FC<ListViewProps> = ({
         onToggleColumn={toggleColumn}
         onSelectAll={() => {}}
       />
+
+      {/* Floating Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={selectedRowIds.size}
+        onOpenBulkEdit={() => setIsBulkModalOpen(true)}
+        onClearSelection={() => setSelectedRowIds(new Set())}
+      />
+
+      {/* Bulk Update Modal */}
+      {currentProject && (
+        <BulkUpdateModal
+          isOpen={isBulkModalOpen}
+          onClose={() => setIsBulkModalOpen(false)}
+          projectId={currentProject.id}
+          selectedItemIds={Array.from(selectedRowIds)}
+          folders={folders}
+          members={members}
+          onComplete={() => setSelectedRowIds(new Set())}
+        />
+      )}
     </div>
   );
 };

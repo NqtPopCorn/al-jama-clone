@@ -20,9 +20,7 @@ export const LoginPage: React.FC = () => {
       await login(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || 'Invalid username or password. Please try again.',
-      );
+      setError(err.response?.data?.message || 'Invalid username or password. Please try again.');
     }
   };
 
@@ -46,9 +44,19 @@ export const LoginPage: React.FC = () => {
                 fill="currentColor"
               >
                 {/* Stylized 3-blade Jama emblem */}
-                <path d="M50 15 C45 15, 38 25, 36 38 C34 50, 42 62, 50 62 C58 62, 66 50, 64 38 C62 25, 55 15, 50 15 Z" fill="#0284c7" />
-                <path d="M22 68 C22 62, 32 58, 44 65 C55 72, 58 84, 52 90 C46 96, 32 94, 25 85 C20 78, 22 71, 22 68 Z" fill="#0369a1" opacity="0.9" />
-                <path d="M78 68 C78 62, 68 58, 56 65 C45 72, 42 84, 48 90 C54 96, 68 94, 75 85 C80 78, 78 71, 78 68 Z" fill="#38bdf8" />
+                <path
+                  d="M50 15 C45 15, 38 25, 36 38 C34 50, 42 62, 50 62 C58 62, 66 50, 64 38 C62 25, 55 15, 50 15 Z"
+                  fill="#0284c7"
+                />
+                <path
+                  d="M22 68 C22 62, 32 58, 44 65 C55 72, 58 84, 52 90 C46 96, 32 94, 25 85 C20 78, 22 71, 22 68 Z"
+                  fill="#0369a1"
+                  opacity="0.9"
+                />
+                <path
+                  d="M78 68 C78 62, 68 58, 56 65 C45 72, 42 84, 48 90 C54 96, 68 94, 75 85 C80 78, 78 71, 78 68 Z"
+                  fill="#38bdf8"
+                />
               </svg>
               <div className="flex flex-col leading-none">
                 <div className="flex items-baseline gap-1">
@@ -77,28 +85,24 @@ export const LoginPage: React.FC = () => {
             {/* Main Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1">
-                <label className="text-xs font-normal text-slate-600 block">
-                  Username
-                </label>
+                <label className="text-xs font-normal text-slate-600 block">Username</label>
                 <input
                   type="text"
                   required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={e => setUsername(e.target.value)}
                   className="w-full px-3 py-1.5 border border-slate-300 rounded text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-normal text-slate-600 block">
-                  Password
-                </label>
+                <label className="text-xs font-normal text-slate-600 block">Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     className="w-full px-3 py-1.5 border border-slate-300 rounded text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white pr-9"
                   />
                   <button
@@ -114,9 +118,11 @@ export const LoginPage: React.FC = () => {
               <div className="flex items-center justify-between pt-1">
                 <a
                   href="#forgot"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.preventDefault();
-                    alert('Please contact your System Administrator (admin@aljama.local) to reset credentials.');
+                    alert(
+                      'Please contact your System Administrator (admin@aljama.local) to reset credentials.',
+                    );
                   }}
                   className="text-xs text-[#0284c7] hover:underline"
                 >
@@ -169,7 +175,10 @@ export const LoginPage: React.FC = () => {
 
           {/* Copyright Section (Matching Image 1) */}
           <div className="pt-8 text-[11px] text-slate-400 leading-relaxed border-t border-slate-100 mt-8">
-            <p>© 2026 Jama Software. All rights reserved. <span className="text-[#0284c7]">www.jamasoftware.com</span></p>
+            <p>
+              © 2026 Jama Software. All rights reserved.{' '}
+              <span className="text-[#0284c7]">www.jamasoftware.com</span>
+            </p>
             <p>Build date: 2026/09/09 17:00 — Version: Jama Connect 8.79.0 (AL-JAMA MVP)</p>
           </div>
         </div>
@@ -208,7 +217,10 @@ export const LoginPage: React.FC = () => {
               <div className="flex items-center gap-3 p-2.5 rounded border border-slate-200 bg-slate-50">
                 <div className="w-9 h-9 rounded bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                   <svg viewBox="0 0 100 100" className="w-5 h-5" fill="currentColor">
-                    <path d="M50 15 C45 15, 38 25, 36 38 C34 50, 42 62, 50 62 C58 62, 66 50, 64 38 C62 25, 55 15, 50 15 Z" fill="#0284c7" />
+                    <path
+                      d="M50 15 C45 15, 38 25, 36 38 C34 50, 42 62, 50 62 C58 62, 66 50, 64 38 C62 25, 55 15, 50 15 Z"
+                      fill="#0284c7"
+                    />
                   </svg>
                 </div>
                 <div>
@@ -242,9 +254,16 @@ export const LoginPage: React.FC = () => {
       {/* Footer Legal Banner (Matching Image 1 bottom) */}
       <footer className="w-full bg-[#f8fafc] border-t border-slate-200 px-6 py-2.5 text-[11px] text-slate-500 text-center flex items-center justify-between">
         <span className="truncate">
-          Jama is designed for a minimum of 1024 x 768 screen resolution. Javascript MUST be enabled. For a list of supported browsers, please visit our <span className="text-[#0284c7] cursor-pointer hover:underline">support community</span>. View our <span className="text-[#0284c7] cursor-pointer hover:underline">privacy policy</span>.
+          Jama is designed for a minimum of 1024 x 768 screen resolution. Javascript MUST be
+          enabled. For a list of supported browsers, please visit our{' '}
+          <span className="text-[#0284c7] cursor-pointer hover:underline">support community</span>.
+          View our{' '}
+          <span className="text-[#0284c7] cursor-pointer hover:underline">privacy policy</span>.
         </span>
-        <div className="w-3 h-3 rounded-full bg-amber-500/80 shrink-0 ml-3" title="Jama System Status: Operational" />
+        <div
+          className="w-3 h-3 rounded-full bg-amber-500/80 shrink-0 ml-3"
+          title="Jama System Status: Operational"
+        />
       </footer>
     </div>
   );

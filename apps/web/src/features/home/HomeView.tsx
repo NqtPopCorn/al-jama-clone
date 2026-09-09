@@ -3,13 +3,7 @@ import { useProjectStore } from '../../stores/project.store';
 import { useThemeStore } from '../../stores/theme.store';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import {
-  Folder,
-  FileText,
-  Layers,
-  CheckSquare,
-  Flag,
-} from 'lucide-react';
+import { Folder, FileText, Layers, CheckSquare, Flag } from 'lucide-react';
 import { ProjectSummary } from '@aljama/shared';
 
 interface HomeViewProps {
@@ -30,9 +24,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
     >
       <div
         className={`max-w-6xl mx-auto rounded-lg border p-6 lg:p-8 space-y-6 transition-colors ${
-          isDark
-            ? 'bg-[#161b22] border-[#30363d]'
-            : 'bg-white border-slate-200 shadow-sm'
+          isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200 shadow-sm'
         }`}
       >
         {/* Title */}
@@ -74,7 +66,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                     {currentProject?.name || 'Medical Device Control System'}
                   </span>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono">Project</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  Project
+                </Badge>
               </div>
 
               {/* Recently viewed item 2 */}
@@ -92,7 +86,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                     {currentProject?.name}: 1. System Requirements
                   </span>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono">Folder</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  Folder
+                </Badge>
               </div>
 
               {/* Recently viewed item 3 */}
@@ -110,7 +106,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                     {currentProject?.name}: 1.1 Safety & Alarms
                   </span>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono">Folder</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  Folder
+                </Badge>
               </div>
 
               {/* Recently viewed item 4 */}
@@ -128,7 +126,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                     {currentProject?.name}: 2. Software Architecture
                   </span>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono">Folder</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  Folder
+                </Badge>
               </div>
 
               {/* Recently viewed item 5 */}
@@ -146,7 +146,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                     {currentProject?.name}: 3. Verification & Validation
                   </span>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono">Folder</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  Folder
+                </Badge>
               </div>
             </div>
           </div>
@@ -183,18 +185,25 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                     <span>14 days left</span>
                     <div className="flex items-center gap-1.5">
                       <span>Progress</span>
-                      <div className={`w-14 h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '25%' }} />
+                      <div
+                        className={`w-14 h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}
+                      >
+                        <div
+                          className="h-full bg-emerald-500 rounded-full"
+                          style={{ width: '25%' }}
+                        />
                       </div>
                       <span className="font-mono">25%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className={`pt-2 border-t text-right ${isDark ? 'border-[#30363d]' : 'border-slate-100'}`}>
+                <div
+                  className={`pt-2 border-t text-right ${isDark ? 'border-[#30363d]' : 'border-slate-100'}`}
+                >
                   <a
                     href="#reviews"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       alert('Review Center is active across assigned review baselines!');
                     }}
@@ -221,7 +230,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                 }`}
               >
                 <div className={isDark ? 'text-slate-300' : 'text-slate-600'}>
-                  You are in <strong className="text-blue-500 font-bold">1 open conversation</strong>
+                  You are in{' '}
+                  <strong className="text-blue-500 font-bold">1 open conversation</strong>
                 </div>
 
                 <div className="flex items-start gap-2.5 pt-1">
@@ -236,10 +246,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                   </div>
                 </div>
 
-                <div className={`pt-2 border-t text-right ${isDark ? 'border-[#30363d]' : 'border-slate-100'}`}>
+                <div
+                  className={`pt-2 border-t text-right ${isDark ? 'border-[#30363d]' : 'border-slate-100'}`}
+                >
                   <a
                     href="#stream"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       alert('Stream conversations are accessible directly from item panels!');
                     }}

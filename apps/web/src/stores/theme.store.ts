@@ -8,16 +8,16 @@ interface ThemeState {
   toggleHeaderTheme: () => void;
 }
 
-export const useThemeStore = create<ThemeState>((set) => ({
+export const useThemeStore = create<ThemeState>(set => ({
   headerTheme: (localStorage.getItem('aljama_header_theme') as HeaderTheme) || 'dark',
 
-  setHeaderTheme: (headerTheme) => {
+  setHeaderTheme: headerTheme => {
     localStorage.setItem('aljama_header_theme', headerTheme);
     set({ headerTheme });
   },
 
   toggleHeaderTheme: () => {
-    set((state) => {
+    set(state => {
       const next = state.headerTheme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('aljama_header_theme', next);
       return { headerTheme: next };

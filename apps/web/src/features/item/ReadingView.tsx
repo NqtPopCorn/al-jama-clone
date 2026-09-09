@@ -62,7 +62,7 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
         {
           label: 'The impact of which is',
           content:
-            'Dentists cannot free themselves to focus on a patient\'s dental needs and must go between a surgical environment to one that is best accessed from within a cubicle.',
+            "Dentists cannot free themselves to focus on a patient's dental needs and must go between a surgical environment to one that is best accessed from within a cubicle.",
         },
         {
           label: 'Software that is user-friendly and focused more on clinical needs',
@@ -78,15 +78,18 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
       specifications: [
         {
           label: 'For',
-          content: 'Dental practitioners and clinical assistants managing high-throughput patient visits.',
+          content:
+            'Dental practitioners and clinical assistants managing high-throughput patient visits.',
         },
         {
           label: 'Who',
-          content: 'Require zero-touch or minimal-latency clinical record access in sterile operational environments.',
+          content:
+            'Require zero-touch or minimal-latency clinical record access in sterile operational environments.',
         },
         {
           label: 'The MediKiosk Pro is',
-          content: 'An integrated touchscreen and mobile requirements-verified clinical companion platform.',
+          content:
+            'An integrated touchscreen and mobile requirements-verified clinical companion platform.',
         },
       ],
     },
@@ -113,7 +116,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
           >
             {currentProject?.name || 'MediKiosk Pro'}
           </h2>
-          <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>96 items</span>
+          <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            96 items
+          </span>
           <button
             type="button"
             onClick={onOpenFilter}
@@ -147,7 +152,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
               type="button"
               onClick={() => setActiveView('list')}
               className={`p-1 rounded transition-colors ${
-                isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                isDark
+                  ? 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
               }`}
               title="List View (Image 3)"
             >
@@ -212,7 +219,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
       {/* 2. Top Reading View Selection Bar (Gray header with checkbox matching Image 4) */}
       <div
         className={`h-7 border-b flex items-center px-3 gap-2 ${
-          isDark ? 'bg-[#21262d] border-[#30363d] text-slate-200' : 'bg-[#8c949e] border-slate-300 text-white'
+          isDark
+            ? 'bg-[#21262d] border-[#30363d] text-slate-200'
+            : 'bg-[#8c949e] border-slate-300 text-white'
         }`}
       >
         <input
@@ -223,7 +232,7 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
 
       {/* 3. Document Body with Section Numbering & Specification Table matching Image 4 */}
       <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-w-5xl mx-auto w-full relative">
-        {defaultSections.map((sec) => (
+        {defaultSections.map(sec => (
           <div key={sec.id} className="space-y-4">
             {/* Section Heading with Checkbox matching Image 4 */}
             <div className="flex items-center gap-3 pt-2">
@@ -231,7 +240,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
                 type="checkbox"
                 className="rounded border-slate-300 text-blue-600 focus:ring-0 h-3.5 w-3.5"
               />
-              <h3 className={`text-sm font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h3
+                className={`text-sm font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}
+              >
                 <span className="text-[#0088cc] mr-1.5 font-bold">{sec.number}</span>
                 {sec.title}
               </h3>
@@ -288,7 +299,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
       {/* 4. Floating Bottom-Right Pagination Bar matching Image 4 */}
       <div
         className={`absolute right-4 bottom-4 rounded shadow-md px-2 py-1 flex items-center gap-1.5 text-xs z-20 border transition-colors ${
-          isDark ? 'bg-[#161b22] border-[#30363d] text-slate-200' : 'bg-white border-slate-300 text-slate-700'
+          isDark
+            ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+            : 'bg-white border-slate-300 text-slate-700'
         }`}
       >
         <button
@@ -305,7 +318,7 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
         <button
           type="button"
           disabled={page <= 1}
-          onClick={() => setPage((p) => p - 1)}
+          onClick={() => setPage(p => p - 1)}
           className={`p-1 disabled:opacity-30 rounded transition-colors ${
             isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
           }`}
@@ -320,7 +333,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
           readOnly
           value={page}
           className={`w-7 text-center rounded py-0.5 text-xs font-semibold border ${
-            isDark ? 'bg-[#0d1117] border-[#30363d] text-white' : 'bg-white border-slate-300 text-slate-900'
+            isDark
+              ? 'bg-[#0d1117] border-[#30363d] text-white'
+              : 'bg-white border-slate-300 text-slate-900'
           }`}
         />
         <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>of 2</span>
@@ -328,7 +343,7 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
         <button
           type="button"
           disabled={page >= 2}
-          onClick={() => setPage((p) => p + 1)}
+          onClick={() => setPage(p => p + 1)}
           className={`p-1 disabled:opacity-30 rounded transition-colors ${
             isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
           }`}

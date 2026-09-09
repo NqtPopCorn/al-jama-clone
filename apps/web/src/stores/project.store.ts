@@ -18,7 +18,7 @@ interface ProjectState {
   toggleSidebar: () => void;
 }
 
-export const useProjectStore = create<ProjectState>((set) => ({
+export const useProjectStore = create<ProjectState>(set => ({
   currentProject: null,
   selectedFolderId: null,
   selectedItemId: null,
@@ -26,7 +26,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
   activeView: 'list',
   isSidebarOpen: true,
 
-  setCurrentProject: (project) =>
+  setCurrentProject: project =>
     set({
       currentProject: project,
       selectedFolderId: null,
@@ -34,20 +34,20 @@ export const useProjectStore = create<ProjectState>((set) => ({
       searchQuery: '',
     }),
 
-  setSelectedFolderId: (folderId) =>
+  setSelectedFolderId: folderId =>
     set({
       selectedFolderId: folderId,
       selectedItemId: null, // clear item selection when folder is selected
     }),
 
-  setSelectedItemId: (itemId) =>
+  setSelectedItemId: itemId =>
     set({
       selectedItemId: itemId,
     }),
 
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setSearchQuery: searchQuery => set({ searchQuery }),
 
-  setActiveView: (activeView) => set({ activeView }),
+  setActiveView: activeView => set({ activeView }),
 
-  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  toggleSidebar: () => set(state => ({ isSidebarOpen: !state.isSidebarOpen })),
 }));

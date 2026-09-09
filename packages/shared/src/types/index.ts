@@ -92,3 +92,115 @@ export interface ItemSummary {
   updatedAt: string;
   createdAt: string;
 }
+
+export interface ItemDetail extends ItemSummary {
+  folder?: { id: string; name: string } | null;
+  creator: { id: string; fullName: string; email?: string };
+  updater?: { id: string; fullName: string } | null;
+  versionsCount: number;
+  isSubscribed: boolean;
+  subscriptionsCount: number;
+  connectedUsersCount: number;
+  commentsCount: number;
+  relationshipsCount: number;
+}
+
+export interface ItemVersionSummary {
+  id: string;
+  itemId: string;
+  versionNumber: number;
+  snapshot: Record<string, unknown>;
+  changeDetails?: string | null;
+  changeComment?: string | null;
+  changedBy: {
+    id: string;
+    fullName: string;
+    avatarUrl?: string | null;
+  };
+  changedAt: string;
+}
+
+export interface ItemVersionDiff {
+  versionA: number;
+  versionB: number;
+  nameDiff: { old: string; new: string; changed: boolean };
+  descriptionDiffHtml: string;
+  fieldDiffs: Array<{
+    fieldKey: string;
+    fieldName: string;
+    oldValue: unknown;
+    newValue: unknown;
+    changed: boolean;
+  }>;
+}
+
+export interface ItemTypeFieldSummary {
+  id: string;
+  fieldLabel: string;
+  name?: string;
+  fieldKey: string;
+  fieldType: string;
+  isRequired: boolean;
+  options?: unknown;
+  displayOrder: number;
+}
+
+export interface ItemTypeWithFields {
+  id: string;
+  key: string;
+  name: string;
+  icon?: string | null;
+  description?: string | null;
+  fields: ItemTypeFieldSummary[];
+}
+
+export interface FolderSummary {
+  id: string;
+  name: string;
+  parentFolderId?: string | null;
+  orderIndex: number;
+}
+
+export interface ProjectMemberSummary {
+  id: string;
+  userId: string;
+  fullName: string;
+  username: string;
+  avatarUrl?: string | null;
+  projectRole: string;
+}
+
+export interface CreateItemDto {
+  name: string;
+  itemTypeId: string;
+  folderId?: string | null;
+  description?: string | null;
+  priority?: string | null;
+  status?: string | null;
+  assigneeId?: string | null;
+  customFields?: Record<string, unknown> | null;
+}
+
+export interface UpdateItemDto {
+  name?: string;
+  folderId?: string | null;
+  description?: string | null;
+  priority?: string | null;
+  status?: string | null;
+  assigneeId?: string | null;
+  customFields?: Record<string, unknown> | null;
+  changeComment?: string | null;
+}
+
+export interface BulkUpdateItemsDto {
+  itemIds: string[];
+  priority?: string;
+  status?: string;
+  assigneeId?: string | null;
+  folderId?: string | null;
+}
+
+export interface ReuseItemDto {
+  targetFolderId?: string | null;
+  namePrefix?: string;
+}
