@@ -1,0 +1,859 @@
+// Prisma Schema for AL-JAMA — JAMA-Clone MVP
+// Conforms to Database_Schema_JAMA_Clone_MVP.md & .agents conventions
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+enum LicenseType {
+  FULL             @map("full")
+  REVIEWER_LIMITED @map("reviewer_limited")
+
+  @@map("license_type")
+}
+
+enum UserStatus {
+  ACTIVE   @map("active")
+  INACTIVE @map("inactive")
+
+  @@map("user_status")
+}
+
+enum ProjectRole {
+  ADMINISTRATOR @map("administrator")
+  MEMBER        @map("member")
+
+  @@map("project_role")
+}
+
+enum ProjectStatus {
+  ACTIVE   @map("active")
+  ARCHIVED @map("archived")
+
+  @@map("project_status")
+}
+
+enum FieldType {
+  TEXT         @map("text")
+  RICHTEXT     @map("richtext")
+  NUMBER       @map("number")
+  DATE         @map("date")
+  DROPDOWN     @map("dropdown")
+  USER         @map("user")
+  MULTI_SELECT @map("multi_select")
+
+  @@map("field_type")
+}
+
+enum ItemActivityType {
+  CREATED    @map("created")
+  EDITED     @map("edited")
+  COMMENTED  @map("commented")
+  SUBSCRIBED @map("subscribed")
+  MENTIONED  @map("mentioned")
+  VIEWED     @map("viewed")
+
+  @@map("item_activity_type")
+}
+
+enum ScopeType {
+  ITEM         @map("item")
+  PROJECT      @map("project")
+  ORGANIZATION @map("organization")
+
+  @@map("scope_type")
+}
+
+enum MentionedType {
+  USER  @map("user")
+  GROUP @map("group")
+  ITEM  @map("item")
+
+  @@map("mentioned_type")
+}
+
+enum ReviewTemplateType {
+  APPROVAL @map("approval")
+  PEER     @map("peer")
+
+  @@map("review_template_type")
+}
+
+enum ReviewStatus {
+  DRAFT               @map("draft")
+  ACTIVE              @map("active")
+  CLOSED_FOR_FEEDBACK @map("closed_for_feedback")
+  ARCHIVED            @map("archived")
+  FINALIZED           @map("finalized")
+
+  @@map("review_status")
+}
+
+enum ReviewSourceType {
+  MANUAL @map("manual")
+  FILTER @map("filter")
+
+  @@map("review_source_type")
+}
+
+enum ReviewRole {
+  MODERATOR @map("moderator")
+  APPROVER  @map("approver")
+  REVIEWER  @map("reviewer")
+
+  @@map("review_role")
+}
+
+enum ReviewItemStatusValue {
+  NOT_REVIEWED @map("not_reviewed")
+  REVIEWED     @map("reviewed")
+  APPROVED     @map("approved")
+  REJECTED     @map("rejected")
+
+  @@map("review_item_status_value")
+}
+
+enum ReviewCommentLabel {
+  GENERAL         @map("general")
+  ISSUE           @map("issue")
+  QUESTION        @map("question")
+  PROPOSED_CHANGE @map("proposed_change")
+
+  @@map("review_comment_label")
+}
+
+enum TestResult {
+  NOT_RUN          @map("not_run")
+  PASS             @map("pass")
+  FAIL             @map("fail")
+  PASS_WITH_ERRORS @map("pass_with_errors")
+  BLOCKED          @map("blocked")
+
+  @@map("test_result")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: USER & AUTH (users, user_groups, user_group_members, project_members)
+// -----------------------------------------------------------------------------
+
+model User {
+  id           String      @id @default(uuid()) @db.Uuid
+  username     String      @unique @db.VarChar(100)
+  email        String      @unique @db.VarChar(255)
+  passwordHash String      @map("password_hash") @db.VarChar(255)
+  fullName     String      @map("full_name") @db.VarChar(255)
+  avatarUrl    String?     @map("avatar_url") @db.VarChar(500)
+  licenseType  LicenseType @default(FULL) @map("license_type")
+  status       UserStatus  @default(ACTIVE)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  groupMembers            UserGroupMember[]
+  projectMembers          ProjectMember[]
+  createdProjects         Project[]               @relation("ProjectCreatedBy")
+  assignedItems           Item[]                  @relation("ItemAssignee")
+  lockedItems             Item[]                  @relation("ItemLockedBy")
+  createdItems            Item[]                  @relation("ItemCreatedBy")
+  updatedItems            Item[]                  @relation("ItemUpdatedBy")
+  itemVersions            ItemVersion[]           @relation("VersionChangedBy")
+  itemSubscriptions       ItemSubscription[]
+  itemAttachments         ItemAttachment[]        @relation("AttachmentUploadedBy")
+  itemActivities          ItemActivityLog[]
+  createdRelationships    ItemRelationship[]      @relation("RelationshipCreatedBy")
+  clearedRelationships    ItemRelationship[]      @relation("RelationshipClearedBy")
+  comments                Comment[]               @relation("CommentAuthor")
+  resolvedCommentActions  CommentAction[]         @relation("ActionResolvedBy")
+  createdReviewTemplates  ReviewTemplate[]        @relation("TemplateCreatedBy")
+  createdReviews          Review[]                @relation("ReviewCreatedBy")
+  reviewParticipants      ReviewParticipant[]
+  reviewItemStatuses      ReviewItemStatus[]
+  reviewComments          ReviewComment[]         @relation("ReviewCommentAuthor")
+  reviewSignatures        ReviewSignature[]
+  createdTestPlans        TestPlan[]              @relation("TestPlanCreatedBy")
+  testPlanTesters         TestPlanTester[]
+  createdTestCycles       TestCycle[]             @relation("TestCycleCreatedBy")
+  executedTestRuns        TestRun[]               @relation("TestRunExecutedBy")
+  notifications           Notification[]
+  auditLogs               AuditLog[]
+
+  @@map("users")
+}
+
+model UserGroup {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members UserGroupMember[]
+
+  @@map("user_groups")
+}
+
+model UserGroupMember {
+  groupId   String   @map("group_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  group UserGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@map("user_group_members")
+}
+
+model ProjectMember {
+  id          String      @id @default(uuid()) @db.Uuid
+  projectId   String      @map("project_id") @db.Uuid
+  userId      String      @map("user_id") @db.Uuid
+  projectRole ProjectRole @map("project_role")
+  joinedAt    DateTime    @default(now()) @map("joined_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: PROJECT (projects, folders, item_types, item_type_fields, relationship_types)
+// -----------------------------------------------------------------------------
+
+model Project {
+  id          String        @id @default(uuid()) @db.Uuid
+  key         String        @unique @db.VarChar(50)
+  name        String        @db.VarChar(255)
+  description String?       @db.Text
+  status      ProjectStatus @default(ACTIVE)
+  createdBy   String        @map("created_by") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  creator           User               @relation("ProjectCreatedBy", fields: [createdBy], references: [id])
+  members           ProjectMember[]
+  folders           Folder[]
+  itemTypes         ItemType[]
+  relationshipTypes RelationshipType[]
+  items             Item[]
+  relationships     ItemRelationship[]
+  reviewTemplates   ReviewTemplate[]
+  reviews           Review[]
+  testPlans         TestPlan[]
+
+  @@map("projects")
+}
+
+model Folder {
+  id             String   @id @default(uuid()) @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  parentFolderId String?  @map("parent_folder_id") @db.Uuid
+  name           String   @db.VarChar(255)
+  orderIndex     Int      @default(0) @map("order_index")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: Cascade)
+  children Folder[] @relation("FolderTree")
+  items    Item[]
+
+  @@map("folders")
+}
+
+model ItemType {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String?  @map("project_id") @db.Uuid
+  key         String   @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  icon        String?  @db.VarChar(100)
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  project Project?        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fields  ItemTypeField[]
+  items   Item[]
+
+  @@unique([projectId, key])
+  @@map("item_types")
+}
+
+model ItemTypeField {
+  id           String    @id @default(uuid()) @db.Uuid
+  itemTypeId   String    @map("item_type_id") @db.Uuid
+  fieldKey     String    @map("field_key") @db.VarChar(100)
+  fieldLabel   String    @map("field_label") @db.VarChar(255)
+  fieldType    FieldType @map("field_type")
+  isRequired   Boolean   @default(false) @map("is_required")
+  options      Json?     @db.JsonB
+  displayOrder Int       @default(0) @map("display_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  itemType ItemType @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([itemTypeId, fieldKey])
+  @@map("item_type_fields")
+}
+
+model RelationshipType {
+  id                       String   @id @default(uuid()) @db.Uuid
+  projectId                String?  @map("project_id") @db.Uuid
+  name                     String   @db.VarChar(255)
+  inverseName              String   @map("inverse_name") @db.VarChar(255)
+  isRequiredDefault        Boolean  @default(false) @map("is_required_default")
+  suspectOnUpstreamChange  Boolean  @default(true) @map("suspect_on_upstream_change")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  project       Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  relationships ItemRelationship[]
+
+  @@map("relationship_types")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: ITEM (items, item_versions, item_subscriptions, item_attachments, item_activity_log)
+// -----------------------------------------------------------------------------
+
+model Item {
+  id             String    @id @default(uuid()) @db.Uuid
+  projectId      String    @map("project_id") @db.Uuid
+  folderId       String?   @map("folder_id") @db.Uuid
+  itemTypeId     String    @map("item_type_id") @db.Uuid
+  itemKey        String    @unique @map("item_key") @db.VarChar(100)
+  name           String    @db.VarChar(500)
+  description    String?   @db.Text
+  assigneeId     String?   @map("assignee_id") @db.Uuid
+  priority       String?   @db.VarChar(50)
+  status         String?   @db.VarChar(100)
+  customFields   Json?     @map("custom_fields") @db.JsonB
+  currentVersion Int       @default(1) @map("current_version")
+  lockedBy       String?   @map("locked_by") @db.Uuid
+  lockedAt       DateTime? @map("locked_at")
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  createdBy      String    @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  project                 Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folder                  Folder?              @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  itemType                ItemType             @relation(fields: [itemTypeId], references: [id])
+  assignee                User?                @relation("ItemAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  locker                  User?                @relation("ItemLockedBy", fields: [lockedBy], references: [id], onDelete: SetNull)
+  creator                 User                 @relation("ItemCreatedBy", fields: [createdBy], references: [id])
+  updater                 User?                @relation("ItemUpdatedBy", fields: [updatedBy], references: [id])
+  versions                ItemVersion[]
+  subscriptions           ItemSubscription[]
+  attachments             ItemAttachment[]
+  activityLogs            ItemActivityLog[]
+  upstreamRelationships   ItemRelationship[]   @relation("UpstreamItem")
+  downstreamRelationships ItemRelationship[]   @relation("DownstreamItem")
+  reviewItems             ReviewItem[]
+  testSteps               TestStep[]
+  testPlanCases           TestPlanCase[]
+  testRuns                TestRun[]
+  defectLinks             DefectTestRunLink[]  @relation("DefectItem")
+  testCaseDefectLinks     DefectTestRunLink[]  @relation("TestCaseDefectItem")
+
+  @@index([projectId, folderId])
+  @@index([projectId, itemTypeId])
+  @@map("items")
+}
+
+model ItemVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  itemId        String   @map("item_id") @db.Uuid
+  versionNumber Int      @map("version_number")
+  snapshot      Json     @db.JsonB
+  changeComment String?  @map("change_comment") @db.Text
+  changedBy     String   @map("changed_by") @db.Uuid
+  changedAt     DateTime @default(now()) @map("changed_at")
+
+  item            Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user            User             @relation("VersionChangedBy", fields: [changedBy], references: [id])
+  reviewBaselines ReviewBaseline[]
+
+  @@unique([itemId, versionNumber])
+  @@map("item_versions")
+}
+
+model ItemSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId])
+  @@map("item_subscriptions")
+}
+
+model ItemAttachment {
+  id         String   @id @default(uuid()) @db.Uuid
+  itemId     String   @map("item_id") @db.Uuid
+  fileName   String   @map("file_name") @db.VarChar(255)
+  fileUrl    String   @map("file_url") @db.Text
+  mimeType   String?  @map("mime_type") @db.VarChar(100)
+  sizeBytes  Int?     @map("size_bytes")
+  uploadedBy String   @map("uploaded_by") @db.Uuid
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User @relation("AttachmentUploadedBy", fields: [uploadedBy], references: [id])
+
+  @@map("item_attachments")
+}
+
+model ItemActivityLog {
+  id           String           @id @default(uuid()) @db.Uuid
+  itemId       String           @map("item_id") @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  activityType ItemActivityType @map("activity_type")
+  details      Json?            @db.JsonB
+  occurredAt   DateTime         @default(now()) @map("occurred_at")
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("item_activity_log")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: TRACEABILITY (item_relationships)
+// -----------------------------------------------------------------------------
+
+model ItemRelationship {
+  id                 String    @id @default(uuid()) @db.Uuid
+  projectId          String    @map("project_id") @db.Uuid
+  upstreamItemId     String    @map("upstream_item_id") @db.Uuid
+  downstreamItemId   String    @map("downstream_item_id") @db.Uuid
+  relationshipTypeId String    @map("relationship_type_id") @db.Uuid
+  isSuspect          Boolean   @default(false) @map("is_suspect")
+  suspectFlaggedAt   DateTime? @map("suspect_flagged_at")
+  suspectReason      String?   @map("suspect_reason") @db.Text
+  clearedBy          String?   @map("cleared_by") @db.Uuid
+  clearedAt          DateTime? @map("cleared_at")
+  createdBy          String    @map("created_by") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  upstreamItem     Item             @relation("UpstreamItem", fields: [upstreamItemId], references: [id], onDelete: Cascade)
+  downstreamItem   Item             @relation("DownstreamItem", fields: [downstreamItemId], references: [id], onDelete: Cascade)
+  relationshipType RelationshipType @relation(fields: [relationshipTypeId], references: [id])
+  creator          User             @relation("RelationshipCreatedBy", fields: [createdBy], references: [id])
+  clearer          User?            @relation("RelationshipClearedBy", fields: [clearedBy], references: [id])
+
+  @@unique([upstreamItemId, downstreamItemId, relationshipTypeId])
+  @@map("item_relationships")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: COLLABORATION (comments, comment_mentions, comment_hashtags, comment_actions)
+// -----------------------------------------------------------------------------
+
+model Comment {
+  id              String    @id @default(uuid()) @db.Uuid
+  scopeType       ScopeType @map("scope_type")
+  scopeId         String?   @map("scope_id") @db.Uuid
+  parentCommentId String?   @map("parent_comment_id") @db.Uuid
+  authorId        String    @map("author_id") @db.Uuid
+  content         String    @db.Text
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  parent   Comment?         @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies  Comment[]        @relation("CommentReplies")
+  author   User             @relation("CommentAuthor", fields: [authorId], references: [id])
+  mentions CommentMention[]
+  hashtags CommentHashtag[]
+  actions  CommentAction[]
+
+  @@map("comments")
+}
+
+model CommentMention {
+  id            String        @id @default(uuid()) @db.Uuid
+  commentId     String        @map("comment_id") @db.Uuid
+  mentionedType MentionedType @map("mentioned_type")
+  mentionedId   String        @map("mentioned_id") @db.Uuid
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("comment_mentions")
+}
+
+model CommentHashtag {
+  id        String @id @default(uuid()) @db.Uuid
+  commentId String @map("comment_id") @db.Uuid
+  tag       String @db.VarChar(100)
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("comment_hashtags")
+}
+
+model CommentAction {
+  id         String    @id @default(uuid()) @db.Uuid
+  commentId  String    @map("comment_id") @db.Uuid
+  actionText String    @map("action_text") @db.Text
+  isResolved Boolean   @default(false) @map("is_resolved")
+  resolvedBy String?   @map("resolved_by") @db.Uuid
+  resolvedAt DateTime? @map("resolved_at")
+
+  comment  Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  resolver User?   @relation("ActionResolvedBy", fields: [resolvedBy], references: [id])
+
+  @@map("comment_actions")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: REVIEW CENTER (10 tables)
+// -----------------------------------------------------------------------------
+
+model ReviewTemplate {
+  id                           String             @id @default(uuid()) @db.Uuid
+  projectId                    String             @map("project_id") @db.Uuid
+  name                         String             @db.VarChar(255)
+  type                         ReviewTemplateType
+  requiresSignature            Boolean            @default(false) @map("requires_signature")
+  enableTimeTracking           Boolean            @default(false) @map("enable_time_tracking")
+  allowApproverAddParticipant  Boolean            @default(false) @map("allow_approver_add_participant")
+  allowDelegate                Boolean            @default(false) @map("allow_delegate")
+  isEditableOnCreate           Boolean            @default(true) @map("is_editable_on_create")
+  createdBy                    String             @map("created_by") @db.Uuid
+  createdAt                    DateTime           @default(now()) @map("created_at")
+  updatedAt                    DateTime           @updatedAt @map("updated_at")
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator User     @relation("TemplateCreatedBy", fields: [createdBy], references: [id])
+  reviews Review[]
+
+  @@map("review_templates")
+}
+
+model Review {
+  id                    String           @id @default(uuid()) @db.Uuid
+  projectId             String           @map("project_id") @db.Uuid
+  templateId            String           @map("template_id") @db.Uuid
+  name                  String           @db.VarChar(255)
+  description           String?          @db.Text
+  status                ReviewStatus     @default(DRAFT)
+  sourceType            ReviewSourceType @default(MANUAL) @map("source_type")
+  sourceFilterId        String?          @map("source_filter_id") @db.Uuid
+  deadline              DateTime?
+  currentRevisionNumber Int              @default(1) @map("current_revision_number")
+  includeContext        Boolean          @default(false) @map("include_context")
+  createdBy             String           @map("created_by") @db.Uuid
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  template     ReviewTemplate      @relation(fields: [templateId], references: [id])
+  creator      User                @relation("ReviewCreatedBy", fields: [createdBy], references: [id])
+  items        ReviewItem[]
+  participants ReviewParticipant[]
+  revisions    ReviewRevision[]
+  baselines    ReviewBaseline[]
+  signatures   ReviewSignature[]
+
+  @@map("reviews")
+}
+
+model ReviewItem {
+  id            String   @id @default(uuid()) @db.Uuid
+  reviewId      String   @map("review_id") @db.Uuid
+  itemId        String   @map("item_id") @db.Uuid
+  orderIndex    Int      @default(0) @map("order_index")
+  isContextOnly Boolean  @default(false) @map("is_context_only")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  review   Review             @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  item     Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  statuses ReviewItemStatus[]
+  comments ReviewComment[]
+
+  @@unique([reviewId, itemId])
+  @@map("review_items")
+}
+
+model ReviewParticipant {
+  id         String     @id @default(uuid()) @db.Uuid
+  reviewId   String     @map("review_id") @db.Uuid
+  userId     String     @map("user_id") @db.Uuid
+  reviewRole ReviewRole @map("review_role")
+  isSigner   Boolean    @default(false) @map("is_signer")
+  isFinished Boolean    @default(false) @map("is_finished")
+  finishedAt DateTime?  @map("finished_at")
+  invitedAt  DateTime   @default(now()) @map("invited_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@map("review_participants")
+}
+
+model ReviewItemStatus {
+  id             String                @id @default(uuid()) @db.Uuid
+  reviewItemId   String                @map("review_item_id") @db.Uuid
+  participantId  String                @map("participant_id") @db.Uuid
+  userId         String                @map("user_id") @db.Uuid
+  revisionNumber Int                   @map("revision_number")
+  status         ReviewItemStatusValue @default(NOT_REVIEWED)
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  reviewItem ReviewItem @relation(fields: [reviewItemId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewItemId, userId, revisionNumber])
+  @@map("review_item_status")
+}
+
+model ReviewComment {
+  id              String             @id @default(uuid()) @db.Uuid
+  reviewItemId    String             @map("review_item_id") @db.Uuid
+  parentCommentId String?            @map("parent_comment_id") @db.Uuid
+  authorId        String             @map("author_id") @db.Uuid
+  revisionNumber  Int                @map("revision_number")
+  label           ReviewCommentLabel @default(GENERAL)
+  content         String             @db.Text
+  selectedText    String?            @map("selected_text") @db.Text
+  isResolved      Boolean            @default(false) @map("is_resolved")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  reviewItem ReviewItem             @relation(fields: [reviewItemId], references: [id], onDelete: Cascade)
+  parent     ReviewComment?         @relation("ReviewCommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies    ReviewComment[]        @relation("ReviewCommentReplies")
+  author     User                   @relation("ReviewCommentAuthor", fields: [authorId], references: [id])
+  mentions   ReviewCommentMention[]
+
+  @@map("review_comments")
+}
+
+model ReviewCommentMention {
+  id              String @id @default(uuid()) @db.Uuid
+  reviewCommentId String @map("review_comment_id") @db.Uuid
+  mentionedUserId String @map("mentioned_user_id") @db.Uuid
+
+  comment ReviewComment @relation(fields: [reviewCommentId], references: [id], onDelete: Cascade)
+
+  @@map("review_comment_mentions")
+}
+
+model ReviewRevision {
+  id                String   @id @default(uuid()) @db.Uuid
+  reviewId          String   @map("review_id") @db.Uuid
+  revisionNumber    Int      @map("revision_number")
+  changeDescription String?  @map("change_description") @db.Text
+  publishedAt       DateTime @default(now()) @map("published_at")
+  publishedBy       String   @map("published_by") @db.Uuid
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, revisionNumber])
+  @@map("review_revisions")
+}
+
+model ReviewBaseline {
+  id             String   @id @default(uuid()) @db.Uuid
+  reviewId       String   @map("review_id") @db.Uuid
+  revisionNumber Int      @map("revision_number")
+  itemVersionId  String   @map("item_version_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  review      Review      @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  itemVersion ItemVersion @relation(fields: [itemVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, revisionNumber, itemVersionId])
+  @@map("review_baselines")
+}
+
+model ReviewSignature {
+  id         String   @id @default(uuid()) @db.Uuid
+  reviewId   String   @map("review_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  signerName String   @map("signer_name") @db.VarChar(255)
+  meaning    String   @db.VarChar(255)
+  signedAt   DateTime @default(now()) @map("signed_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("review_signatures")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: TEST MANAGEMENT (A9 - generic items with specialized test models)
+// -----------------------------------------------------------------------------
+
+model TestStep {
+  id             String @id @default(uuid()) @db.Uuid
+  testCaseItemId String @map("test_case_item_id") @db.Uuid
+  stepOrder      Int    @map("step_order")
+  action         String @db.Text
+  expectedResult String @map("expected_result") @db.Text
+
+  testCase Item          @relation(fields: [testCaseItemId], references: [id], onDelete: Cascade)
+  runSteps TestRunStep[]
+
+  @@map("test_steps")
+}
+
+model TestPlan {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  environment String?  @db.VarChar(100)
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  project Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator User             @relation("TestPlanCreatedBy", fields: [createdBy], references: [id])
+  testers TestPlanTester[]
+  cases   TestPlanCase[]
+  cycles  TestCycle[]
+
+  @@map("test_plans")
+}
+
+model TestPlanTester {
+  testPlanId String @map("test_plan_id") @db.Uuid
+  userId     String @map("user_id") @db.Uuid
+
+  testPlan TestPlan @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([testPlanId, userId])
+  @@map("test_plan_testers")
+}
+
+model TestPlanCase {
+  id             String @id @default(uuid()) @db.Uuid
+  testPlanId     String @map("test_plan_id") @db.Uuid
+  testCaseItemId String @map("test_case_item_id") @db.Uuid
+  orderIndex     Int    @default(0) @map("order_index")
+
+  testPlan TestPlan @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  testCase Item     @relation(fields: [testCaseItemId], references: [id], onDelete: Cascade)
+
+  @@map("test_plan_cases")
+}
+
+model TestCycle {
+  id                       String   @id @default(uuid()) @db.Uuid
+  testPlanId               String   @map("test_plan_id") @db.Uuid
+  name                     String   @db.VarChar(255)
+  excludePassedFromCycleId String?  @map("exclude_passed_from_cycle_id") @db.Uuid
+  createdBy                String   @map("created_by") @db.Uuid
+  createdAt                DateTime @default(now()) @map("created_at")
+
+  testPlan        TestPlan    @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  creator         User        @relation("TestCycleCreatedBy", fields: [createdBy], references: [id])
+  excludedCycle   TestCycle?  @relation("CycleExclusions", fields: [excludePassedFromCycleId], references: [id])
+  successorCycles TestCycle[] @relation("CycleExclusions")
+  runs            TestRun[]
+
+  @@map("test_cycles")
+}
+
+model TestRun {
+  id             String     @id @default(uuid()) @db.Uuid
+  testCycleId    String     @map("test_cycle_id") @db.Uuid
+  testCaseItemId String     @map("test_case_item_id") @db.Uuid
+  executedBy     String?    @map("executed_by") @db.Uuid
+  executedAt     DateTime?  @map("executed_at")
+  overallResult  TestResult @default(NOT_RUN) @map("overall_result")
+
+  testCycle   TestCycle           @relation(fields: [testCycleId], references: [id], onDelete: Cascade)
+  testCase    Item                @relation(fields: [testCaseItemId], references: [id], onDelete: Cascade)
+  executor    User?               @relation("TestRunExecutedBy", fields: [executedBy], references: [id])
+  runSteps    TestRunStep[]
+  defectLinks DefectTestRunLink[]
+
+  @@map("test_runs")
+}
+
+model TestRunStep {
+  id           String     @id @default(uuid()) @db.Uuid
+  testRunId    String     @map("test_run_id") @db.Uuid
+  testStepId   String     @map("test_step_id") @db.Uuid
+  result       TestResult @default(NOT_RUN)
+  actualResult String?    @map("actual_result") @db.Text
+  notes        String?    @db.Text
+
+  testRun  TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  testStep TestStep @relation(fields: [testStepId], references: [id], onDelete: Cascade)
+
+  @@map("test_run_steps")
+}
+
+model DefectTestRunLink {
+  id             String   @id @default(uuid()) @db.Uuid
+  defectItemId   String   @map("defect_item_id") @db.Uuid
+  testRunId      String   @map("test_run_id") @db.Uuid
+  testCaseItemId String   @map("test_case_item_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  defectItem   Item    @relation("DefectItem", fields: [defectItemId], references: [id], onDelete: Cascade)
+  testRun      TestRun @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  testCaseItem Item    @relation("TestCaseDefectItem", fields: [testCaseItemId], references: [id], onDelete: Cascade)
+
+  @@map("defect_test_run_links")
+}
+
+// -----------------------------------------------------------------------------
+// MODULE: CROSS-CUTTING (audit_logs, notifications)
+// -----------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  entityType String   @map("entity_type") @db.VarChar(100)
+  entityId   String   @map("entity_id") @db.Uuid
+  action     String   @db.VarChar(50)
+  oldData    Json?    @map("old_data") @db.JsonB
+  newData    Json?    @map("new_data") @db.JsonB
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String   @db.VarChar(100)
+  title     String   @db.VarChar(255)
+  content   String   @db.Text
+  linkUrl   String?  @map("link_url") @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}

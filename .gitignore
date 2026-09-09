@@ -45,3 +45,6 @@ coverage/
 # Turborepo / caches
 .turbo/
 .vite/
+
+# IDE
+.vscode

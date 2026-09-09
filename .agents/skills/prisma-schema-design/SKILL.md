@@ -17,6 +17,33 @@ description: |
 
 ## Conventions
 
+### 0. Datasource & Configuration (Prisma v7)
+
+Prisma v7 tách biệt cấu hình kết nối DB sang `apps/api/prisma.config.ts`:
+
+```prisma
+// apps/api/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // LƯU Ý: KHÔNG đặt url ở đây (đã chuyển sang prisma.config.ts)
+}
+```
+
+```typescript
+// apps/api/prisma.config.ts
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: { path: 'prisma/migrations' },
+  datasource: { url: env('DATABASE_URL') },
+});
+```
+
 ### 1. UUID Primary Key
 
 ```prisma
@@ -198,3 +225,5 @@ pnpm --filter api prisma db seed
 5. **Enum values dùng UPPER_CASE** trong Prisma, `@map` sang lowercase cho DB
 6. **Relation fields** phải có `onDelete` explicit (Cascade, SetNull, hoặc Restrict)
 7. **JSONB fields** dùng `Json` type + `@db.JsonB`
+8. **KHÔNG khai báo `url` trong datasource của `schema.prisma`** — cấu hình URL kết nối tại `prisma.config.ts` (chuẩn Prisma v7)
+9. **Khởi tạo PrismaClient bắt buộc thông qua `@prisma/adapter-pg`** và `pg.Pool`

@@ -18,7 +18,7 @@
 | -------------------- | ---------------------------------------- | ------- | ---------------------------------------------------------- |
 | **Monorepo**         | pnpm workspace                           | latest  | Shared types, faster installs                              |
 | **Backend**          | NestJS + TypeScript                      | v10+    | Module system = Modular Monolith native                    |
-| **ORM**              | Prisma                                   | v5+     | Type-safe, migration-first, introspection                  |
+| **ORM**              | Prisma                                   | v7+     | Type-safe, migration-first, introspection                  |
 | **Database**         | PostgreSQL                               | 15+     | JSONB, GIN index, UUID native                              |
 | **Queue / Jobs**     | BullMQ + Redis                           | latest  | Email notification, async tasks                            |
 | **Real-time**        | Socket.io (via @nestjs/websockets)       | latest  | Connected Users, live review updates                       |
@@ -73,6 +73,7 @@ al-jama/
 │   │   │   ├── schema.prisma
 │   │   │   ├── migrations/
 │   │   │   └── seed.ts
+│   │   ├── prisma.config.ts     # Prisma v7 configuration (datasource url, schema, migrations)
 │   │   └── package.json
 │   └── web/                     # React Frontend
 │       ├── src/
@@ -157,11 +158,15 @@ al-jama/
 
 ### Database & Prisma
 
-- **UUID** for all primary keys (`@default(uuid())`).
-- **Soft delete** for items, comments (`isDeleted Boolean @default(false)`).
-- **Timestamps**: `createdAt`, `updatedAt` on all tables.
-- **Enums** defined in Prisma schema, mapped to PostgreSQL enums.
-- **Naming**: snake_case for DB columns/tables (Prisma `@map`), camelCase in TypeScript.
+- **Prisma Version**: v7.x (v7.10.0+), kiến trúc TypeScript/Rust-free.
+- **Driver Adapter**: Bắt buộc dùng `@prisma/adapter-pg` bọc quanh `pg.Pool` cho kết nối PostgreSQL.
+- **Configuration**: Cấu hình kết nối DB được định nghĩa tại `apps/api/prisma.config.ts`. KHÔNG khai báo `url` trong khối `datasource db` của `schema.prisma`.
+- **PrismaService**: Kế thừa `PrismaClient`, khởi tạo với `{ adapter: new PrismaPg(pool) }`, đóng `pool.end()` và `$disconnect()` trong `onModuleDestroy`.
+- **UUID** cho all primary keys (`@default(uuid()) @db.Uuid`).
+- **Soft delete** cho items, comments (`isDeleted Boolean @default(false)`).
+- **Timestamps**: `createdAt`, `updatedAt` trên mọi bảng.
+- **Enums** khai báo trong Prisma schema, map sang PostgreSQL enums qua `@map`.
+- **Naming**: snake_case cho DB columns/tables (Prisma `@map`), camelCase trong TypeScript.
 
 ## Business Rules Reference
 
