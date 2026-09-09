@@ -6,11 +6,11 @@
 
 ## 📖 Tài liệu dự án
 
-- 🚀 **[Hướng dẫn cài đặt & chạy dự án chi tiết (Quick Start Guide)](file:///h:/qtruongbackup/download/ThucTap/AL-JAMA/docs/HUONG_DAN_CHAY_DU_AN.md)**
-- 🌿 **[Quy trình làm việc Git & Branching (Git Flow)](file:///h:/qtruongbackup/download/ThucTap/AL-JAMA/docs/GIT_FLOW.md)**
-- 📋 **[Business Requirements Document (BRD)](file:///h:/qtruongbackup/download/ThucTap/AL-JAMA/docs/requirements/BRD_He_thong_Quan_ly_Yeu_cau_MVP.md)**
-- 🗄️ **[Database Schema Design](file:///h:/qtruongbackup/download/ThucTap/AL-JAMA/docs/requirements/Database_Schema_JAMA_Clone_MVP.md)**
-- 🗺️ **[MVP Delivery Plan & Roadmap](file:///h:/qtruongbackup/download/ThucTap/AL-JAMA/docs/requirements/MVP_Delivery_Plan_JAMA_Clone.md)**
+- 🚀 **[Hướng dẫn cài đặt & chạy dự án chi tiết (Quick Start Guide)](docs/HUONG_DAN_CHAY_DU_AN.md)**
+- 🌿 **[Quy trình làm việc Git & Branching (Git Flow)](docs/GIT_FLOW.md)**
+- 📋 **[Business Requirements Document (BRD)](docs/requirements/BRD_He_thong_Quan_ly_Yeu_cau_MVP.md)**
+- 🗄️ **[Database Schema Design](docs/requirements/Database_Schema_JAMA_Clone_MVP.md)**
+- 🗺️ **[MVP Delivery Plan & Roadmap](docs/requirements/MVP_Delivery_Plan_JAMA_Clone.md)**
 
 ---
 
