@@ -38,7 +38,9 @@ export async function ensureDockerAndDatabase(): Promise<void> {
   let isRunning = await checkPostgresConnection(defaultDbUrl);
 
   if (!isRunning) {
-    console.log('⚡ PostgreSQL container not running. Starting Docker containers via docker-compose...');
+    console.log(
+      '⚡ PostgreSQL container not running. Starting Docker containers via docker-compose...',
+    );
     try {
       execSync('docker-compose -f docker/docker-compose.dev.yml up -d', {
         cwd: ROOT_DIR,
@@ -152,11 +154,13 @@ export async function cleanDatabase(prisma: PrismaService): Promise<void> {
 export async function seedE2EContext(
   prisma: PrismaService,
   jwtService: JwtService,
-): Promise<E2EContext['users'] & {
-  project: E2EContext['project'];
-  itemType: E2EContext['itemType'];
-  relationshipTypes: E2EContext['relationshipTypes'];
-}> {
+): Promise<
+  E2EContext['users'] & {
+    project: E2EContext['project'];
+    itemType: E2EContext['itemType'];
+    relationshipTypes: E2EContext['relationshipTypes'];
+  }
+> {
   await cleanDatabase(prisma);
 
   const passwordHash = await bcrypt.hash('password123', 10);

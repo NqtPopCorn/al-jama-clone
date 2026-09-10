@@ -83,9 +83,9 @@ describe('AuthService', () => {
         status: UserStatus.INACTIVE,
       });
 
-      await expect(
-        service.validateUser('john@example.com', 'password'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser('john@example.com', 'password')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return null if password does not match', async () => {
@@ -120,9 +120,9 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException on invalid credentials', async () => {
       jest.spyOn(service, 'validateUser').mockResolvedValue(null);
 
-      await expect(
-        service.login({ login: 'john@example.com', password: 'wrong' }),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login({ login: 'john@example.com', password: 'wrong' })).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

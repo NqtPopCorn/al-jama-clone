@@ -32,10 +32,7 @@ describe('ProjectService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProjectService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [ProjectService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<ProjectService>(ProjectService);
@@ -109,9 +106,7 @@ describe('ProjectService', () => {
     it('should throw NotFoundException when project is not found', async () => {
       prisma.project.findUnique.mockResolvedValue(null);
 
-      await expect(service.getProjectById(projectId, userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getProjectById(projectId, userId)).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when user is not a member of project', async () => {
@@ -121,9 +116,7 @@ describe('ProjectService', () => {
         _count: { items: 0, folders: 0, itemTypes: 0 },
       });
 
-      await expect(service.getProjectById(projectId, userId)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.getProjectById(projectId, userId)).rejects.toThrow(ForbiddenException);
     });
   });
 

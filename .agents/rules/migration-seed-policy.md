@@ -7,13 +7,13 @@
 
 ## 1. Nguyên tắc bất biến
 
-| Quy tắc | Mô tả |
-| :--- | :--- |
-| **KHÔNG dùng `migrate dev` trên production** | `prisma migrate dev` có thể reset DB. Chỉ dùng trên local dev |
-| **KHÔNG dùng `deleteMany()` trong production seed** | Xóa dữ liệu thực tế không thể khôi phục |
-| **KHÔNG chạy `dev-seed.ts` trên production** | Script có guard kiểm tra `NODE_ENV` và `DATABASE_URL` |
-| **Seed production phải idempotent** | Dùng `upsert` hoặc check `findFirst` trước khi `create` |
-| **Migration phải luôn chạy trước khi app start** | Đảm bảo schema và app code đồng bộ |
+| Quy tắc                                             | Mô tả                                                         |
+| :-------------------------------------------------- | :------------------------------------------------------------ |
+| **KHÔNG dùng `migrate dev` trên production**        | `prisma migrate dev` có thể reset DB. Chỉ dùng trên local dev |
+| **KHÔNG dùng `deleteMany()` trong production seed** | Xóa dữ liệu thực tế không thể khôi phục                       |
+| **KHÔNG chạy `dev-seed.ts` trên production**        | Script có guard kiểm tra `NODE_ENV` và `DATABASE_URL`         |
+| **Seed production phải idempotent**                 | Dùng `upsert` hoặc check `findFirst` trước khi `create`       |
+| **Migration phải luôn chạy trước khi app start**    | Đảm bảo schema và app code đồng bộ                            |
 
 ---
 
@@ -52,23 +52,23 @@ pnpm --filter api prisma:seed:dev        # XÓA HẾT DỮ LIỆU!
 
 ### `prisma/dev-seed.ts` — Chỉ dành cho Development
 
-| Thuộc tính | Giá trị |
-| :--- | :--- |
-| Môi trường | Development, local, staging demo |
-| Hành động | Xóa toàn bộ DB → tạo lại từ đầu |
-| Mục đích | Demo data, test data, onboarding dev mới |
+| Thuộc tính       | Giá trị                                         |
+| :--------------- | :---------------------------------------------- |
+| Môi trường       | Development, local, staging demo                |
+| Hành động        | Xóa toàn bộ DB → tạo lại từ đầu                 |
+| Mục đích         | Demo data, test data, onboarding dev mới        |
 | Production guard | ✅ Có — tự động block nếu `NODE_ENV=production` |
-| Lệnh | `pnpm --filter api prisma:seed:dev` |
+| Lệnh             | `pnpm --filter api prisma:seed:dev`             |
 
 ### `prisma/master-seed.ts` — Safe for Production
 
-| Thuộc tính | Giá trị |
-| :--- | :--- |
-| Môi trường | Tất cả — dev, staging, **production** |
-| Hành động | Upsert reference data — KHÔNG xóa gì cả |
-| Mục đích | Global relationship types, system config |
-| Idempotent | ✅ Có — an toàn chạy nhiều lần |
-| Lệnh | `pnpm --filter api prisma:seed:master` |
+| Thuộc tính | Giá trị                                  |
+| :--------- | :--------------------------------------- |
+| Môi trường | Tất cả — dev, staging, **production**    |
+| Hành động  | Upsert reference data — KHÔNG xóa gì cả  |
+| Mục đích   | Global relationship types, system config |
+| Idempotent | ✅ Có — an toàn chạy nhiều lần           |
+| Lệnh       | `pnpm --filter api prisma:seed:master`   |
 
 ---
 

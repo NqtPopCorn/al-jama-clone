@@ -29,15 +29,15 @@ pnpm --filter api test -- --testPathPattern="src/modules/project/|src/modules/it
 
 #### Mapping: Epic → Modules cần test
 
-| Epic | Branch Pattern | Test Path Pattern |
-| :--- | :--- | :--- |
-| E0 (Platform Foundation) | `feature/E0-*` | `src/modules/auth/\|src/modules/user/\|src/modules/project/` |
-| E1 (Admin Config) | `feature/E1-*` | `src/modules/project/` |
-| E2 (Item Management) | `feature/E2-*` | `src/modules/item/` |
-| E3 (Traceability) | `feature/E3-*` | `src/modules/traceability/` |
-| E4 (Collaboration) | `feature/E4-*` | `src/modules/collaboration/` |
-| E5-E8 (Review Center) | `feature/E5-*` đến `feature/E8-*` | `src/modules/review/` |
-| E9-E10 (Test Management) | `feature/E9-*` đến `feature/E10-*` | `src/modules/test-management/` |
+| Epic                     | Branch Pattern                     | Test Path Pattern                                            |
+| :----------------------- | :--------------------------------- | :----------------------------------------------------------- |
+| E0 (Platform Foundation) | `feature/E0-*`                     | `src/modules/auth/\|src/modules/user/\|src/modules/project/` |
+| E1 (Admin Config)        | `feature/E1-*`                     | `src/modules/project/`                                       |
+| E2 (Item Management)     | `feature/E2-*`                     | `src/modules/item/`                                          |
+| E3 (Traceability)        | `feature/E3-*`                     | `src/modules/traceability/`                                  |
+| E4 (Collaboration)       | `feature/E4-*`                     | `src/modules/collaboration/`                                 |
+| E5-E8 (Review Center)    | `feature/E5-*` đến `feature/E8-*`  | `src/modules/review/`                                        |
+| E9-E10 (Test Management) | `feature/E9-*` đến `feature/E10-*` | `src/modules/test-management/`                               |
 
 #### Tiêu chí nghiệm thu khi kết thúc Epic
 

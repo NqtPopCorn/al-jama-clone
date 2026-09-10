@@ -35,9 +35,7 @@ if (
   dbUrl.includes('prod') ||
   dbUrl.includes('rds.amazonaws.com')
 ) {
-  console.error(
-    '❌ BLOCKED: dev-seed.ts is strictly forbidden on production environments.',
-  );
+  console.error('❌ BLOCKED: dev-seed.ts is strictly forbidden on production environments.');
   console.error('   Use master-seed.ts for production reference data.');
   process.exit(1);
 }

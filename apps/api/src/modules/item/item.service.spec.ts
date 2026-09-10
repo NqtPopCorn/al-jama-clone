@@ -288,9 +288,9 @@ describe('ItemService - Item Locking (AC-01 / QT-01)', () => {
         lockedAt: new Date(Date.now() - 5 * 60 * 1000), // 5 min ago (< 15 min)
       });
 
-      await expect(
-        service.updateItem(itemId, { name: 'New Name' }, userB),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.updateItem(itemId, { name: 'New Name' }, userB)).rejects.toThrow(
+        ConflictException,
+      );
 
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });

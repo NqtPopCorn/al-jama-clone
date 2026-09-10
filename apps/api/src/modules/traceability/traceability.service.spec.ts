@@ -224,9 +224,7 @@ describe('TraceabilityService - Suspect Flagging (AC-02 / QT-02)', () => {
     });
 
     it('should throw NotFoundException for invalid relationship UUID', async () => {
-      await expect(service.clearSuspect('invalid-uuid', userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.clearSuspect('invalid-uuid', userId)).rejects.toThrow(NotFoundException);
     });
   });
 

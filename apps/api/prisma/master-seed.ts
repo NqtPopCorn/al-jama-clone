@@ -117,9 +117,7 @@ async function main() {
   // e.g., default notification templates, system-wide audit log config, etc.
 
   console.log('\n🎉 [MASTER SEED] Reference data seeding complete!');
-  console.log(
-    '   This seed is idempotent — safe to run again without side effects.',
-  );
+  console.log('   This seed is idempotent — safe to run again without side effects.');
 }
 
 main()
