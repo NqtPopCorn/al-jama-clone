@@ -10,6 +10,7 @@ import { ItemVersionsDrawer } from './item-versions-drawer';
 import { ItemRelationshipsDrawer } from '../../traceability/components/item-relationships-drawer';
 import { ResizableBottomDrawer } from '../../../components/common/resizable-bottom-drawer';
 import { VersionDiffCanvas } from './version-diff-canvas';
+import { JamaStreamSection } from '../../collaboration/components/JamaStreamSection';
 import { TiptapEditor } from '../../../components/editor/tiptap-editor';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -637,14 +638,13 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({
           isOpen={activePanel === 'comments'}
           onClose={() => setActivePanel(null)}
           title="Item Stream & Comments"
-          icon={<MessageSquare className="w-4 h-4 text-blue-600" />}
+          icon={<MessageSquare className="w-4 h-4 text-[#0088cc]" />}
           storageKey="comments_drawer"
-          defaultHeight={240}
-          minHeight={140}
+          defaultHeight={380}
+          minHeight={180}
         >
-          <div className="p-4 text-xs text-slate-400 italic">
-            No comments on this item yet. You can collaborate and mention colleagues using the
-            stream panel.
+          <div className="p-4 overflow-y-auto h-full bg-[#f7f9fa] dark:bg-[#0d1117]">
+            <JamaStreamSection itemId={item.id} projectId={projectId} />
           </div>
         </ResizableBottomDrawer>
 

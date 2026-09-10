@@ -3,15 +3,23 @@ import { useAuthStore } from '../../stores/auth.store';
 import { useProjectStore } from '../../stores/project.store';
 import { useThemeStore } from '../../stores/theme.store';
 import { Home, Sun, Moon, LogOut } from 'lucide-react';
+import { NotificationDropdown } from '../../features/notification/NotificationDropdown';
 
 export type MainNavTab = 'home' | 'stream' | 'projects' | 'reviews' | 'admin';
 
 interface AppHeaderProps {
   activeTab: MainNavTab;
   onTabChange: (tab: MainNavTab) => void;
+  onNavigateToItem?: (itemId: string) => void;
+  onOpenTraceability?: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({
+  activeTab,
+  onTabChange,
+  onNavigateToItem,
+  onOpenTraceability,
+}) => {
   const { user, logout } = useAuthStore();
   const { currentProject } = useProjectStore();
   const { headerTheme, toggleHeaderTheme } = useThemeStore();
@@ -137,16 +145,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
         </button>
       </div>
 
-      {/* Right User & Utility Area (Matching Jama Connect) */}
+      {/* Right User & Utility Area */}
       <div className="flex items-center gap-4 text-xs font-normal">
         {/* Org Name */}
         <span
           className={`font-semibold hidden sm:inline ${isDark ? 'text-slate-200' : 'text-slate-800'}`}
         >
-          Jama Software
+          AL-JAMA Requirements
         </span>
 
-        {/* Theme Toggle Button (Dark / Light header as requested) */}
+        {/* Notification Center */}
+        <NotificationDropdown isDark={isDark} onNavigateToItem={onNavigateToItem} />
+
+        {/* Theme Toggle Button (Dark / Light header) */}
         <button
           type="button"
           onClick={toggleHeaderTheme}
@@ -175,31 +186,25 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeTab, onTabChange }) 
           {user?.fullName || 'User'}
         </span>
 
-        {/* Action Links: Reports | Help | Log Out */}
+        {/* Action Links: Reports | Log Out */}
         <div
           className={`flex items-center gap-2 text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
         >
-          <a
-            href="#reports"
-            onClick={e => {
-              e.preventDefault();
-              alert('Reports view is available in Project Dashboard and Trace View.');
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenTraceability) {
+                onOpenTraceability();
+              } else {
+                onTabChange('projects');
+                useProjectStore.getState().setActiveView('trace');
+              }
             }}
-            className="hover:underline"
+            className="hover:underline hover:text-blue-500"
+            title="Open Traceability & Coverage Reports"
           >
             Reports
-          </a>
-          <span>|</span>
-          <a
-            href="#help"
-            onClick={e => {
-              e.preventDefault();
-              alert('AL-JAMA Documentation and User Guides available in docs/.');
-            }}
-            className="hover:underline"
-          >
-            Help
-          </a>
+          </button>
           <span>|</span>
           <button
             type="button"

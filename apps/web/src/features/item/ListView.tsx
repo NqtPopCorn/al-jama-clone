@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ItemSummary, PaginatedResult } from '@aljama/shared';
 import { useProjectStore } from '../../stores/project.store';
 import { useThemeStore } from '../../stores/theme.store';
@@ -40,6 +41,7 @@ interface ListViewProps {
   onOpenFilter?: () => void;
   onOpenItem?: (itemId: string, itemKey: string, itemName: string) => void;
   onOpenCreateItem?: () => void;
+  onOpenTraceability?: () => void;
 }
 
 export const ListView: React.FC<ListViewProps> = ({
@@ -53,6 +55,7 @@ export const ListView: React.FC<ListViewProps> = ({
   onOpenFilter,
   onOpenItem,
   onOpenCreateItem,
+  onOpenTraceability,
 }) => {
   const {
     currentProject,
@@ -67,6 +70,7 @@ export const ListView: React.FC<ListViewProps> = ({
   const isDark = headerTheme === 'dark';
 
   const { folders, members } = useProjectMeta(currentProject?.id);
+  const queryClient = useQueryClient();
 
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -113,129 +117,23 @@ export const ListView: React.FC<ListViewProps> = ({
     });
   };
 
-  // Demo fallback items if current project has few items, matching Image 3
+  // Map real API items directly without mock/dummy fallback data
   const apiItems = data?.items || [];
-  const defaultItems = [
-    {
-      id: 'demo-set-1',
-      itemKey: 'MKP-SET-1',
-      name: 'Business Requirements',
-      itemTypeKey: 'SET',
-      status: 'Active',
-      priority: 'High',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-txt-1',
-      itemKey: 'MKP-TXT-1',
-      name: 'Problem Statement',
-      itemTypeKey: 'TXT',
-      status: 'Active',
-      priority: 'Medium',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-txt-2',
-      itemKey: 'MKP-TXT-2',
-      name: 'Position Statement',
-      itemTypeKey: 'TXT',
-      status: 'Active',
-      priority: 'Medium',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-br-1',
-      itemKey: 'MKP-BR-1',
-      name: 'Manage patient profile (contact, insurance & billing history)',
-      itemTypeKey: 'REQ',
-      status: 'Draft',
-      priority: 'High',
-      isLocked: false,
-      hasSuspect: true,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-br-2',
-      itemKey: 'MKP-BR-2',
-      name: 'Manage procedures and office visits, including history',
-      itemTypeKey: 'REQ',
-      status: 'Draft',
-      priority: 'High',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-br-3',
-      itemKey: 'MKP-BR-3',
-      name: 'Interface with X-Raymatic to save and display images',
-      itemTypeKey: 'REQ',
-      status: 'Draft',
-      priority: 'Critical',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-br-4',
-      itemKey: 'MKP-BR-4',
-      name: 'Allow multiple methods of data entry',
-      itemTypeKey: 'REQ',
-      status: 'In Review',
-      priority: 'Medium',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-br-5',
-      itemKey: 'MKP-BR-5',
-      name: 'Interface with Share-D dental record system',
-      itemTypeKey: 'REQ',
-      status: 'Approved',
-      priority: 'High',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-    {
-      id: 'demo-br-6',
-      itemKey: 'MKP-BR-6',
-      name: 'Electronically send & receive billing information to insurance claims',
-      itemTypeKey: 'REQ',
-      status: 'Draft',
-      priority: 'Medium',
-      isLocked: false,
-      hasSuspect: false,
-      connectedUser: 'Sandra Elliott',
-    },
-  ];
+  const items = apiItems.map(item => ({
+    id: item.id,
+    itemKey: item.itemKey,
+    name: item.name,
+    itemTypeId: item.itemTypeId,
+    itemTypeKey: item.itemTypeKey,
+    status: item.status,
+    priority: item.priority,
+    isLocked: item.isLocked,
+    hasSuspect: item.hasSuspect ?? false,
+    connectedUser: item.assignee?.fullName || 'Unassigned',
+  }));
 
-  // Merge API items with demo items to achieve exact look
-  const items =
-    apiItems.length > 0
-      ? apiItems.map(item => ({
-          id: item.id,
-          itemKey: item.itemKey,
-          name: item.name,
-          itemTypeId: item.itemTypeId,
-          itemTypeKey: item.itemTypeKey,
-          status: item.status,
-          priority: item.priority,
-          isLocked: item.isLocked,
-          hasSuspect: item.hasSuspect ?? false,
-          connectedUser: item.assignee?.fullName || 'User',
-        }))
-      : defaultItems;
-
-  const totalCount = data?.total || 96;
-  const totalPages = data?.totalPages || 2;
+  const totalCount = data?.total ?? items.length;
+  const totalPages = data?.totalPages ?? 1;
 
   const renderTypeIcon = (typeKey?: string) => {
     switch (typeKey) {
@@ -283,7 +181,7 @@ export const ListView: React.FC<ListViewProps> = ({
               isDark ? 'text-white' : 'text-slate-900'
             }`}
           >
-            {currentProject?.name || 'MediKiosk Pro'}
+            {currentProject?.name || 'Project Workspace'}
           </h2>
           <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             {totalCount} items
@@ -309,7 +207,7 @@ export const ListView: React.FC<ListViewProps> = ({
             type="button"
             variant="jama"
             size="sm"
-            onClick={() => window.location.reload()}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['items'] })}
             title="Refresh items"
             className="p-1.5 h-7"
           >
@@ -336,9 +234,15 @@ export const ListView: React.FC<ListViewProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setActiveView('trace')}
+              onClick={() => {
+                if (onOpenTraceability) {
+                  onOpenTraceability();
+                } else {
+                  setActiveView('trace');
+                }
+              }}
               className="p-1 rounded text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-              title="Traceability Matrix (BR-TRACE-06)"
+              title="Open Traceability Matrix in new tab (BR-TRACE-06)"
             >
               <Layers className="w-3.5 h-3.5 text-purple-600" />
             </button>
@@ -521,8 +425,18 @@ export const ListView: React.FC<ListViewProps> = ({
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-500">
-                      No items found in selected project.
+                    <td colSpan={9} className="py-16 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                        <span className="font-semibold text-sm text-slate-600 dark:text-slate-300">
+                          No items found
+                        </span>
+                        <p className="text-xs text-slate-400 max-w-sm">
+                          {currentProject
+                            ? 'This project or folder does not have any matching items. Use "+ Add" to create one.'
+                            : 'Please select a project to view its requirements.'}
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
