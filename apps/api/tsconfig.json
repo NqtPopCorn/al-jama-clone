@@ -22,5 +22,5 @@
       "@aljama/shared": ["../../packages/shared/dist"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "test/**/*"]
 }

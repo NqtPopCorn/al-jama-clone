@@ -63,8 +63,9 @@ graph TD
 - **Backend:** Relationship CRUD, Suspect flag tự động lan đúng 1 cấp downstream (QT-02), Clear suspect, Impact Analysis BFS traversal, Trace View & CSV export.
 - **Frontend:** Tab Relationships, Cờ Suspect & nút Clear, Impact Analysis tree graph, Trace View ma trận & xuất CSV.
 
-### Milestone 1.5: Tích hợp & Nghiệm thu Phase 1
+### Milestone 1.5: Tích hợp & Nghiệm thu Phase 1 [COMPLETED]
 
 - **Branch:** `chore/phase-1-verification`
-- Chạy unit test backend
-- Chạy E2E tests, nghiệm thu toàn bộ tiêu chí AC-01 (Lock item) và AC-02 (Suspect flag lan 1 cấp).
+- Chạy unit test backend (39/39 passed)
+- Chạy E2E tests, nghiệm thu toàn bộ tiêu chí AC-01 (Lock item) và AC-02 (Suspect flag lan 1 cấp) (13/13 passed)
+- Tự động bật Docker container (`docker-compose`) nếu chưa chạy và quản lý test DB `aljama_test`.

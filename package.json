@@ -15,6 +15,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "test": "pnpm --recursive test",
+    "test:api": "pnpm --filter api test",
+    "test:e2e": "pnpm --filter api test:e2e",
+    "test:api:e2e": "pnpm --filter api test:e2e",
     "clean": "pnpm --recursive exec rimraf dist node_modules"
   },
   "devDependencies": {
