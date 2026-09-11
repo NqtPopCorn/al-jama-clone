@@ -119,7 +119,7 @@ export class ReviewInitiationService {
     }
 
     // 5. Tạo Review trong Database Transaction
-    const review = await this.prisma.$transaction(async (tx) => {
+    const review = await this.prisma.$transaction(async tx => {
       const createdReview = await tx.review.create({
         data: {
           projectId: dto.projectId,
@@ -136,7 +136,7 @@ export class ReviewInitiationService {
 
       // Tạo ReviewItems theo đúng thứ tự
       const itemData = dto.itemIds
-        .filter((itemId) => items.some((i) => i.id === itemId))
+        .filter(itemId => items.some(i => i.id === itemId))
         .map((itemId, index) => ({
           reviewId: createdReview.id,
           itemId,
@@ -148,15 +148,13 @@ export class ReviewInitiationService {
       });
 
       // Tạo ReviewParticipants
-      const participantData = Array.from(participantsMap.entries()).map(
-        ([userId, details]) => ({
-          reviewId: createdReview.id,
-          userId,
-          groupId: details.groupId || null,
-          reviewRole: details.reviewRole,
-          isSigner: details.isSigner,
-        }),
-      );
+      const participantData = Array.from(participantsMap.entries()).map(([userId, details]) => ({
+        reviewId: createdReview.id,
+        userId,
+        groupId: details.groupId || null,
+        reviewRole: details.reviewRole,
+        isSigner: details.isSigner,
+      }));
 
       await tx.reviewParticipant.createMany({
         data: participantData,
@@ -205,7 +203,7 @@ export class ReviewInitiationService {
 
     // Kiểm tra quyền Moderator
     const userParticipant = review.participants.find(
-      (p) => p.userId === currentUserId && p.reviewRole === ReviewRole.MODERATOR,
+      p => p.userId === currentUserId && p.reviewRole === ReviewRole.MODERATOR,
     );
     if (!userParticipant && review.createdBy !== currentUserId) {
       throw new ForbiddenException('Only a review moderator can initiate the review');
@@ -213,7 +211,9 @@ export class ReviewInitiationService {
 
     // Pre-condition: Chỉ initiate từ DRAFT
     if (review.status !== ReviewStatus.DRAFT) {
-      throw new ConflictException(`Review is already ${review.status.toLowerCase()}, cannot initiate`);
+      throw new ConflictException(
+        `Review is already ${review.status.toLowerCase()}, cannot initiate`,
+      );
     }
 
     // Pre-condition: Phải có >= 1 item và >= 1 participant
@@ -225,7 +225,7 @@ export class ReviewInitiationService {
     }
 
     // Thực hiện trong Transaction
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       // 1. Cập nhật review sang ACTIVE
       await tx.review.update({
         where: { id: reviewId },
@@ -294,7 +294,7 @@ export class ReviewInitiationService {
       projectId: review.projectId,
       moderatorId: currentUserId,
       revisionNumber: 1,
-      participantUserIds: review.participants.map((p) => p.userId),
+      participantUserIds: review.participants.map(p => p.userId),
       deadline: review.deadline,
     });
 

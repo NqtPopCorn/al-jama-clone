@@ -28,6 +28,9 @@
   },
   "dependencies": {
     "@aljama/shared": "workspace:*",
+    "@bull-board/api": "^9.9.0",
+    "@bull-board/express": "^9.9.0",
+    "@bull-board/nestjs": "^9.9.0",
     "@nestjs/bullmq": "^10.2.3",
     "@nestjs/common": "^10.4.15",
     "@nestjs/config": "^3.3.0",

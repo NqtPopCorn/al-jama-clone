@@ -1,8 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  reviewApi,
-  FetchReviewsParams,
-} from '../api/reviewApi';
+import { reviewApi, FetchReviewsParams } from '../api/reviewApi';
 import {
   CreateReviewDto,
   InitiateReviewDto,
@@ -82,13 +79,8 @@ export function useUpdateReviewItemStatusMutation() {
 export function useBatchUpdateReviewStatusMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      reviewId,
-      dto,
-    }: {
-      reviewId: string;
-      dto: BatchUpdateReviewItemStatusDto;
-    }) => reviewApi.batchUpdateStatus(reviewId, dto),
+    mutationFn: ({ reviewId, dto }: { reviewId: string; dto: BatchUpdateReviewItemStatusDto }) =>
+      reviewApi.batchUpdateStatus(reviewId, dto),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(variables.reviewId) });
     },
@@ -106,11 +98,7 @@ export function useCompleteReviewMutation() {
   });
 }
 
-export function useItemCommentsQuery(
-  reviewId?: string,
-  itemId?: string,
-  revisionNumber?: number,
-) {
+export function useItemCommentsQuery(reviewId?: string, itemId?: string, revisionNumber?: number) {
   return useQuery({
     queryKey: reviewQueryKeys.comments(reviewId || '', itemId || ''),
     queryFn: () => reviewApi.getItemComments(reviewId!, itemId!, revisionNumber),

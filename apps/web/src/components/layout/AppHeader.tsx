@@ -11,6 +11,7 @@ interface AppHeaderProps {
   activeTab: MainNavTab;
   onTabChange: (tab: MainNavTab) => void;
   onNavigateToItem?: (itemId: string) => void;
+  onNavigateToReview?: (reviewId: string) => void;
   onOpenTraceability?: () => void;
 }
 
@@ -18,6 +19,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   activeTab,
   onTabChange,
   onNavigateToItem,
+  onNavigateToReview,
   onOpenTraceability,
 }) => {
   const { user, logout } = useAuthStore();
@@ -155,7 +157,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </span>
 
         {/* Notification Center */}
-        <NotificationDropdown isDark={isDark} onNavigateToItem={onNavigateToItem} />
+        <NotificationDropdown
+          isDark={isDark}
+          onNavigateToItem={onNavigateToItem}
+          onNavigateToReview={onNavigateToReview}
+        />
 
         {/* Theme Toggle Button (Dark / Light header) */}
         <button

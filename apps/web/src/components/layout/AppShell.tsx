@@ -258,6 +258,11 @@ export const AppShell: React.FC = () => {
     }
   };
 
+  const handleNavigateToReview = (reviewId: string) => {
+    setMainNavTab('reviews');
+    setSelectedReviewId(reviewId);
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col bg-[#eef2f6] text-slate-800 overflow-hidden font-sans select-none">
       {/* 1. App Header: Supports Dark & Light header themes (Matching Image 2, 3, 4) */}
@@ -265,6 +270,7 @@ export const AppShell: React.FC = () => {
         activeTab={mainNavTab}
         onTabChange={handleTabChange}
         onNavigateToItem={handleOpenItem}
+        onNavigateToReview={handleNavigateToReview}
         onOpenTraceability={handleOpenTraceability}
       />
 
@@ -307,7 +313,7 @@ export const AppShell: React.FC = () => {
                 onSelectFolder={handleSelectFolder}
                 onSelectItem={handleOpenItem}
                 onOpenCreateItem={() => setIsCreateItemOpen(true)}
-                onSendForReview={(config) => {
+                onSendForReview={config => {
                   setReviewWizardState({
                     isOpen: true,
                     reviewName: config.reviewName,
@@ -394,10 +400,10 @@ export const AppShell: React.FC = () => {
           />
         ) : (
           <ReviewsHomeView
-            onSelectReview={(id) => setSelectedReviewId(id)}
+            onSelectReview={id => setSelectedReviewId(id)}
             projectId={projectId}
             projectName={currentProject?.name}
-            projectMembers={members.map((m) => ({
+            projectMembers={members.map(m => ({
               userId: m.userId,
               fullName: m.fullName,
               username: m.username,
@@ -455,13 +461,13 @@ export const AppShell: React.FC = () => {
           defaultReviewName={reviewWizardState.reviewName}
           sourceFilterName={reviewWizardState.sourceFilterName}
           initialItems={reviewWizardState.items}
-          preselectedItemIds={reviewWizardState.items?.map((i) => i.id)}
-          members={members.map((m) => ({
+          preselectedItemIds={reviewWizardState.items?.map(i => i.id)}
+          members={members.map(m => ({
             userId: m.userId,
             fullName: m.fullName,
             username: m.username,
           }))}
-          onSuccess={(newReviewId) => {
+          onSuccess={newReviewId => {
             setReviewWizardState({ isOpen: false });
             setMainNavTab('reviews');
             setSelectedReviewId(newReviewId);

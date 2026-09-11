@@ -75,13 +75,19 @@ export class ReviewCommentService {
     });
     if (!review) throw new NotFoundException(`Review ${reviewId} not found`);
 
-    if (review.status === ReviewStatus.CLOSED_FOR_FEEDBACK || review.status === ReviewStatus.FINALIZED || review.status === ReviewStatus.ARCHIVED) {
+    if (
+      review.status === ReviewStatus.CLOSED_FOR_FEEDBACK ||
+      review.status === ReviewStatus.FINALIZED ||
+      review.status === ReviewStatus.ARCHIVED
+    ) {
       throw new ConflictException(`Cannot comment: Review is in ${review.status} state.`);
     }
 
-    const reviewItem = review.items.find((i) => i.id === reviewItemId);
+    const reviewItem = review.items.find(i => i.id === reviewItemId);
     if (!reviewItem) {
-      throw new NotFoundException(`ReviewItem ${reviewItemId} does not belong to review ${reviewId}`);
+      throw new NotFoundException(
+        `ReviewItem ${reviewItemId} does not belong to review ${reviewId}`,
+      );
     }
 
     const participant = await this.prisma.reviewParticipant.findUnique({
@@ -91,7 +97,7 @@ export class ReviewCommentService {
       throw new ForbiddenException('You must be a review participant to leave comments');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async tx => {
       const comment = await tx.reviewComment.create({
         data: {
           reviewItemId,
@@ -112,7 +118,7 @@ export class ReviewCommentService {
       // Tạo mention records nếu có
       if (dto.mentionedUserIds && dto.mentionedUserIds.length > 0) {
         await tx.reviewCommentMention.createMany({
-          data: dto.mentionedUserIds.map((userId) => ({
+          data: dto.mentionedUserIds.map(userId => ({
             reviewCommentId: comment.id,
             mentionedUserId: userId,
           })),

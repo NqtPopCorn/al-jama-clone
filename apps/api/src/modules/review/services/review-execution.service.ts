@@ -48,9 +48,11 @@ export class ReviewExecutionService {
     }
 
     // 2. Kiểm tra item thuộc review
-    const reviewItem = review.items.find((i) => i.id === reviewItemId);
+    const reviewItem = review.items.find(i => i.id === reviewItemId);
     if (!reviewItem) {
-      throw new NotFoundException(`ReviewItem ${reviewItemId} does not belong to review ${reviewId}`);
+      throw new NotFoundException(
+        `ReviewItem ${reviewItemId} does not belong to review ${reviewId}`,
+      );
     }
 
     // 3. Kiểm tra participant
@@ -88,7 +90,7 @@ export class ReviewExecutionService {
     }
 
     // 6. Cập nhật trạng thái trong Transaction
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       // Upsert ReviewItemStatus tại currentRevisionNumber
       const updatedStatus = await tx.reviewItemStatus.upsert({
         where: {
@@ -125,16 +127,25 @@ export class ReviewExecutionService {
 
       return updatedStatus;
     });
+
+    this.eventEmitter.emit('review.item_status_changed', {
+      reviewId,
+      reviewItemId,
+      itemId: reviewItem.itemId,
+      userId: currentUserId,
+      userRole: participant.reviewRole,
+      status: dto.status,
+      rejectionComment: dto.rejectionComment,
+      revisionNumber: review.currentRevisionNumber,
+    });
+
+    return result;
   }
 
   /**
    * Cập nhật trạng thái hàng loạt cho nhiều items (BR-REV-15)
    */
-  async batchUpdateItemStatus(
-    reviewId: string,
-    currentUserId: string,
-    dto: BatchUpdateStatusDto,
-  ) {
+  async batchUpdateItemStatus(reviewId: string, currentUserId: string, dto: BatchUpdateStatusDto) {
     const review = await this.prisma.review.findUnique({
       where: { id: reviewId },
       include: { items: true },
@@ -168,7 +179,7 @@ export class ReviewExecutionService {
     }
 
     // Execute batch in transaction
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async tx => {
       for (const reviewItemId of dto.reviewItemIds) {
         await tx.reviewItemStatus.upsert({
           where: {
@@ -204,6 +215,20 @@ export class ReviewExecutionService {
       }
     });
 
+    for (const reviewItemId of dto.reviewItemIds) {
+      const reviewItem = review.items.find(i => i.id === reviewItemId);
+      this.eventEmitter.emit('review.item_status_changed', {
+        reviewId,
+        reviewItemId,
+        itemId: reviewItem?.itemId,
+        userId: currentUserId,
+        userRole: participant.reviewRole,
+        status: dto.status,
+        rejectionComment: dto.rejectionComment,
+        revisionNumber: review.currentRevisionNumber,
+      });
+    }
+
     return { success: true, updatedCount: dto.reviewItemIds.length };
   }
 
@@ -227,7 +252,7 @@ export class ReviewExecutionService {
     // QT-06 Check: Nếu người này (hoặc trong review) có bất kỳ item nào REJECTED ở revision hiện tại
     const userRejectionsCount = await this.prisma.reviewItemStatus.count({
       where: {
-        reviewItemId: { in: review.items.map((i) => i.id) },
+        reviewItemId: { in: review.items.map(i => i.id) },
         userId: currentUserId,
         revisionNumber: review.currentRevisionNumber,
         status: ReviewItemStatusValue.REJECTED,

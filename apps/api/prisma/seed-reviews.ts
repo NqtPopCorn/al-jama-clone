@@ -94,7 +94,8 @@ export async function seedReviews() {
     {
       key: '2.1',
       name: 'Use Cases',
-      description: 'Parent set containing functional use case specifications for clinical workflow.',
+      description:
+        'Parent set containing functional use case specifications for clinical workflow.',
       customFields: {},
     },
     {
@@ -105,7 +106,7 @@ export async function seedReviews() {
         Trigger:
           'Patient needs an appointment. Can be initiated by phone during appointment or after appointment completed.',
         'Primary Flow':
-          '1. Receptionist receives call and searches for patient.\n2. System finds patient and loads summary info.\n3. Receptionist searches for appointments based on sur info or patient\'s suggestions.\n4. System returns found appointments. 5 options at a time and hour order\n5. Receptionist selects time indicated by patient.\n6. System inserts patient into appointment and blocks time. Procedure, dentist and notes are referenced.',
+          "1. Receptionist receives call and searches for patient.\n2. System finds patient and loads summary info.\n3. Receptionist searches for appointments based on sur info or patient's suggestions.\n4. System returns found appointments. 5 options at a time and hour order\n5. Receptionist selects time indicated by patient.\n6. System inserts patient into appointment and blocks time. Procedure, dentist and notes are referenced.",
         'Alternate Flow':
           '1. Receptionist places call\n2. System does not find patient\n3. Error message served',
         Assumptions: 'Terminal is connected to network',
@@ -128,17 +129,26 @@ export async function seedReviews() {
       description: 'Submission of claims to carrier via EDI 837 transaction.',
       customFields: {
         Trigger: 'Treatment marked completed by attending provider.',
-        'Primary Flow': '1. Generate claim form CMS-1500.\n2. Validate procedure code against fee schedule.',
+        'Primary Flow':
+          '1. Generate claim form CMS-1500.\n2. Validate procedure code against fee schedule.',
       },
     },
-    { key: '2.1.4', name: 'Add X-Ray Results', description: 'DICOM imaging upload and attachment.' },
+    {
+      key: '2.1.4',
+      name: 'Add X-Ray Results',
+      description: 'DICOM imaging upload and attachment.',
+    },
     { key: '2.1.5', name: 'Update Admin Password', description: 'Credential lifecycle security.' },
     { key: '2.1.6', name: 'Update Patient Bills', description: 'Adjustment of copay and balance.' },
     { key: '2.1.7', name: 'Print out Insurer Bills', description: 'Paper statement generation.' },
     { key: '2.1.8', name: 'Search available dates', description: 'Calendar query optimization.' },
     { key: '2.1.9', name: 'Attach Note', description: 'Clinical encounter progress note.' },
     { key: '2.1.10', name: 'Upload to Share-D', description: 'Cloud repository synchronization.' },
-    { key: '2.1.11', name: 'Download from Share-D', description: 'Retrieve archived historical chart.' },
+    {
+      key: '2.1.11',
+      name: 'Download from Share-D',
+      description: 'Retrieve archived historical chart.',
+    },
     { key: '2.1.12', name: 'Manage Patient Information', description: 'Demographics and consent.' },
     { key: '2.1.13', name: 'Login as employee', description: 'Role-based access verification.' },
   ];
@@ -198,7 +208,8 @@ export async function seedReviews() {
         projectId: project.id,
         templateId: peerTemplate.id,
         name: 'Set: Use Cases - V2',
-        description: 'Comprehensive review of medical clinic use cases and flow requirements for release V2.',
+        description:
+          'Comprehensive review of medical clinic use cases and flow requirements for release V2.',
         status: ReviewStatus.ACTIVE,
         currentRevisionNumber: 2,
         includeContext: true,
@@ -221,7 +232,8 @@ export async function seedReviews() {
       data: {
         reviewId: review1.id,
         revisionNumber: 2,
-        changeDescription: 'Published revision 2 incorporating clinical feedback and flow adjustments',
+        changeDescription:
+          'Published revision 2 incorporating clinical feedback and flow adjustments',
         publishedBy: adminUser.id,
         publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       },
@@ -308,7 +320,8 @@ export async function seedReviews() {
             authorId: reviewerUser.id,
             revisionNumber: 2,
             label: ReviewCommentLabel.QUESTION,
-            content: 'Should receptionist be able to search for appointments by doctor specialty as well?',
+            content:
+              'Should receptionist be able to search for appointments by doctor specialty as well?',
           },
         });
         await prisma.reviewComment.create({
@@ -350,7 +363,8 @@ export async function seedReviews() {
             authorId: adminUser.id,
             revisionNumber: 2,
             label: ReviewCommentLabel.GENERAL,
-            content: 'It is weird to read. We should change this to "marks tooth in dental chart diagram".',
+            content:
+              'It is weird to read. We should change this to "marks tooth in dental chart diagram".',
           },
         });
       }
@@ -377,9 +391,24 @@ export async function seedReviews() {
     });
     await prisma.reviewParticipant.createMany({
       data: [
-        { reviewId: review2.id, userId: adminUser.id, reviewRole: ReviewRole.MODERATOR, isSigner: true },
-        { reviewId: review2.id, userId: memberUser.id, reviewRole: ReviewRole.APPROVER, isSigner: true },
-        { reviewId: review2.id, userId: reviewerUser.id, reviewRole: ReviewRole.REVIEWER, isSigner: false },
+        {
+          reviewId: review2.id,
+          userId: adminUser.id,
+          reviewRole: ReviewRole.MODERATOR,
+          isSigner: true,
+        },
+        {
+          reviewId: review2.id,
+          userId: memberUser.id,
+          reviewRole: ReviewRole.APPROVER,
+          isSigner: true,
+        },
+        {
+          reviewId: review2.id,
+          userId: reviewerUser.id,
+          reviewRole: ReviewRole.REVIEWER,
+          isSigner: false,
+        },
       ],
     });
     await prisma.reviewItem.createMany({
@@ -411,8 +440,18 @@ export async function seedReviews() {
     });
     await prisma.reviewParticipant.createMany({
       data: [
-        { reviewId: review3.id, userId: adminUser.id, reviewRole: ReviewRole.MODERATOR, isSigner: true },
-        { reviewId: review3.id, userId: memberUser.id, reviewRole: ReviewRole.APPROVER, isSigner: true },
+        {
+          reviewId: review3.id,
+          userId: adminUser.id,
+          reviewRole: ReviewRole.MODERATOR,
+          isSigner: true,
+        },
+        {
+          reviewId: review3.id,
+          userId: memberUser.id,
+          reviewRole: ReviewRole.APPROVER,
+          isSigner: true,
+        },
       ],
     });
     await prisma.reviewItem.createMany({
@@ -444,8 +483,18 @@ export async function seedReviews() {
     });
     await prisma.reviewParticipant.createMany({
       data: [
-        { reviewId: review4.id, userId: adminUser.id, reviewRole: ReviewRole.MODERATOR, isSigner: false },
-        { reviewId: review4.id, userId: reviewerUser.id, reviewRole: ReviewRole.REVIEWER, isSigner: false },
+        {
+          reviewId: review4.id,
+          userId: adminUser.id,
+          reviewRole: ReviewRole.MODERATOR,
+          isSigner: false,
+        },
+        {
+          reviewId: review4.id,
+          userId: reviewerUser.id,
+          reviewRole: ReviewRole.REVIEWER,
+          isSigner: false,
+        },
       ],
     });
     await prisma.reviewItem.createMany({
@@ -477,8 +526,18 @@ export async function seedReviews() {
     });
     await prisma.reviewParticipant.createMany({
       data: [
-        { reviewId: review5.id, userId: adminUser.id, reviewRole: ReviewRole.MODERATOR, isSigner: false },
-        { reviewId: review5.id, userId: memberUser.id, reviewRole: ReviewRole.APPROVER, isSigner: false },
+        {
+          reviewId: review5.id,
+          userId: adminUser.id,
+          reviewRole: ReviewRole.MODERATOR,
+          isSigner: false,
+        },
+        {
+          reviewId: review5.id,
+          userId: memberUser.id,
+          reviewRole: ReviewRole.APPROVER,
+          isSigner: false,
+        },
       ],
     });
     console.log('✅ Created Review 5: "Set: Project Overview" (Completed, Rev 4)');
@@ -490,7 +549,7 @@ export async function seedReviews() {
 // Chạy trực tiếp nếu gọi từ command line
 if (require.main === module) {
   seedReviews()
-    .catch((e) => {
+    .catch(e => {
       console.error('❌ Error seeding reviews:', e);
       process.exit(1);
     })

@@ -14,11 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useCreateReviewMutation } from '../hooks/useReviewApi';
-import {
-  ReviewRole,
-  ReviewTemplateType,
-  CreateReviewParticipantInput,
-} from '@aljama/shared';
+import { ReviewRole, ReviewTemplateType, CreateReviewParticipantInput } from '@aljama/shared';
 import { useAuthStore } from '../../../stores/auth.store';
 import { ProjectItemPickerModal } from './ProjectItemPickerModal';
 
@@ -128,7 +124,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   members = [],
   onSuccess,
 }) => {
-  const currentUser = useAuthStore((s) => s.user);
+  const currentUser = useAuthStore(s => s.user);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // --- Step 1: Definition State ---
@@ -150,9 +146,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   useEffect(() => {
     if (defaultReviewName !== undefined) {
       setName(defaultReviewName);
-      setSubject(
-        defaultReviewName ? `Jama-Carleda Wade REVIEW: ${defaultReviewName}` : '',
-      );
+      setSubject(defaultReviewName ? `Jama-Carleda Wade REVIEW: ${defaultReviewName}` : '');
       setInvitationMessage(
         defaultReviewName
           ? `You are invited to the following review of ${defaultReviewName}. Select the link below to begin the review and leave feedback.`
@@ -179,9 +173,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   const [selectedDownstreamTypes, setSelectedDownstreamTypes] = useState<string[]>([]);
 
   // --- Step 2: Settings State ---
-  const [templateType, setTemplateType] = useState<ReviewTemplateType>(
-    ReviewTemplateType.APPROVAL,
-  );
+  const [templateType, setTemplateType] = useState<ReviewTemplateType>(ReviewTemplateType.APPROVAL);
 
   const [requireSignature, setRequireSignature] = useState(false);
   const [enableSignerRole, setEnableSignerRole] = useState(false);
@@ -231,8 +223,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   const availableParticipants = useMemo(() => {
     const list: AvailableParticipant[] = [...DEFAULT_AVAILABLE];
     if (members && members.length > 0) {
-      members.forEach((m) => {
-        if (!list.some((item) => item.userId === m.userId || item.name === m.fullName)) {
+      members.forEach(m => {
+        if (!list.some(item => item.userId === m.userId || item.name === m.fullName)) {
           list.push({
             id: m.userId,
             userId: m.userId,
@@ -250,7 +242,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
     if (!searchParticipant.trim()) return availableParticipants;
     const q = searchParticipant.toLowerCase();
     return availableParticipants.filter(
-      (item) =>
+      item =>
         item.name.toLowerCase().includes(q) ||
         (item.email && item.email.toLowerCase().includes(q)) ||
         (item.subtitle && item.subtitle.toLowerCase().includes(q)),
@@ -286,8 +278,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   };
 
   // Participant counts summary for Step 4
-  const approversCount = assignedParticipants.filter((p) => p.reviewRole === 'APPROVER').length;
-  const reviewersCount = assignedParticipants.filter((p) => p.reviewRole === 'REVIEWER').length;
+  const approversCount = assignedParticipants.filter(p => p.reviewRole === 'APPROVER').length;
+  const reviewersCount = assignedParticipants.filter(p => p.reviewRole === 'REVIEWER').length;
 
   const participantsSummaryText = useMemo(() => {
     const parts: string[] = [];
@@ -305,7 +297,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
     if (!itemSearchQuery.trim()) return reviewItems;
     const q = itemSearchQuery.toLowerCase();
     return reviewItems.filter(
-      (i) =>
+      i =>
         i.key.toLowerCase().includes(q) ||
         i.name.toLowerCase().includes(q) ||
         (i.itemTypeKey && i.itemTypeKey.toLowerCase().includes(q)) ||
@@ -314,7 +306,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   }, [reviewItems, itemSearchQuery]);
 
   const handleRemoveItem = (id: string) => {
-    setReviewItems((prev) => prev.filter((i) => i.id !== id));
+    setReviewItems(prev => prev.filter(i => i.id !== id));
   };
 
   const handleClearAllItems = () => {
@@ -323,9 +315,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
   // When items are selected from ProjectItemPickerModal
   const handleAddItemsFromTree = (newItems: ReviewWizardItemInfo[]) => {
-    setReviewItems((prev) => {
-      const existingIds = new Set(prev.map((i) => i.id));
-      const filteredNew = newItems.filter((i) => !existingIds.has(i.id));
+    setReviewItems(prev => {
+      const existingIds = new Set(prev.map(i => i.id));
+      const filteredNew = newItems.filter(i => !existingIds.has(i.id));
       return [...prev, ...filteredNew];
     });
     setError(null);
@@ -374,27 +366,25 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
   // Toggle helpers for related items
   const toggleUpstreamType = (type: string) => {
-    setSelectedUpstreamTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    setSelectedUpstreamTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type],
     );
   };
 
   const toggleDownstreamType = (type: string) => {
-    setSelectedDownstreamTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    setSelectedDownstreamTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type],
     );
   };
 
   // Participant assignments manipulation
   const handleAddAssignment = (item: AvailableParticipant) => {
     if (
-      assignedParticipants.some(
-        (p) => p.id === item.id || (item.userId && p.userId === item.userId),
-      )
+      assignedParticipants.some(p => p.id === item.id || (item.userId && p.userId === item.userId))
     ) {
       return;
     }
-    setAssignedParticipants((prev) => [
+    setAssignedParticipants(prev => [
       ...prev,
       {
         id: item.id,
@@ -416,14 +406,14 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
       return;
     }
     const cleanEmail = inviteEmail.trim();
-    if (assignedParticipants.some((p) => p.email?.toLowerCase() === cleanEmail.toLowerCase())) {
+    if (assignedParticipants.some(p => p.email?.toLowerCase() === cleanEmail.toLowerCase())) {
       setError('This email is already added as a participant');
       return;
     }
 
     const newId = `email-${Date.now()}`;
     const namePart = cleanEmail.split('@')[0];
-    setAssignedParticipants((prev) => [
+    setAssignedParticipants(prev => [
       ...prev,
       {
         id: newId,
@@ -438,8 +428,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   };
 
   const handleUpdateReviewRole = (id: string, role: 'APPROVER' | 'REVIEWER') => {
-    setAssignedParticipants((prev) =>
-      prev.map((p) => {
+    setAssignedParticipants(prev =>
+      prev.map(p => {
         if (p.id !== id) return p;
         return {
           ...p,
@@ -451,13 +441,11 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   };
 
   const handleUpdateSignerRole = (id: string, signerRole: SignerRole) => {
-    setAssignedParticipants((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, signerRole } : p)),
-    );
+    setAssignedParticipants(prev => prev.map(p => (p.id === id ? { ...p, signerRole } : p)));
   };
 
   const handleRemoveAssignment = (id: string) => {
-    setAssignedParticipants((prev) => prev.filter((p) => p.id !== id));
+    setAssignedParticipants(prev => prev.filter(p => p.id !== id));
   };
 
   const handleClearAllAssignments = () => {
@@ -481,14 +469,14 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
       setError(null);
       const combinedDeadline = deadlineDate ? new Date(deadlineDate).toISOString() : undefined;
 
-      const formattedParticipants: CreateReviewParticipantInput[] = assignedParticipants.map((p) => ({
+      const formattedParticipants: CreateReviewParticipantInput[] = assignedParticipants.map(p => ({
         userId: p.userId,
         groupId: p.groupId,
         reviewRole: p.reviewRole === 'APPROVER' ? ReviewRole.APPROVER : ReviewRole.REVIEWER,
         isSigner: p.signerRole !== 'Not assigned',
       }));
 
-      const finalItemIds = reviewItems.map((i) => i.id);
+      const finalItemIds = reviewItems.map(i => i.id);
 
       const result = await createReviewMutation.mutateAsync({
         projectId,
@@ -553,8 +541,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       step === item.num
                         ? 'bg-[#203a6b] text-white'
                         : step > item.num
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-200 text-slate-600'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-200 text-slate-600'
                     }`}
                   >
                     {item.num}
@@ -564,8 +552,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       step === item.num
                         ? 'text-[#203a6b]'
                         : step > item.num
-                        ? 'text-slate-800'
-                        : 'text-slate-400'
+                          ? 'text-slate-800'
+                          : 'text-slate-400'
                     }`}
                   >
                     {item.label}
@@ -598,7 +586,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => handleNameChange(e.target.value)}
+                    onChange={e => handleNameChange(e.target.value)}
                     className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder:text-slate-400"
                     placeholder="Enter review name (e.g. System Requirements Ready for Review)..."
                   />
@@ -615,14 +603,14 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       <input
                         type="date"
                         value={deadlineDate}
-                        onChange={(e) => setDeadlineDate(e.target.value)}
+                        onChange={e => setDeadlineDate(e.target.value)}
                         className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                       />
                     </div>
                     <div className="relative w-36">
                       <select
                         value={deadlineTime}
-                        onChange={(e) => setDeadlineTime(e.target.value)}
+                        onChange={e => setDeadlineTime(e.target.value)}
                         className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-500 outline-none"
                       >
                         <option value="17:00 EDT">17:00 EDT</option>
@@ -652,7 +640,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block font-medium text-slate-700">
-                      Items for Review <span className="text-red-500 font-bold">*</span> ({reviewItems.length})
+                      Items for Review <span className="text-red-500 font-bold">*</span> (
+                      {reviewItems.length})
                     </label>
                     <div className="flex items-center gap-2">
                       {sourceFilterName && (
@@ -668,7 +657,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#203a6b] hover:bg-[#162747] text-white text-[11px] font-semibold rounded shadow-2xs transition-colors"
                       >
                         <Plus className="w-3 h-3" />
-                        <span>{reviewItems.length === 0 ? 'Select items from project' : 'Add items'}</span>
+                        <span>
+                          {reviewItems.length === 0 ? 'Select items from project' : 'Add items'}
+                        </span>
                       </button>
 
                       {reviewItems.length > 0 && (
@@ -703,9 +694,12 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   {reviewItems.length === 0 ? (
                     <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50 space-y-2">
                       <FolderTree className="w-8 h-8 text-slate-400 mx-auto" />
-                      <div className="text-xs font-semibold text-slate-700">No items selected yet</div>
+                      <div className="text-xs font-semibold text-slate-700">
+                        No items selected yet
+                      </div>
                       <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-                        Please select items from the project tree or filter to include in this review.
+                        Please select items from the project tree or filter to include in this
+                        review.
                       </p>
                       <button
                         type="button"
@@ -727,7 +721,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                               type="text"
                               placeholder="Search items by ID, name, type, or status..."
                               value={itemSearchQuery}
-                              onChange={(e) => setItemSearchQuery(e.target.value)}
+                              onChange={e => setItemSearchQuery(e.target.value)}
                               className="w-full text-xs px-2.5 py-1 pr-7 border border-slate-300 rounded bg-white outline-none focus:ring-1 focus:ring-blue-500"
                             />
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1.5 pointer-events-none" />
@@ -756,8 +750,11 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
-                                {filteredReviewItems.map((item) => (
-                                  <tr key={item.id} className="hover:bg-blue-50/40 transition-colors group">
+                                {filteredReviewItems.map(item => (
+                                  <tr
+                                    key={item.id}
+                                    className="hover:bg-blue-50/40 transition-colors group"
+                                  >
                                     <td className="py-1.5 px-3 font-mono font-bold text-blue-600 text-[11px]">
                                       {item.key}
                                     </td>
@@ -773,10 +770,10 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                           item.itemTypeKey === 'SET'
                                             ? 'bg-purple-100 text-purple-800'
                                             : item.itemTypeKey === 'TXT'
-                                            ? 'bg-slate-100 text-slate-700'
-                                            : item.itemTypeKey === 'DEFECT'
-                                            ? 'bg-red-100 text-red-700'
-                                            : 'bg-blue-100 text-blue-800'
+                                              ? 'bg-slate-100 text-slate-700'
+                                              : item.itemTypeKey === 'DEFECT'
+                                                ? 'bg-red-100 text-red-700'
+                                                : 'bg-blue-100 text-blue-800'
                                         }`}
                                       >
                                         {item.itemTypeKey || 'REQ'}
@@ -788,8 +785,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                           item.status === 'Accepted'
                                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                             : item.status === 'In Review'
-                                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                              : 'bg-amber-50 text-amber-700 border border-amber-200'
                                         }`}
                                       >
                                         {item.status || 'In Review'}
@@ -826,11 +823,12 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       type="checkbox"
                       id="attachments"
                       checked={includeAttachments}
-                      onChange={(e) => setIncludeAttachments(e.target.checked)}
+                      onChange={e => setIncludeAttachments(e.target.checked)}
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="attachments" className="text-slate-700 cursor-pointer">
-                      Include item attachments (Reviewers must have proper project permissions to view attachments.)
+                      Include item attachments (Reviewers must have proper project permissions to
+                      view attachments.)
                     </label>
                   </div>
 
@@ -839,7 +837,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       type="checkbox"
                       id="relatedItems"
                       checked={includeRelatedItems}
-                      onChange={(e) => setIncludeRelatedItems(e.target.checked)}
+                      onChange={e => setIncludeRelatedItems(e.target.checked)}
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="relatedItems" className="text-slate-700 cursor-pointer">
@@ -862,10 +860,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           type="checkbox"
                           id="showUpstream"
                           checked={showUpstream}
-                          onChange={(e) => setShowUpstream(e.target.checked)}
+                          onChange={e => setShowUpstream(e.target.checked)}
                           className="rounded text-blue-600"
                         />
-                        <label htmlFor="showUpstream" className="font-medium text-slate-800 cursor-pointer">
+                        <label
+                          htmlFor="showUpstream"
+                          className="font-medium text-slate-800 cursor-pointer"
+                        >
                           Show upstream related items
                         </label>
                       </div>
@@ -878,8 +879,11 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             { label: 'Related Risk Evaluations', count: 1, icon: '☣️' },
                             { label: 'Related User Needs', count: 10, icon: '👥' },
                             { label: 'Related xFMEAs', count: 1, icon: '📑' },
-                          ].map((rel) => (
-                            <div key={rel.label} className="flex items-center justify-between py-0.5">
+                          ].map(rel => (
+                            <div
+                              key={rel.label}
+                              className="flex items-center justify-between py-0.5"
+                            >
                               <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                   type="checkbox"
@@ -910,10 +914,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           type="checkbox"
                           id="showDownstream"
                           checked={showDownstream}
-                          onChange={(e) => setShowDownstream(e.target.checked)}
+                          onChange={e => setShowDownstream(e.target.checked)}
                           className="rounded text-blue-600"
                         />
-                        <label htmlFor="showDownstream" className="font-medium text-slate-800 cursor-pointer">
+                        <label
+                          htmlFor="showDownstream"
+                          className="font-medium text-slate-800 cursor-pointer"
+                        >
                           Show downstream related items
                         </label>
                       </div>
@@ -924,8 +931,11 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             { label: 'Related Subsystem Requirements', count: 12, icon: '💻' },
                             { label: 'Related System Architectures', count: 8, icon: '🧩' },
                             { label: 'Related Verifications', count: 5, icon: '✔️' },
-                          ].map((rel) => (
-                            <div key={rel.label} className="flex items-center justify-between py-0.5">
+                          ].map(rel => (
+                            <div
+                              key={rel.label}
+                              className="flex items-center justify-between py-0.5"
+                            >
                               <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                   type="checkbox"
@@ -1018,14 +1028,16 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <div className="space-y-1.5 pl-1">
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? true : requireSignature}
                         disabled={isApproval}
-                        onChange={(e) => setRequireSignature(e.target.checked)}
+                        onChange={e => setRequireSignature(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>Require electronic signatures from approvers</span>
@@ -1033,18 +1045,21 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                     <label
                       className={`flex items-center gap-2 pl-6 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? true : enableSignerRole}
                         disabled={isApproval}
-                        onChange={(e) => setEnableSignerRole(e.target.checked)}
+                        onChange={e => setEnableSignerRole(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>
-                        Enable signer role for approvers. This associates a signer role with an approver's signature.
+                        Enable signer role for approvers. This associates a signer role with an
+                        approver's signature.
                       </span>
                     </label>
                   </div>
@@ -1056,29 +1071,36 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <div className="space-y-1.5 pl-1">
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? true : allowCommentsInProject}
                         disabled={isApproval}
-                        onChange={(e) => setAllowCommentsInProject(e.target.checked)}
+                        onChange={e => setAllowCommentsInProject(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
-                      <span>Allow for review comments to also appear in the single item view within a project</span>
+                      <span>
+                        Allow for review comments to also appear in the single item view within a
+                        project
+                      </span>
                     </label>
 
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? true : allowApproversAddParticipants}
                         disabled={isApproval}
-                        onChange={(e) => setAllowApproversAddParticipants(e.target.checked)}
+                        onChange={e => setAllowApproversAddParticipants(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>Let approvers add reviewers and approvers</span>
@@ -1086,14 +1108,16 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? true : allowApproversDelegate}
                         disabled={isApproval}
-                        onChange={(e) => setAllowApproversDelegate(e.target.checked)}
+                        onChange={e => setAllowApproversDelegate(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>Let approvers delegate their review to others</span>
@@ -1107,14 +1131,16 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <div className="space-y-1.5 pl-1">
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? true : enableTimeTracking}
                         disabled={isApproval}
-                        onChange={(e) => setEnableTimeTracking(e.target.checked)}
+                        onChange={e => setEnableTimeTracking(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>Enable time tracking</span>
@@ -1122,14 +1148,16 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? false : notifyParticipantFinishes}
                         disabled={isApproval}
-                        onChange={(e) => setNotifyParticipantFinishes(e.target.checked)}
+                        onChange={e => setNotifyParticipantFinishes(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>Notify me when a participant finishes a review</span>
@@ -1137,14 +1165,16 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                     <label
                       className={`flex items-center gap-2 ${
-                        isApproval ? 'text-slate-400 cursor-not-allowed' : 'cursor-pointer text-slate-700'
+                        isApproval
+                          ? 'text-slate-400 cursor-not-allowed'
+                          : 'cursor-pointer text-slate-700'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isApproval ? false : enableVoting}
                         disabled={isApproval}
-                        onChange={(e) => setEnableVoting(e.target.checked)}
+                        onChange={e => setEnableVoting(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>Enable voting</span>
@@ -1161,7 +1191,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
               <div className="flex flex-col text-xs space-y-3">
                 {/* Dual-Column Header matching media_1789105342448.png */}
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
-                  <h3 className="font-bold text-slate-900 text-xs w-[280px]">Select participants</h3>
+                  <h3 className="font-bold text-slate-900 text-xs w-[280px]">
+                    Select participants
+                  </h3>
                   <div className="w-5 h-5 rounded-full bg-slate-800 text-white flex items-center justify-center text-[11px] font-bold">
                     ➔
                   </div>
@@ -1217,7 +1249,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             type="text"
                             placeholder="Search by email or name"
                             value={searchParticipant}
-                            onChange={(e) => setSearchParticipant(e.target.value)}
+                            onChange={e => setSearchParticipant(e.target.value)}
                             className="w-full text-xs px-2.5 py-1.5 pr-7 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                           />
                           <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2 pointer-events-none" />
@@ -1225,8 +1257,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                         {/* Participant & Group list */}
                         <div className="flex-1 overflow-y-auto space-y-0.5 pr-1 max-h-[290px]">
-                          {filteredAvailable.map((item) => {
-                            const isAssigned = assignedParticipants.some((p) => p.id === item.id);
+                          {filteredAvailable.map(item => {
+                            const isAssigned = assignedParticipants.some(p => p.id === item.id);
                             return (
                               <div
                                 key={item.id}
@@ -1277,8 +1309,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           type="email"
                           placeholder="user@example.com"
                           value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleInviteByEmail()}
+                          onChange={e => setInviteEmail(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleInviteByEmail()}
                           className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                         />
                         <button
@@ -1310,7 +1342,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100 overflow-y-auto max-h-[300px]">
-                        {assignedParticipants.map((p) => (
+                        {assignedParticipants.map(p => (
                           <div
                             key={p.id}
                             className="grid grid-cols-12 gap-2 py-2 items-center text-xs px-1"
@@ -1346,7 +1378,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                 <select
                                   value={p.signerRole}
                                   disabled={p.reviewRole === 'REVIEWER'}
-                                  onChange={(e) =>
+                                  onChange={e =>
                                     handleUpdateSignerRole(p.id, e.target.value as SignerRole)
                                   }
                                   className={`w-full text-xs px-2 py-1 pr-6 border rounded bg-white outline-none appearance-none transition-colors ${
@@ -1355,7 +1387,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                       : 'border-slate-300 text-slate-700 focus:ring-1 focus:ring-blue-500'
                                   }`}
                                 >
-                                  {SIGNER_ROLES.map((role) => (
+                                  {SIGNER_ROLES.map(role => (
                                     <option key={role} value={role}>
                                       {role}
                                     </option>
@@ -1431,7 +1463,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <input
                     type="text"
                     value={subject}
-                    onChange={(e) => {
+                    onChange={e => {
                       setSubject(e.target.value);
                       setIsSubjectDirty(true);
                     }}
@@ -1446,7 +1478,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <textarea
                     rows={3}
                     value={invitationMessage}
-                    onChange={(e) => {
+                    onChange={e => {
                       setInvitationMessage(e.target.value);
                       setIsMessageDirty(true);
                     }}
@@ -1466,7 +1498,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                     </span>
                   </div>
                   <div className="bg-slate-50 border border-slate-200 rounded-md p-2 max-h-24 overflow-y-auto space-y-1">
-                    {reviewItems.slice(0, 10).map((item) => (
+                    {reviewItems.slice(0, 10).map(item => (
                       <div key={item.id} className="flex items-center justify-between text-[11px]">
                         <span className="font-mono font-semibold text-blue-600 truncate max-w-xs">
                           {item.key}: {item.name}
@@ -1488,7 +1520,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 <div className="pt-2 text-xs text-slate-700 space-y-3 font-sans leading-relaxed border-t border-slate-100">
                   <div>
                     Your review role is:{' '}
-                    <span className="text-slate-500 font-mono text-[11px]">*&#91; review role &#93;*</span>
+                    <span className="text-slate-500 font-mono text-[11px]">
+                      *&#91; review role &#93;*
+                    </span>
                   </div>
 
                   <div className="text-slate-500 text-[11px] italic">
@@ -1503,7 +1537,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       </span>
                     </div>
                     <div>
-                      Your signature will be used for the following meaning: I approve the content of this review.
+                      Your signature will be used for the following meaning: I approve the content
+                      of this review.
                     </div>
                   </div>
 
@@ -1520,7 +1555,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                   <div className="pt-2 text-xs text-slate-700">
                     <p>Thank you,</p>
-                    <p className="font-medium text-slate-900">{currentUser?.fullName || 'Carleda Wade'}</p>
+                    <p className="font-medium text-slate-900">
+                      {currentUser?.fullName || 'Carleda Wade'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1581,7 +1618,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   onClick={() => handleSubmit(true)}
                   className="px-6 py-1.5 text-xs font-semibold text-white bg-[#203a6b] hover:bg-[#162747] rounded shadow transition-colors flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  <span>{createReviewMutation.isPending ? 'Initiating...' : 'Initiate review'}</span>
+                  <span>
+                    {createReviewMutation.isPending ? 'Initiating...' : 'Initiate review'}
+                  </span>
                 </button>
               )}
             </div>
@@ -1596,7 +1635,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
           onClose={() => setIsTreeModalOpen(false)}
           projectId={projectId}
           projectName={projectName}
-          alreadySelectedItemIds={reviewItems.map((i) => i.id)}
+          alreadySelectedItemIds={reviewItems.map(i => i.id)}
           onSelectItems={handleAddItemsFromTree}
         />
       )}

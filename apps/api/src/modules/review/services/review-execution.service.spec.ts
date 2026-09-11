@@ -31,7 +31,7 @@ describe('ReviewExecutionService (QT-04, QT-06, A-P2-02)', () => {
       reviewComment: {
         create: jest.fn(),
       },
-      $transaction: jest.fn(async (cb) => cb(prisma)),
+      $transaction: jest.fn(async cb => cb(prisma)),
     };
 
     eventEmitter = {
@@ -180,6 +180,15 @@ describe('ReviewExecutionService (QT-04, QT-06, A-P2-02)', () => {
             content: 'Missing trigger requirement',
             label: 'ISSUE',
           }),
+        }),
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'review.item_status_changed',
+        expect.objectContaining({
+          reviewId,
+          reviewItemId,
+          userId: approverUserId,
+          status: ReviewItemStatusValue.REJECTED,
         }),
       );
     });

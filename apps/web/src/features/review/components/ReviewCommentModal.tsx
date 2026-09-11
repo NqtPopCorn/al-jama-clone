@@ -127,7 +127,7 @@ export const ReviewCommentModal: React.FC<ReviewCommentModalProps> = ({
               <input
                 type="text"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={e => setContent(e.target.value)}
                 placeholder="Add your comment..."
                 className="flex-1 text-xs px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder:text-slate-400"
               />
@@ -145,7 +145,7 @@ export const ReviewCommentModal: React.FC<ReviewCommentModalProps> = ({
             <div className="flex items-center gap-2 mt-2 pt-1 text-[11px]">
               <span className="text-slate-400 font-medium">Label:</span>
               {(['GENERAL', 'QUESTION', 'PROPOSED_CHANGE', 'ISSUE'] as ReviewCommentLabel[]).map(
-                (l) => (
+                l => (
                   <button
                     key={l}
                     type="button"
@@ -173,7 +173,7 @@ export const ReviewCommentModal: React.FC<ReviewCommentModalProps> = ({
               No comments on this item yet. Start the conversation above.
             </div>
           ) : (
-            comments.map((comment) => (
+            comments.map(comment => (
               <div key={comment.id} className="pt-3 first:pt-0 space-y-2">
                 {/* Main Comment */}
                 <div className="flex gap-2.5">
@@ -239,7 +239,7 @@ export const ReviewCommentModal: React.FC<ReviewCommentModalProps> = ({
                         <input
                           type="text"
                           value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
+                          onChange={e => setReplyContent(e.target.value)}
                           placeholder={`Reply to ${comment.authorName}...`}
                           autoFocus
                           className="flex-1 text-xs px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
@@ -260,7 +260,7 @@ export const ReviewCommentModal: React.FC<ReviewCommentModalProps> = ({
                 {/* Nested Replies matching Screen 5 */}
                 {comment.replies && comment.replies.length > 0 && (
                   <div className="pl-9 space-y-2 border-l-2 border-slate-100 ml-3.5">
-                    {comment.replies.map((reply) => (
+                    {comment.replies.map(reply => (
                       <div key={reply.id} className="flex gap-2">
                         <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-[10px] font-semibold text-slate-600 flex-shrink-0">
                           {reply.authorName ? reply.authorName.charAt(0).toUpperCase() : 'U'}

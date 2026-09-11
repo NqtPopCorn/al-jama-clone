@@ -93,4 +93,3 @@ export enum ReviewTemplateType {
   APPROVAL = 'APPROVAL',
   PEER = 'PEER',
 }
-

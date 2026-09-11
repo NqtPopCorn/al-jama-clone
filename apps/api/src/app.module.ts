@@ -11,6 +11,7 @@ import { TraceabilityModule } from './modules/traceability/traceability.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { ReviewModule } from './modules/review/review.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -39,6 +40,7 @@ import { AppService } from './app.service';
     NotificationModule,
     CollaborationModule,
     ReviewModule,
+    AuditModule,
   ],
 
   controllers: [AppController],

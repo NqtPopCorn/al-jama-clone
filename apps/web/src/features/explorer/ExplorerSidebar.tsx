@@ -35,19 +35,123 @@ import {
 import { ReviewWizardItemInfo } from '../review/components/StartReviewWizard';
 
 const READY_FOR_REVIEW_FILTER_ITEMS: ReviewWizardItemInfo[] = [
-  { id: 'item-txt-3', key: 'Rev-TXT-3', name: 'Scope and Purpose', itemTypeKey: 'TXT', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-txt-4', key: 'Rev-TXT-4', name: 'Definitions and Acronyms', itemTypeKey: 'TXT', status: 'In Review', currentVersion: 1, priority: 'Medium' },
-  { id: 'item-txt-5', key: 'Rev-TXT-5', name: 'Applicable Regulations', itemTypeKey: 'TXT', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-txt-6', key: 'Rev-TXT-6', name: 'Safety Standards', itemTypeKey: 'TXT', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-fld-3', key: 'Rev-FLD-3', name: 'Core Delivery Architecture', itemTypeKey: 'SET', status: 'In Review', currentVersion: 1, priority: 'Medium' },
-  { id: 'item-sr-2', key: 'Rev-SR-2', name: 'Bolus Delivery Precision', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-sr-5', key: 'Rev-SR-5', name: 'Occlusion Pressure Threshold', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-sr-4', key: 'Rev-SR-4', name: 'Battery Backup Duration', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1, priority: 'Medium' },
-  { id: 'item-fld-4', key: 'Rev-FLD-4', name: 'Safety System Sensors', itemTypeKey: 'SET', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-sr-1', key: 'Rev-SR-1', name: 'Emergency Stop Protocol', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-sr-7', key: 'Rev-SR-7', name: 'Air-in-line Bubble Detection', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1, priority: 'High' },
-  { id: 'item-fld-5', key: 'Rev-FLD-5', name: 'Telemetry Interface', itemTypeKey: 'SET', status: 'In Review', currentVersion: 1, priority: 'Low' },
-  { id: 'item-sr-3', key: 'Rev-SR-3', name: 'Wireless Telemetry Encryption', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1, priority: 'High' },
+  {
+    id: 'item-txt-3',
+    key: 'Rev-TXT-3',
+    name: 'Scope and Purpose',
+    itemTypeKey: 'TXT',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-txt-4',
+    key: 'Rev-TXT-4',
+    name: 'Definitions and Acronyms',
+    itemTypeKey: 'TXT',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'Medium',
+  },
+  {
+    id: 'item-txt-5',
+    key: 'Rev-TXT-5',
+    name: 'Applicable Regulations',
+    itemTypeKey: 'TXT',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-txt-6',
+    key: 'Rev-TXT-6',
+    name: 'Safety Standards',
+    itemTypeKey: 'TXT',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-fld-3',
+    key: 'Rev-FLD-3',
+    name: 'Core Delivery Architecture',
+    itemTypeKey: 'SET',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'Medium',
+  },
+  {
+    id: 'item-sr-2',
+    key: 'Rev-SR-2',
+    name: 'Bolus Delivery Precision',
+    itemTypeKey: 'REQ',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-sr-5',
+    key: 'Rev-SR-5',
+    name: 'Occlusion Pressure Threshold',
+    itemTypeKey: 'REQ',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-sr-4',
+    key: 'Rev-SR-4',
+    name: 'Battery Backup Duration',
+    itemTypeKey: 'REQ',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'Medium',
+  },
+  {
+    id: 'item-fld-4',
+    key: 'Rev-FLD-4',
+    name: 'Safety System Sensors',
+    itemTypeKey: 'SET',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-sr-1',
+    key: 'Rev-SR-1',
+    name: 'Emergency Stop Protocol',
+    itemTypeKey: 'REQ',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-sr-7',
+    key: 'Rev-SR-7',
+    name: 'Air-in-line Bubble Detection',
+    itemTypeKey: 'REQ',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
+  {
+    id: 'item-fld-5',
+    key: 'Rev-FLD-5',
+    name: 'Telemetry Interface',
+    itemTypeKey: 'SET',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'Low',
+  },
+  {
+    id: 'item-sr-3',
+    key: 'Rev-SR-3',
+    name: 'Wireless Telemetry Encryption',
+    itemTypeKey: 'REQ',
+    status: 'In Review',
+    currentVersion: 1,
+    priority: 'High',
+  },
 ];
 
 export interface FilterItem {
@@ -65,11 +169,46 @@ const DEFAULT_FILTERS: FilterItem[] = [
     isBookmarked: true,
     itemsCount: 5,
     items: [
-      { id: 'item-sr-1', key: 'Rev-SR-1', name: 'Emergency Stop Protocol', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1 },
-      { id: 'item-sr-3', key: 'Rev-SR-3', name: 'Wireless Telemetry Encryption', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1 },
-      { id: 'item-sr-7', key: 'Rev-SR-7', name: 'Air-in-line Bubble Detection', itemTypeKey: 'REQ', status: 'In Review', currentVersion: 1 },
-      { id: 'item-txt-5', key: 'Rev-TXT-5', name: 'Applicable Regulations', itemTypeKey: 'TXT', status: 'In Review', currentVersion: 1 },
-      { id: 'item-fld-3', key: 'Rev-FLD-3', name: 'Core Delivery Architecture', itemTypeKey: 'SET', status: 'In Review', currentVersion: 1 },
+      {
+        id: 'item-sr-1',
+        key: 'Rev-SR-1',
+        name: 'Emergency Stop Protocol',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-sr-3',
+        key: 'Rev-SR-3',
+        name: 'Wireless Telemetry Encryption',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-sr-7',
+        key: 'Rev-SR-7',
+        name: 'Air-in-line Bubble Detection',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-txt-5',
+        key: 'Rev-TXT-5',
+        name: 'Applicable Regulations',
+        itemTypeKey: 'TXT',
+        status: 'In Review',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-fld-3',
+        key: 'Rev-FLD-3',
+        name: 'Core Delivery Architecture',
+        itemTypeKey: 'SET',
+        status: 'In Review',
+        currentVersion: 1,
+      },
     ],
   },
   {
@@ -78,10 +217,38 @@ const DEFAULT_FILTERS: FilterItem[] = [
     isBookmarked: true,
     itemsCount: 4,
     items: [
-      { id: 'item-sr-4', key: 'Rev-SR-4', name: 'Battery Backup Duration', itemTypeKey: 'REQ', status: 'Accepted', currentVersion: 1 },
-      { id: 'item-sr-5', key: 'Rev-SR-5', name: 'Occlusion Pressure Threshold', itemTypeKey: 'REQ', status: 'Accepted', currentVersion: 1 },
-      { id: 'item-txt-4', key: 'Rev-TXT-4', name: 'Definitions and Acronyms', itemTypeKey: 'TXT', status: 'Accepted', currentVersion: 1 },
-      { id: 'item-fld-4', key: 'Rev-FLD-4', name: 'Safety System Sensors', itemTypeKey: 'SET', status: 'Accepted', currentVersion: 1 },
+      {
+        id: 'item-sr-4',
+        key: 'Rev-SR-4',
+        name: 'Battery Backup Duration',
+        itemTypeKey: 'REQ',
+        status: 'Accepted',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-sr-5',
+        key: 'Rev-SR-5',
+        name: 'Occlusion Pressure Threshold',
+        itemTypeKey: 'REQ',
+        status: 'Accepted',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-txt-4',
+        key: 'Rev-TXT-4',
+        name: 'Definitions and Acronyms',
+        itemTypeKey: 'TXT',
+        status: 'Accepted',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-fld-4',
+        key: 'Rev-FLD-4',
+        name: 'Safety System Sensors',
+        itemTypeKey: 'SET',
+        status: 'Accepted',
+        currentVersion: 1,
+      },
     ],
   },
   {
@@ -90,12 +257,54 @@ const DEFAULT_FILTERS: FilterItem[] = [
     isBookmarked: true,
     itemsCount: 6,
     items: [
-      { id: 'item-sr-2', key: 'Rev-SR-2', name: 'Bolus Delivery Precision', itemTypeKey: 'REQ', status: 'In Process', currentVersion: 1 },
-      { id: 'item-sr-3', key: 'Rev-SR-3', name: 'Wireless Telemetry Encryption', itemTypeKey: 'REQ', status: 'In Process', currentVersion: 1 },
-      { id: 'item-txt-3', key: 'Rev-TXT-3', name: 'Scope and Purpose', itemTypeKey: 'TXT', status: 'In Process', currentVersion: 1 },
-      { id: 'item-txt-6', key: 'Rev-TXT-6', name: 'Safety Standards', itemTypeKey: 'TXT', status: 'In Process', currentVersion: 1 },
-      { id: 'item-fld-5', key: 'Rev-FLD-5', name: 'Telemetry Interface', itemTypeKey: 'SET', status: 'In Process', currentVersion: 1 },
-      { id: 'item-fld-3', key: 'Rev-FLD-3', name: 'Core Delivery Architecture', itemTypeKey: 'SET', status: 'In Process', currentVersion: 1 },
+      {
+        id: 'item-sr-2',
+        key: 'Rev-SR-2',
+        name: 'Bolus Delivery Precision',
+        itemTypeKey: 'REQ',
+        status: 'In Process',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-sr-3',
+        key: 'Rev-SR-3',
+        name: 'Wireless Telemetry Encryption',
+        itemTypeKey: 'REQ',
+        status: 'In Process',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-txt-3',
+        key: 'Rev-TXT-3',
+        name: 'Scope and Purpose',
+        itemTypeKey: 'TXT',
+        status: 'In Process',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-txt-6',
+        key: 'Rev-TXT-6',
+        name: 'Safety Standards',
+        itemTypeKey: 'TXT',
+        status: 'In Process',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-fld-5',
+        key: 'Rev-FLD-5',
+        name: 'Telemetry Interface',
+        itemTypeKey: 'SET',
+        status: 'In Process',
+        currentVersion: 1,
+      },
+      {
+        id: 'item-fld-3',
+        key: 'Rev-FLD-3',
+        name: 'Core Delivery Architecture',
+        itemTypeKey: 'SET',
+        status: 'In Process',
+        currentVersion: 1,
+      },
     ],
   },
   {
@@ -111,9 +320,30 @@ const DEFAULT_FILTERS: FilterItem[] = [
     isBookmarked: false,
     itemsCount: 3,
     items: [
-      { id: 'def-1', key: 'DEF-101', name: 'Bolus valve leakage under extreme pressure', itemTypeKey: 'DEFECT', status: 'Open', currentVersion: 1 },
-      { id: 'def-2', key: 'DEF-102', name: 'Bluetooth reconnection timeout', itemTypeKey: 'DEFECT', status: 'Open', currentVersion: 1 },
-      { id: 'def-3', key: 'DEF-103', name: 'Screen flicker at low battery state', itemTypeKey: 'DEFECT', status: 'Open', currentVersion: 1 },
+      {
+        id: 'def-1',
+        key: 'DEF-101',
+        name: 'Bolus valve leakage under extreme pressure',
+        itemTypeKey: 'DEFECT',
+        status: 'Open',
+        currentVersion: 1,
+      },
+      {
+        id: 'def-2',
+        key: 'DEF-102',
+        name: 'Bluetooth reconnection timeout',
+        itemTypeKey: 'DEFECT',
+        status: 'Open',
+        currentVersion: 1,
+      },
+      {
+        id: 'def-3',
+        key: 'DEF-103',
+        name: 'Screen flicker at low battery state',
+        itemTypeKey: 'DEFECT',
+        status: 'Open',
+        currentVersion: 1,
+      },
     ],
   },
 ];
@@ -174,7 +404,9 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   const { headerTheme } = useThemeStore();
   const isDark = headerTheme === 'dark';
 
-  const [activeTab, setActiveTab] = useState<'explorer' | 'filter' | 'bookmarks' | 'views'>('explorer');
+  const [activeTab, setActiveTab] = useState<'explorer' | 'filter' | 'bookmarks' | 'views'>(
+    'explorer',
+  );
   const [tagTab, setTagTab] = useState<'cloud' | 'list'>('cloud');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']));
 
@@ -196,12 +428,12 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   useEffect(() => {
     const handleOutsideClick = () => {
       if (contextMenu.isOpen) {
-        setContextMenu((prev) => ({ ...prev, isOpen: false }));
+        setContextMenu(prev => ({ ...prev, isOpen: false }));
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setContextMenu((prev) => ({ ...prev, isOpen: false }));
+        setContextMenu(prev => ({ ...prev, isOpen: false }));
       }
     };
 
@@ -216,10 +448,10 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   // Automatically expand top-level folders when nodes load
   useEffect(() => {
     if (nodes.length > 0) {
-      setExpandedFolders((prev) => {
+      setExpandedFolders(prev => {
         const next = new Set(prev);
         next.add('root');
-        nodes.forEach((n) => {
+        nodes.forEach(n => {
           if (n.type === 'folder') next.add(n.id);
         });
         return next;
@@ -338,6 +570,13 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
     return { typeCounts: tCounts, statusCounts: sCounts, totalItemCount: total };
   }, [nodes]);
 
+  const displayedFilters = useMemo(() => {
+    if (filterViewMode === 'bookmarks') {
+      return filtersList.filter(f => f.isBookmarked);
+    }
+    return filtersList;
+  }, [filtersList, filterViewMode]);
+
   // License check: Reviewer Limited (QT-08)
   if (user?.licenseType === LicenseType.REVIEWER_LIMITED) {
     return (
@@ -367,7 +606,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   }
 
   const toggleFolder = (folderKey: string) => {
-    setExpandedFolders((prev) => {
+    setExpandedFolders(prev => {
       const next = new Set(prev);
       if (next.has(folderKey)) {
         next.delete(folderKey);
@@ -431,15 +670,15 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
         <div key={node.id} className="space-y-0.5">
           <div
             onClick={() => handleFolderClick(node.id)}
-            onContextMenu={(e) => handleFolderContextMenu(e, node)}
+            onContextMenu={e => handleFolderContextMenu(e, node)}
             className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer transition-colors ${
               isSelected
                 ? isDark
                   ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                   : 'bg-[#e0efff] text-blue-900 font-semibold'
                 : isDark
-                ? 'hover:bg-[#1f242c] text-slate-200'
-                : 'hover:bg-slate-100 text-slate-800'
+                  ? 'hover:bg-[#1f242c] text-slate-200'
+                  : 'hover:bg-slate-100 text-slate-800'
             }`}
             style={{ paddingLeft: `${depth * 14 + 6}px` }}
             title={node.name}
@@ -447,7 +686,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
             {hasChildren ? (
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   toggleFolder(node.id);
                 }}
@@ -474,7 +713,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
 
           {isExpanded && hasChildren && (
             <div className={`border-l ml-3 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}>
-              {node.children!.map((child) => renderTreeNode(child, depth + 1))}
+              {node.children!.map(child => renderTreeNode(child, depth + 1))}
             </div>
           )}
         </div>
@@ -487,15 +726,15 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
         <div
           key={node.id}
           onClick={() => handleItemClick(node.id, node.key || '', node.name)}
-          onContextMenu={(e) => handleItemContextMenu(e, node)}
+          onContextMenu={e => handleItemContextMenu(e, node)}
           className={`flex items-center gap-1.5 py-0.5 px-1.5 rounded cursor-pointer transition-colors text-[11px] ${
             isSelected
               ? isDark
                 ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                 : 'bg-[#e0efff] text-blue-900 font-semibold'
               : isDark
-              ? 'hover:bg-[#1f242c] text-slate-300'
-              : 'hover:bg-slate-100 text-slate-700'
+                ? 'hover:bg-[#1f242c] text-slate-300'
+                : 'hover:bg-slate-100 text-slate-700'
           }`}
           style={{ paddingLeft: `${depth * 14 + 6}px` }}
           title={`${node.key}: ${node.name}`}
@@ -509,13 +748,6 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
       );
     }
   };
-
-  const displayedFilters = useMemo(() => {
-    if (filterViewMode === 'bookmarks') {
-      return filtersList.filter((f) => f.isBookmarked);
-    }
-    return filtersList;
-  }, [filtersList, filterViewMode]);
 
   return (
     <div
@@ -541,8 +773,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                 ? 'bg-[#161b22] text-white border-t border-l border-r border-[#30363d] shadow-2xs'
                 : 'bg-white text-slate-900 border-t border-l border-r border-slate-300 shadow-2xs'
               : isDark
-              ? 'text-slate-400 hover:text-slate-200 hover:bg-[#282e38]'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-[#282e38]'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
           }`}
         >
           <Folder className="w-3.5 h-3.5 text-blue-500" />
@@ -559,8 +791,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                 ? 'bg-[#161b22] text-blue-400 border-t border-l border-r border-[#30363d] shadow-2xs'
                 : 'bg-white text-blue-600 border-t border-l border-r border-slate-300 shadow-2xs'
               : isDark
-              ? 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
-              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                ? 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title="Filters"
         >
@@ -578,8 +810,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                 ? 'bg-[#161b22] text-blue-400'
                 : 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
               : activeTab === 'bookmarks'
-              ? 'bg-white shadow-2xs text-blue-600'
-              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                ? 'bg-white shadow-2xs text-blue-600'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title="Bookmarks"
         >
@@ -596,8 +828,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                 ? 'bg-[#161b22] text-blue-400'
                 : 'text-slate-400 hover:bg-[#282e38] hover:text-slate-200'
               : activeTab === 'views'
-              ? 'bg-white shadow-2xs text-blue-600'
-              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                ? 'bg-white shadow-2xs text-blue-600'
+                : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
           }`}
           title="Views Layout"
         >
@@ -666,12 +898,12 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
             {/* Root Node: Project Name */}
             <div
               onClick={handleRootClick}
-              onContextMenu={(e) => {
+              onContextMenu={e => {
                 e.preventDefault();
                 e.stopPropagation();
                 // Collect all project items
                 const allItems: ReviewWizardItemInfo[] = [];
-                nodes.forEach((n) => allItems.push(...collectDescendantItems(n)));
+                nodes.forEach(n => allItems.push(...collectDescendantItems(n)));
                 setContextMenu({
                   isOpen: true,
                   x: Math.min(e.clientX, window.innerWidth - 240),
@@ -690,14 +922,14 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     ? 'bg-[#1f3a5f] text-blue-200 font-semibold'
                     : 'bg-[#e0efff] text-blue-900 font-semibold'
                   : isDark
-                  ? 'hover:bg-[#1f242c] text-slate-200'
-                  : 'hover:bg-slate-100 text-slate-800'
+                    ? 'hover:bg-[#1f242c] text-slate-200'
+                    : 'hover:bg-slate-100 text-slate-800'
               }`}
               title={`${currentProject?.name || 'Project'} (Dashboard)`}
             >
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   toggleFolder('root');
                 }}
@@ -737,7 +969,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     No folders or items in this project.
                   </div>
                 ) : (
-                  nodes.map((node) => renderTreeNode(node, 0))
+                  nodes.map(node => renderTreeNode(node, 0))
                 )}
               </div>
             )}
@@ -826,10 +1058,10 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
 
               {isBookmarkedSectionOpen && (
                 <div className="divide-y divide-slate-100">
-                  {displayedFilters.map((filter) => (
+                  {displayedFilters.map(filter => (
                     <div
                       key={filter.id}
-                      onContextMenu={(e) => handleFilterContextMenu(e, filter)}
+                      onContextMenu={e => handleFilterContextMenu(e, filter)}
                       className="px-3 py-1.5 flex items-center justify-between text-xs hover:bg-blue-50/60 cursor-pointer transition-colors group"
                       title="Right-click for options (Send for review, Duplicate, Edit...)"
                     >
@@ -928,8 +1160,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                       isActive
                         ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                         : isDark
-                        ? 'bg-[#21262d] border-[#30363d] text-slate-300 hover:border-blue-500 hover:text-blue-400'
-                        : 'bg-white border-slate-300 text-slate-700 hover:border-blue-500 hover:text-blue-600 shadow-2xs'
+                          ? 'bg-[#21262d] border-[#30363d] text-slate-300 hover:border-blue-500 hover:text-blue-400'
+                          : 'bg-white border-slate-300 text-slate-700 hover:border-blue-500 hover:text-blue-600 shadow-2xs'
                     }`}
                   >
                     <span>{typeKey}</span>
@@ -938,8 +1170,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                         isActive
                           ? 'bg-blue-800 text-blue-100'
                           : isDark
-                          ? 'bg-slate-700 text-slate-300'
-                          : 'bg-slate-100 text-slate-600'
+                            ? 'bg-slate-700 text-slate-300'
+                            : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       {count}
@@ -962,8 +1194,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     isActive
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                       : isDark
-                      ? 'bg-[#21262d] border-[#30363d] text-slate-300 hover:border-emerald-500 hover:text-emerald-400'
-                      : 'bg-white border-slate-300 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 shadow-2xs'
+                        ? 'bg-[#21262d] border-[#30363d] text-slate-300 hover:border-emerald-500 hover:text-emerald-400'
+                        : 'bg-white border-slate-300 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 shadow-2xs'
                   }`}
                 >
                   <span>{status}</span>
@@ -972,8 +1204,8 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                       isActive
                         ? 'bg-emerald-800 text-emerald-100'
                         : isDark
-                        ? 'bg-slate-700 text-slate-300'
-                        : 'bg-slate-100 text-slate-600'
+                          ? 'bg-slate-700 text-slate-300'
+                          : 'bg-slate-100 text-slate-600'
                     }`}
                   >
                     {count}
@@ -993,7 +1225,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
       {contextMenu.isOpen && (
         <div
           style={{ top: contextMenu.y, left: contextMenu.x }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           className="fixed z-50 bg-white border border-slate-300 rounded-md shadow-2xl py-1 w-56 text-xs text-slate-800 animate-in fade-in duration-75 select-none"
         >
           {/* Menu for Filter */}
@@ -1002,28 +1234,24 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setFiltersList((prev) =>
-                    prev.map((f) =>
-                      f.id === contextMenu.data.id
-                        ? { ...f, isBookmarked: !f.isBookmarked }
-                        : f,
+                  setFiltersList(prev =>
+                    prev.map(f =>
+                      f.id === contextMenu.data.id ? { ...f, isBookmarked: !f.isBookmarked } : f,
                     ),
                   );
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
                 <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                 <span>
-                  {contextMenu.data.isBookmarked
-                    ? 'Remove from bookmarks'
-                    : 'Bookmark filter'}
+                  {contextMenu.data.isBookmarked ? 'Remove from bookmarks' : 'Bookmark filter'}
                 </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+                onClick={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
                 <Copy className="w-3.5 h-3.5 text-slate-400" />
@@ -1032,7 +1260,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
 
               <button
                 type="button"
-                onClick={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+                onClick={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
                 <Edit2 className="w-3.5 h-3.5 text-slate-400" />
@@ -1041,7 +1269,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
 
               <button
                 type="button"
-                onClick={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+                onClick={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
                 <Tag className="w-3.5 h-3.5 text-slate-400" />
@@ -1050,7 +1278,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
 
               <button
                 type="button"
-                onClick={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+                onClick={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
                 className="w-full text-left px-3 py-1.5 hover:bg-red-50 flex items-center gap-2 text-red-600"
               >
                 <Trash2 className="w-3.5 h-3.5 text-red-500" />
@@ -1061,7 +1289,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
 
               <button
                 type="button"
-                onClick={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+                onClick={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
                 <FolderTree className="w-3.5 h-3.5 text-slate-400" />
@@ -1077,7 +1305,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     sourceFilterName: contextMenu.data.name,
                     items: contextMenu.data.items || READY_FOR_REVIEW_FILTER_ITEMS,
                   });
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold flex items-center gap-2 border-t border-blue-100"
               >
@@ -1100,7 +1328,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                       contextMenu.data.name,
                     );
                   }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
@@ -1114,7 +1342,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                   if (contextMenu.data.key) {
                     navigator.clipboard.writeText(contextMenu.data.key);
                   }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
@@ -1133,7 +1361,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     sourceFilterName: `Single Item: ${contextMenu.data.key}`,
                     items: contextMenu.data.items || [],
                   });
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold flex items-center gap-2"
               >
@@ -1152,7 +1380,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                   if (contextMenu.data.id !== 'root') {
                     handleFolderClick(contextMenu.data.id);
                   }
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
               >
@@ -1171,14 +1399,12 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     sourceFilterName: `Folder: ${contextMenu.data.name}`,
                     items: contextMenu.data.items || [],
                   });
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
+                  setContextMenu(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full text-left px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold flex items-center gap-2"
               >
                 <FileCheck className="w-3.5 h-3.5 text-blue-600" />
-                <span>
-                  Send set for review ({contextMenu.data.items?.length || 0} items)
-                </span>
+                <span>Send set for review ({contextMenu.data.items?.length || 0} items)</span>
               </button>
             </>
           )}

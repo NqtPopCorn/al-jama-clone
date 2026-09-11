@@ -3,7 +3,12 @@ import { BadRequestException, ForbiddenException, ConflictException } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ReviewInitiationService } from './review-initiation.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ReviewStatus, ReviewRole, ReviewTemplateType, ReviewItemStatusValue } from '@prisma/client';
+import {
+  ReviewStatus,
+  ReviewRole,
+  ReviewTemplateType,
+  ReviewItemStatusValue,
+} from '@prisma/client';
 
 describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
   let service: ReviewInitiationService;
@@ -58,7 +63,7 @@ describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
       reviewItemStatus: {
         createMany: jest.fn(),
       },
-      $transaction: jest.fn(async (cb) => cb(prisma)),
+      $transaction: jest.fn(async cb => cb(prisma)),
     };
 
     eventEmitter = {
@@ -104,9 +109,7 @@ describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
           templateId,
           name: 'Sprint Review',
           itemIds: [itemId1, itemId2],
-          participants: [
-            { groupId, reviewRole: ReviewRole.REVIEWER },
-          ],
+          participants: [{ groupId, reviewRole: ReviewRole.REVIEWER }],
         },
         creatorId,
       );
@@ -140,9 +143,7 @@ describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
         participants: [{ userId: creatorId, reviewRole: ReviewRole.MODERATOR }],
       });
 
-      await expect(service.initiateReview('rev-1', creatorId)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.initiateReview('rev-1', creatorId)).rejects.toThrow(BadRequestException);
     });
 
     it('should transition review to ACTIVE, create Revision #1, snapshot baseline, and initialize statuses', async () => {
@@ -153,9 +154,7 @@ describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
         projectId,
         status: ReviewStatus.DRAFT,
         createdBy: creatorId,
-        items: [
-          { id: 'ri-1', itemId: itemId1, item: { id: itemId1, currentVersion: 1 } },
-        ],
+        items: [{ id: 'ri-1', itemId: itemId1, item: { id: itemId1, currentVersion: 1 } }],
         participants: [
           { id: 'rp-1', userId: creatorId, reviewRole: ReviewRole.MODERATOR },
           { id: 'rp-2', userId: memberId1, reviewRole: ReviewRole.APPROVER },

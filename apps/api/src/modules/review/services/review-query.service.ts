@@ -76,10 +76,10 @@ export class ReviewQueryService {
     });
 
     const items = reviews.map((r, index) => {
-      const myParticipant = r.participants.find((p) => p.userId === currentUserId);
+      const myParticipant = r.participants.find(p => p.userId === currentUserId);
       const moderators = r.participants
-        .filter((p) => p.reviewRole === 'MODERATOR')
-        .map((p) => p.user.fullName || p.user.username);
+        .filter(p => p.reviewRole === 'MODERATOR')
+        .map(p => p.user.fullName || p.user.username);
 
       return {
         id: r.id,
@@ -151,7 +151,7 @@ export class ReviewQueryService {
     }
 
     // Kiểm tra quyền truy cập
-    const myParticipant = review.participants.find((p) => p.userId === currentUserId);
+    const myParticipant = review.participants.find(p => p.userId === currentUserId);
     if (!myParticipant && review.createdBy !== currentUserId) {
       throw new ForbiddenException('You do not have access to this review');
     }
@@ -159,7 +159,7 @@ export class ReviewQueryService {
     // Lấy trạng thái của toàn bộ items ở revision hiện tại
     const currentStatuses = await this.prisma.reviewItemStatus.findMany({
       where: {
-        reviewItemId: { in: review.items.map((i) => i.id) },
+        reviewItemId: { in: review.items.map(i => i.id) },
         revisionNumber: review.currentRevisionNumber,
       },
     });
@@ -167,7 +167,7 @@ export class ReviewQueryService {
     // Lấy comment count của revision hiện tại
     const commentsInRevision = await this.prisma.reviewComment.findMany({
       where: {
-        reviewItemId: { in: review.items.map((i) => i.id) },
+        reviewItemId: { in: review.items.map(i => i.id) },
         revisionNumber: review.currentRevisionNumber,
       },
       select: {
@@ -187,10 +187,10 @@ export class ReviewQueryService {
       if (c.authorId === currentUserId) myCommentsCount++;
     }
 
-    const readingItems = review.items.map((ri) => {
+    const readingItems = review.items.map(ri => {
       // Trạng thái của current user cho item này
       const myStatusRow = currentStatuses.find(
-        (s) => s.reviewItemId === ri.id && s.userId === currentUserId,
+        s => s.reviewItemId === ri.id && s.userId === currentUserId,
       );
       const statusVal = myStatusRow ? myStatusRow.status : ReviewItemStatusValue.NOT_REVIEWED;
 
@@ -199,9 +199,7 @@ export class ReviewQueryService {
       else if (statusVal === ReviewItemStatusValue.REVIEWED) reviewedCount++;
       else unmarkedCount++;
 
-      const itemCommentsCount = commentsInRevision.filter(
-        (c) => c.reviewItemId === ri.id,
-      ).length;
+      const itemCommentsCount = commentsInRevision.filter(c => c.reviewItemId === ri.id).length;
 
       return {
         id: ri.id,
@@ -220,7 +218,7 @@ export class ReviewQueryService {
       };
     });
 
-    const participantsSummary = review.participants.map((p) => ({
+    const participantsSummary = review.participants.map(p => ({
       id: p.id,
       reviewId: p.reviewId,
       userId: p.userId,

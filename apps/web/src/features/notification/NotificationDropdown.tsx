@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, ExternalLink } from 'lucide-react';
+import {
+  Bell,
+  CheckCheck,
+  ExternalLink,
+  FileCheck,
+  MessageSquare,
+  CheckCircle,
+  AtSign,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { api } from '../../lib/api';
 
@@ -18,11 +26,13 @@ export interface AppNotification {
 interface NotificationDropdownProps {
   isDark?: boolean;
   onNavigateToItem?: (itemId: string) => void;
+  onNavigateToReview?: (reviewId: string) => void;
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   isDark,
   onNavigateToItem,
+  onNavigateToReview,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -92,11 +102,34 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     setIsOpen(false);
 
     if (notif.linkUrl) {
-      // If it points to an item (/items/:id)
+      // Check if it points to a review (/reviews/:id)
+      const reviewMatch = notif.linkUrl.match(/\/reviews\/([0-9a-fA-F-]+)/);
+      if (reviewMatch && reviewMatch[1] && onNavigateToReview) {
+        onNavigateToReview(reviewMatch[1]);
+        return;
+      }
+
+      // Check if it points to an item (/items/:id)
       const itemMatch = notif.linkUrl.match(/\/items\/([0-9a-fA-F-]+)/);
       if (itemMatch && itemMatch[1] && onNavigateToItem) {
         onNavigateToItem(itemMatch[1]);
+        return;
       }
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'REVIEW_INVITATION':
+      case 'REVIEW_REVISION_PUBLISHED':
+        return <FileCheck className="w-3.5 h-3.5 text-indigo-500 shrink-0" />;
+      case 'REVIEW_COMMENT_MENTION':
+      case 'COMMENT_MENTION':
+        return <AtSign className="w-3.5 h-3.5 text-amber-500 shrink-0" />;
+      case 'REVIEW_PARTICIPANT_FINISHED':
+        return <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />;
+      default:
+        return <MessageSquare className="w-3.5 h-3.5 text-blue-500 shrink-0" />;
     }
   };
 
@@ -166,12 +199,13 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     !n.isRead ? 'bg-blue-50/50 dark:bg-blue-950/30' : 'bg-transparent opacity-85'
                   }`}
                 >
-                  <div className="pt-0.5">
+                  <div className="pt-0.5 flex items-center gap-1.5">
                     <span
-                      className={`block w-2 h-2 rounded-full ${
+                      className={`block w-1.5 h-1.5 rounded-full ${
                         !n.isRead ? 'bg-blue-600' : 'bg-transparent'
                       }`}
                     />
+                    {getNotificationIcon(n.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-1 mb-0.5">
@@ -186,8 +220,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                       {n.content}
                     </p>
                     {n.linkUrl && (
-                      <div className="mt-1 flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400">
-                        <span>View detail</span>
+                      <div className="mt-1 flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                        <span>
+                          {n.linkUrl.startsWith('/reviews') ? 'Open Review' : 'View detail'}
+                        </span>
                         <ExternalLink className="w-2.5 h-2.5" />
                       </div>
                     )}

@@ -51,11 +51,7 @@ export const reviewApi = {
     return res.data.data;
   },
 
-  updateItemStatus: async (
-    reviewId: string,
-    itemId: string,
-    dto: UpdateReviewItemStatusDto,
-  ) => {
+  updateItemStatus: async (reviewId: string, itemId: string, dto: UpdateReviewItemStatusDto) => {
     const res = await api.patch<ApiResponse<unknown>>(
       `/reviews/${reviewId}/items/${itemId}/status`,
       dto,
@@ -84,11 +80,7 @@ export const reviewApi = {
     return res.data.data;
   },
 
-  createComment: async (
-    reviewId: string,
-    itemId: string,
-    dto: CreateReviewCommentDto,
-  ) => {
+  createComment: async (reviewId: string, itemId: string, dto: CreateReviewCommentDto) => {
     const res = await api.post<ApiResponse<ReviewCommentSummary>>(
       `/reviews/${reviewId}/items/${itemId}/comments`,
       dto,

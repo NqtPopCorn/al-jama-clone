@@ -464,4 +464,3 @@ export interface CreateReviewCommentDto {
   parentCommentId?: string;
   mentionedUserIds?: string[];
 }
-

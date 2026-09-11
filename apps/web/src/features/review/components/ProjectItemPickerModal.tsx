@@ -35,16 +35,96 @@ const SAMPLE_PROJECT_TREE: ExplorerNode[] = [
     type: 'folder',
     orderIndex: 1,
     children: [
-      { id: 'item-txt-3', key: 'Rev-TXT-3', name: 'Scope and Purpose', type: 'item', itemTypeKey: 'TXT', status: 'In Review', orderIndex: 1 },
-      { id: 'item-txt-4', key: 'Rev-TXT-4', name: 'Definitions and Acronyms', type: 'item', itemTypeKey: 'TXT', status: 'In Review', orderIndex: 2 },
-      { id: 'item-txt-5', key: 'Rev-TXT-5', name: 'Applicable Regulations', type: 'item', itemTypeKey: 'TXT', status: 'In Review', orderIndex: 3 },
-      { id: 'item-txt-6', key: 'Rev-TXT-6', name: 'Safety Standards', type: 'item', itemTypeKey: 'TXT', status: 'In Review', orderIndex: 4 },
-      { id: 'item-sr-1', key: 'Rev-SR-1', name: 'Emergency Stop Protocol', type: 'item', itemTypeKey: 'REQ', status: 'In Review', orderIndex: 5 },
-      { id: 'item-sr-2', key: 'Rev-SR-2', name: 'Bolus Delivery Precision', type: 'item', itemTypeKey: 'REQ', status: 'In Review', orderIndex: 6 },
-      { id: 'item-sr-3', key: 'Rev-SR-3', name: 'Wireless Telemetry Encryption', type: 'item', itemTypeKey: 'REQ', status: 'In Review', orderIndex: 7 },
-      { id: 'item-sr-4', key: 'Rev-SR-4', name: 'Battery Backup Duration', type: 'item', itemTypeKey: 'REQ', status: 'Accepted', orderIndex: 8 },
-      { id: 'item-sr-5', key: 'Rev-SR-5', name: 'Occlusion Pressure Threshold', type: 'item', itemTypeKey: 'REQ', status: 'Accepted', orderIndex: 9 },
-      { id: 'item-sr-7', key: 'Rev-SR-7', name: 'Air-in-line Bubble Detection', type: 'item', itemTypeKey: 'REQ', status: 'In Review', orderIndex: 10 },
+      {
+        id: 'item-txt-3',
+        key: 'Rev-TXT-3',
+        name: 'Scope and Purpose',
+        type: 'item',
+        itemTypeKey: 'TXT',
+        status: 'In Review',
+        orderIndex: 1,
+      },
+      {
+        id: 'item-txt-4',
+        key: 'Rev-TXT-4',
+        name: 'Definitions and Acronyms',
+        type: 'item',
+        itemTypeKey: 'TXT',
+        status: 'In Review',
+        orderIndex: 2,
+      },
+      {
+        id: 'item-txt-5',
+        key: 'Rev-TXT-5',
+        name: 'Applicable Regulations',
+        type: 'item',
+        itemTypeKey: 'TXT',
+        status: 'In Review',
+        orderIndex: 3,
+      },
+      {
+        id: 'item-txt-6',
+        key: 'Rev-TXT-6',
+        name: 'Safety Standards',
+        type: 'item',
+        itemTypeKey: 'TXT',
+        status: 'In Review',
+        orderIndex: 4,
+      },
+      {
+        id: 'item-sr-1',
+        key: 'Rev-SR-1',
+        name: 'Emergency Stop Protocol',
+        type: 'item',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        orderIndex: 5,
+      },
+      {
+        id: 'item-sr-2',
+        key: 'Rev-SR-2',
+        name: 'Bolus Delivery Precision',
+        type: 'item',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        orderIndex: 6,
+      },
+      {
+        id: 'item-sr-3',
+        key: 'Rev-SR-3',
+        name: 'Wireless Telemetry Encryption',
+        type: 'item',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        orderIndex: 7,
+      },
+      {
+        id: 'item-sr-4',
+        key: 'Rev-SR-4',
+        name: 'Battery Backup Duration',
+        type: 'item',
+        itemTypeKey: 'REQ',
+        status: 'Accepted',
+        orderIndex: 8,
+      },
+      {
+        id: 'item-sr-5',
+        key: 'Rev-SR-5',
+        name: 'Occlusion Pressure Threshold',
+        type: 'item',
+        itemTypeKey: 'REQ',
+        status: 'Accepted',
+        orderIndex: 9,
+      },
+      {
+        id: 'item-sr-7',
+        key: 'Rev-SR-7',
+        name: 'Air-in-line Bubble Detection',
+        type: 'item',
+        itemTypeKey: 'REQ',
+        status: 'In Review',
+        orderIndex: 10,
+      },
     ],
   },
   {
@@ -53,9 +133,33 @@ const SAMPLE_PROJECT_TREE: ExplorerNode[] = [
     type: 'folder',
     orderIndex: 2,
     children: [
-      { id: 'item-uc-1', key: 'Rev-UC-1', name: 'Clinician Program Infusion Rate', type: 'item', itemTypeKey: 'UC', status: 'Accepted', orderIndex: 1 },
-      { id: 'item-uc-2', key: 'Rev-UC-2', name: 'Emergency Bolus Delivery Manual Override', type: 'item', itemTypeKey: 'UC', status: 'In Review', orderIndex: 2 },
-      { id: 'item-uc-3', key: 'Rev-UC-3', name: 'Occlusion Alarm and Auto-Pause Workflow', type: 'item', itemTypeKey: 'UC', status: 'In Review', orderIndex: 3 },
+      {
+        id: 'item-uc-1',
+        key: 'Rev-UC-1',
+        name: 'Clinician Program Infusion Rate',
+        type: 'item',
+        itemTypeKey: 'UC',
+        status: 'Accepted',
+        orderIndex: 1,
+      },
+      {
+        id: 'item-uc-2',
+        key: 'Rev-UC-2',
+        name: 'Emergency Bolus Delivery Manual Override',
+        type: 'item',
+        itemTypeKey: 'UC',
+        status: 'In Review',
+        orderIndex: 2,
+      },
+      {
+        id: 'item-uc-3',
+        key: 'Rev-UC-3',
+        name: 'Occlusion Alarm and Auto-Pause Workflow',
+        type: 'item',
+        itemTypeKey: 'UC',
+        status: 'In Review',
+        orderIndex: 3,
+      },
     ],
   },
   {
@@ -64,8 +168,24 @@ const SAMPLE_PROJECT_TREE: ExplorerNode[] = [
     type: 'folder',
     orderIndex: 3,
     children: [
-      { id: 'item-tc-1', key: 'Rev-TC-1', name: 'Test Battery Cutoff Response Time', type: 'item', itemTypeKey: 'TC', status: 'Draft', orderIndex: 1 },
-      { id: 'item-tc-2', key: 'Rev-TC-2', name: 'Verify Air Bubble Ultrasonic Sensor Accuracy', type: 'item', itemTypeKey: 'TC', status: 'Draft', orderIndex: 2 },
+      {
+        id: 'item-tc-1',
+        key: 'Rev-TC-1',
+        name: 'Test Battery Cutoff Response Time',
+        type: 'item',
+        itemTypeKey: 'TC',
+        status: 'Draft',
+        orderIndex: 1,
+      },
+      {
+        id: 'item-tc-2',
+        key: 'Rev-TC-2',
+        name: 'Verify Air Bubble Ultrasonic Sensor Accuracy',
+        type: 'item',
+        itemTypeKey: 'TC',
+        status: 'Draft',
+        orderIndex: 2,
+      },
     ],
   },
 ];
@@ -102,7 +222,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       const topIds = new Set<string>();
-      nodes.forEach((n) => {
+      nodes.forEach(n => {
         if (n.type === 'folder') topIds.add(n.id);
       });
       setExpandedFolderIds(topIds);
@@ -145,7 +265,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
 
   const toggleFolderExpand = (folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedFolderIds((prev) => {
+    setExpandedFolderIds(prev => {
       const next = new Set(prev);
       if (next.has(folderId)) {
         next.delete(folderId);
@@ -157,7 +277,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
   };
 
   const toggleItemSelect = (itemId: string) => {
-    setSelectedItemIds((prev) => {
+    setSelectedItemIds(prev => {
       const next = new Set(prev);
       if (next.has(itemId)) {
         next.delete(itemId);
@@ -173,13 +293,13 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
     if (childItemIds.length === 0) return;
 
     // If all are already selected, deselect all; otherwise select all
-    const allSelected = childItemIds.every((id) => selectedItemIds.has(id));
-    setSelectedItemIds((prev) => {
+    const allSelected = childItemIds.every(id => selectedItemIds.has(id));
+    setSelectedItemIds(prev => {
       const next = new Set(prev);
       if (allSelected) {
-        childItemIds.forEach((id) => next.delete(id));
+        childItemIds.forEach(id => next.delete(id));
       } else {
-        childItemIds.forEach((id) => next.add(id));
+        childItemIds.forEach(id => next.add(id));
       }
       return next;
     });
@@ -197,7 +317,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
 
   const handleConfirm = () => {
     const selectedList: ReviewWizardItemInfo[] = [];
-    selectedItemIds.forEach((id) => {
+    selectedItemIds.forEach(id => {
       const node = allItemsMap.get(id);
       if (node) {
         selectedList.push({
@@ -239,7 +359,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
     if (isFolder) {
       const isExpanded = expandedFolderIds.has(node.id);
       const childItemIds = getDescendantItemIds(node);
-      const selectedChildCount = childItemIds.filter((id) => selectedItemIds.has(id)).length;
+      const selectedChildCount = childItemIds.filter(id => selectedItemIds.has(id)).length;
       const isAllChildrenSelected =
         childItemIds.length > 0 && selectedChildCount === childItemIds.length;
       const isPartiallySelected =
@@ -249,7 +369,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
       const matchesSearch =
         !searchQuery.trim() ||
         node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        childItemIds.some((id) => {
+        childItemIds.some(id => {
           const item = allItemsMap.get(id);
           return (
             item &&
@@ -269,7 +389,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
             {/* Expand / Collapse Button */}
             <button
               type="button"
-              onClick={(e) => toggleFolderExpand(node.id, e)}
+              onClick={e => toggleFolderExpand(node.id, e)}
               className="w-4 h-4 flex items-center justify-center text-slate-500 hover:text-slate-800 shrink-0"
             >
               {isExpanded ? (
@@ -283,7 +403,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
             <input
               type="checkbox"
               checked={isAllChildrenSelected}
-              ref={(el) => {
+              ref={el => {
                 if (el) el.indeterminate = isPartiallySelected;
               }}
               onChange={() => toggleFolderSelect(node)}
@@ -292,7 +412,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
 
             <Folder className="w-3.5 h-3.5 text-blue-500 shrink-0" />
             <span
-              onClick={(e) => toggleFolderExpand(node.id, e)}
+              onClick={e => toggleFolderExpand(node.id, e)}
               className="font-semibold text-slate-800 truncate flex-1"
             >
               {node.name}
@@ -305,7 +425,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
           {/* Children */}
           {isExpanded && node.children && (
             <div className="space-y-0.5">
-              {node.children.map((child) => renderTreeNode(child, depth + 1))}
+              {node.children.map(child => renderTreeNode(child, depth + 1))}
             </div>
           )}
         </div>
@@ -326,7 +446,9 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
           key={node.id}
           onClick={() => toggleItemSelect(node.id)}
           className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer text-xs transition-colors ${
-            isSelected ? 'bg-blue-50/70 text-blue-900 font-medium' : 'hover:bg-slate-50 text-slate-700'
+            isSelected
+              ? 'bg-blue-50/70 text-blue-900 font-medium'
+              : 'hover:bg-slate-50 text-slate-700'
           }`}
           style={{ paddingLeft: `${depth * 16 + 6}px` }}
         >
@@ -343,9 +465,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
 
           {renderItemTypeIcon(node.itemTypeKey)}
 
-          <span className="font-mono text-[10px] font-bold text-blue-600 shrink-0">
-            {node.key}
-          </span>
+          <span className="font-mono text-[10px] font-bold text-blue-600 shrink-0">{node.key}</span>
           <span className="truncate flex-1">{node.name}</span>
 
           <span className="text-[10px] text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 shrink-0">
@@ -395,7 +515,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               type="text"
               placeholder="Search items by ID or name..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full text-xs px-3 py-1.5 pr-8 border border-slate-300 rounded bg-white outline-none focus:ring-1 focus:ring-blue-500"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2 pointer-events-none" />
@@ -426,7 +546,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               Loading project tree...
             </div>
           ) : (
-            nodes.map((node) => renderTreeNode(node, 0))
+            nodes.map(node => renderTreeNode(node, 0))
           )}
         </div>
 

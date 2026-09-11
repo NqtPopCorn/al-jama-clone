@@ -63,6 +63,17 @@ services:
     volumes:
       - minio_data:/data
 
+  # Mailpit (local mock SMTP & web inbox for BullMQ emails)
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: aljama-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
+    volumes:
+      - mailpit_data:/data
+
   # pgAdmin (optional — dev tool)
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -77,6 +88,8 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  mailpit_data:
   minio_data:
 ```
 

@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Query,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
@@ -39,10 +30,7 @@ export class ReviewController {
 
   @Get()
   @ApiOperation({ summary: 'Lấy danh sách review cho Review Home Page' })
-  async listReviews(
-    @CurrentUser('id') userId: string,
-    @Query() query: QueryReviewsDto,
-  ) {
+  async listReviews(@CurrentUser('id') userId: string, @Query() query: QueryReviewsDto) {
     const result = await this.queryService.listReviews(userId, query);
     return {
       success: true,
@@ -53,10 +41,7 @@ export class ReviewController {
 
   @Post()
   @ApiOperation({ summary: 'Tạo review mới (Draft hoặc Initiate ngay)' })
-  async createReview(
-    @CurrentUser('id') userId: string,
-    @Body() dto: CreateReviewDto,
-  ) {
+  async createReview(@CurrentUser('id') userId: string, @Body() dto: CreateReviewDto) {
     const review = await this.initiationService.createReview(dto, userId);
     return {
       success: true,
@@ -68,10 +53,7 @@ export class ReviewController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Lấy dữ liệu chi tiết cho màn hình Review Workspace' })
-  async getReviewDetail(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  async getReviewDetail(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const detail = await this.queryService.getReviewDetail(id, userId);
     return {
       success: true,
@@ -135,11 +117,8 @@ export class ReviewController {
 
   @Post(':id/complete')
   @UseGuards(ReviewParticipantGuard)
-  @ApiOperation({ summary: 'Hoàn tất review của cá nhân (I\'m Finished)' })
-  async completeReview(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  @ApiOperation({ summary: "Hoàn tất review của cá nhân (I'm Finished)" })
+  async completeReview(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const result = await this.executionService.completeReview(id, userId);
     return {
       success: true,

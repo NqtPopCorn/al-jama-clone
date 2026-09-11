@@ -62,7 +62,7 @@ export const RejectReasonModal: React.FC<RejectReasonModalProps> = ({
           <div>
             <textarea
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={e => setReason(e.target.value)}
               placeholder="Explain why this item is rejected or what needs more work..."
               rows={4}
               required

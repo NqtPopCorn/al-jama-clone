@@ -141,7 +141,7 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
           <div className="flex items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => {
+              onChange={e => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
@@ -160,7 +160,9 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 ${
-                viewMode === 'grid' ? 'bg-slate-100 text-blue-800' : 'text-slate-400 hover:text-slate-600'
+                viewMode === 'grid'
+                  ? 'bg-slate-100 text-blue-800'
+                  : 'text-slate-400 hover:text-slate-600'
               }`}
               title="Grid View"
             >
@@ -169,7 +171,9 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
             <button
               onClick={() => setViewMode('table')}
               className={`p-1.5 ${
-                viewMode === 'table' ? 'bg-slate-100 text-blue-800' : 'text-slate-400 hover:text-slate-600'
+                viewMode === 'table'
+                  ? 'bg-slate-100 text-blue-800'
+                  : 'text-slate-400 hover:text-slate-600'
               }`}
               title="Table View"
             >
@@ -229,7 +233,7 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {reviews.map((r) => (
+              {reviews.map(r => (
                 <tr
                   key={r.id}
                   onClick={() => onSelectReview(r.id)}
@@ -245,7 +249,9 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
                   <td className="px-3 py-2.5 text-slate-600">{r.projectName}</td>
                   <td className="px-3 py-2.5 text-slate-400">{r.isPublic ? 'Yes' : ''}</td>
                   <td className="px-3 py-2.5">{getStatusBadge(r.status)}</td>
-                  <td className="px-3 py-2.5 text-slate-700 font-medium">{r.role || 'Participant'}</td>
+                  <td className="px-3 py-2.5 text-slate-700 font-medium">
+                    {r.role || 'Participant'}
+                  </td>
                   <td className="px-3 py-2.5 text-slate-600">{r.revisionNumber}</td>
                   <td className="px-3 py-2.5 text-slate-700">{r.moderatorNames.join(', ')}</td>
                   <td className="px-3 py-2.5 text-slate-500 font-mono text-[11px]">
@@ -253,7 +259,7 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
                   </td>
                   <td
                     className="px-3 py-2.5 text-center text-slate-400"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-center gap-2">
                       <button title="Edit review" className="hover:text-slate-800">
@@ -296,8 +302,8 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
         </div>
 
         <div>
-          Displaying {reviews.length > 0 ? (page - 1) * 20 + 1 : 0} -{' '}
-          {Math.min(page * 20, total)} of {total}
+          Displaying {reviews.length > 0 ? (page - 1) * 20 + 1 : 0} - {Math.min(page * 20, total)}{' '}
+          of {total}
         </div>
       </div>
 
@@ -309,7 +315,7 @@ export const ReviewsHomeView: React.FC<ReviewsHomeViewProps> = ({
           projectId={projectId}
           projectName={projectName}
           members={projectMembers}
-          onSuccess={(newReviewId) => {
+          onSuccess={newReviewId => {
             refetch();
             onSelectReview(newReviewId);
           }}

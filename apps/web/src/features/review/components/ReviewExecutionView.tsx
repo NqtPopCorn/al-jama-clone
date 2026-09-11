@@ -28,10 +28,7 @@ import {
 } from '../hooks/useReviewApi';
 import { ReviewCommentModal } from './ReviewCommentModal';
 import { RejectReasonModal } from './RejectReasonModal';
-import {
-  ReviewItemReadingView,
-  ReviewItemStatusValue,
-} from '@aljama/shared';
+import { ReviewItemReadingView, ReviewItemStatusValue } from '@aljama/shared';
 
 interface ReviewExecutionViewProps {
   reviewId: string;
@@ -47,10 +44,7 @@ type ActiveFilter =
   | 'UPDATED_SINCE_V1'
   | 'UNMARKED';
 
-export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
-  reviewId,
-  onBack,
-}) => {
+export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ reviewId, onBack }) => {
   // Sidebar states
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [sidebarTab, setSidebarTab] = useState<'summary' | 'toc'>('summary');
@@ -81,22 +75,22 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
 
     // Filter by quick sidebar filters
     if (activeFilter === 'APPROVED') {
-      list = list.filter((i) => i.status === 'APPROVED');
+      list = list.filter(i => i.status === 'APPROVED');
     } else if (activeFilter === 'NEED_WORK') {
-      list = list.filter((i) => i.status === 'REJECTED');
+      list = list.filter(i => i.status === 'REJECTED');
     } else if (activeFilter === 'WITH_COMMENTS') {
-      list = list.filter((i) => i.commentCount > 0);
+      list = list.filter(i => i.commentCount > 0);
     } else if (activeFilter === 'UNMARKED') {
-      list = list.filter((i) => i.status === 'NOT_REVIEWED');
+      list = list.filter(i => i.status === 'NOT_REVIEWED');
     } else if (activeFilter === 'UPDATED_SINCE_V1') {
-      list = list.filter((i) => i.hasUpdatedSinceLastRevision);
+      list = list.filter(i => i.hasUpdatedSinceLastRevision);
     }
 
     // Filter by search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
-        (i) =>
+        i =>
           i.name.toLowerCase().includes(q) ||
           i.itemKey.toLowerCase().includes(q) ||
           (i.description && i.description.toLowerCase().includes(q)) ||
@@ -170,7 +164,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
     await batchStatusMutation.mutateAsync({
       reviewId,
       dto: {
-        reviewItemIds: filteredItems.map((i) => i.id),
+        reviewItemIds: filteredItems.map(i => i.id),
         status: targetStatus,
       },
     });
@@ -248,7 +242,10 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full bg-[#f4f5f7] overflow-hidden" onMouseUp={handleTextSelection}>
+    <div
+      className="flex flex-col flex-1 h-full bg-[#f4f5f7] overflow-hidden"
+      onMouseUp={handleTextSelection}
+    >
       {/* 1. Header Bar matching Jama Connect */}
       <header className="h-12 bg-[#203a6b] text-white flex items-center justify-between px-4 shadow-sm flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -312,7 +309,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <span className="font-semibold text-[11px] text-slate-600">{progressPercent}%</span>
+                  <span className="font-semibold text-[11px] text-slate-600">
+                    {progressPercent}%
+                  </span>
                 </div>
                 <button
                   onClick={() => setIsSidebarOpen(false)}
@@ -369,7 +368,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                     <ul className="space-y-1.5 text-xs">
                       <li>
                         <button
-                          onClick={() => setActiveFilter(activeFilter === 'APPROVED' ? 'ALL' : 'APPROVED')}
+                          onClick={() =>
+                            setActiveFilter(activeFilter === 'APPROVED' ? 'ALL' : 'APPROVED')
+                          }
                           className={`w-full text-left py-1 px-2 rounded flex items-center justify-between transition-colors ${
                             activeFilter === 'APPROVED'
                               ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -381,7 +382,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                       </li>
                       <li>
                         <button
-                          onClick={() => setActiveFilter(activeFilter === 'NEED_WORK' ? 'ALL' : 'NEED_WORK')}
+                          onClick={() =>
+                            setActiveFilter(activeFilter === 'NEED_WORK' ? 'ALL' : 'NEED_WORK')
+                          }
                           className={`w-full text-left py-1 px-2 rounded flex items-center justify-between transition-colors ${
                             activeFilter === 'NEED_WORK'
                               ? 'bg-red-50 text-red-700 font-semibold'
@@ -392,9 +395,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                         </button>
                       </li>
                       <li>
-                        <button
-                          className="w-full text-left py-1 px-2 text-slate-400 cursor-not-allowed text-[11px]"
-                        >
+                        <button className="w-full text-left py-1 px-2 text-slate-400 cursor-not-allowed text-[11px]">
                           <span>0 items I'm following</span>
                         </button>
                       </li>
@@ -417,7 +418,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                       <li>
                         <button
                           onClick={() =>
-                            setActiveFilter(activeFilter === 'WITH_COMMENTS' ? 'ALL' : 'WITH_COMMENTS')
+                            setActiveFilter(
+                              activeFilter === 'WITH_COMMENTS' ? 'ALL' : 'WITH_COMMENTS',
+                            )
                           }
                           className={`w-full text-left py-1 px-2 rounded flex items-center justify-between transition-colors ${
                             activeFilter === 'WITH_COMMENTS'
@@ -441,12 +444,16 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                               : 'text-blue-600 hover:bg-slate-50'
                           }`}
                         >
-                          <span>{review.stats.updatedSinceLastRevisionCount} items updated since V1</span>
+                          <span>
+                            {review.stats.updatedSinceLastRevisionCount} items updated since V1
+                          </span>
                         </button>
                       </li>
                       <li>
                         <button
-                          onClick={() => setActiveFilter(activeFilter === 'UNMARKED' ? 'ALL' : 'UNMARKED')}
+                          onClick={() =>
+                            setActiveFilter(activeFilter === 'UNMARKED' ? 'ALL' : 'UNMARKED')
+                          }
                           className={`w-full text-left py-1 px-2 rounded flex items-center justify-between transition-colors ${
                             activeFilter === 'UNMARKED'
                               ? 'bg-blue-50 text-blue-700 font-semibold'
@@ -512,7 +519,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                     <input
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={e => setSearchQuery(e.target.value)}
                       placeholder="Search..."
                       className="w-full text-xs pl-8 pr-6 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                     />
@@ -537,9 +544,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                         onClick={() => handleScrollToItem(item.id)}
                         className="w-full text-left py-1 px-2 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded truncate flex items-center gap-1.5"
                       >
-                        <span className="font-mono text-[10px] text-slate-400">
-                          {idx + 1}.
-                        </span>
+                        <span className="font-mono text-[10px] text-slate-400">{idx + 1}.</span>
                         <span className="truncate">{item.name}</span>
                       </button>
                     ))}
@@ -555,9 +560,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
           {/* Main Content Toolbar matching Screens 2 & 3 */}
           <div className="h-10 border-b border-slate-200 px-6 flex items-center justify-between bg-slate-50 text-xs flex-shrink-0">
             <div className="flex items-center gap-3">
-              <span className="font-semibold text-slate-700">
-                {filteredItems.length} Items
-              </span>
+              <span className="font-semibold text-slate-700">{filteredItems.length} Items</span>
               <div className="h-4 w-px bg-slate-300" />
               {/* Batch Action */}
               <button
@@ -603,7 +606,10 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
               >
                 Comment on text
               </button>
-              <button onClick={() => setSelectedText(null)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setSelectedText(null)}
+                className="text-slate-400 hover:text-white"
+              >
                 <CloseIcon className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -624,7 +630,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                 return (
                   <div
                     key={item.id}
-                    ref={(el) => (itemRefs.current[item.id] = el)}
+                    ref={el => (itemRefs.current[item.id] = el)}
                     className="flex gap-4 group pb-6 border-b border-slate-100 last:border-b-0"
                   >
                     {/* Left Gutter: Comment badge + Status actions */}
@@ -635,7 +641,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                           setActiveCommentItem(item);
                         }}
                         className={`relative p-1 rounded hover:bg-slate-100 transition-colors ${
-                          item.commentCount > 0 ? 'text-blue-600' : 'text-slate-300 hover:text-slate-500'
+                          item.commentCount > 0
+                            ? 'text-blue-600'
+                            : 'text-slate-300 hover:text-slate-500'
                         }`}
                         title={`${item.commentCount} comments`}
                       >
@@ -736,7 +744,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
                           {renderHighlightedText(item.description)}
                         </div>
                       ) : (
-                        <div className="text-xs text-slate-400 italic">No description provided.</div>
+                        <div className="text-xs text-slate-400 italic">
+                          No description provided.
+                        </div>
                       )}
                     </div>
                   </div>
@@ -752,7 +762,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({
               <span>•</span>
               <span>Show: 50</span>
             </div>
-            <div>Displaying 1 - {filteredItems.length} of {filteredItems.length}</div>
+            <div>
+              Displaying 1 - {filteredItems.length} of {filteredItems.length}
+            </div>
           </footer>
         </main>
       </div>
