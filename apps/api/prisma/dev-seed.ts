@@ -544,6 +544,11 @@ async function main() {
   });
 
   console.log('✅ Created 5 traceability relationships (1 suspect demo)');
+
+  // 10. Seed Sample Reviews
+  const { seedReviews } = await import('./seed-reviews');
+  await seedReviews();
+
   console.log('🎉 [DEV SEED] Completed successfully!');
 }
 
