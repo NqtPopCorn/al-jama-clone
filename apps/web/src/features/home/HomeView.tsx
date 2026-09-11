@@ -1,9 +1,9 @@
 import React from 'react';
 import { useProjectStore } from '../../stores/project.store';
 import { useThemeStore } from '../../stores/theme.store';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
+import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Folder, FileText, Layers, CheckSquare, Flag } from 'lucide-react';
+import { Folder, ArrowRight, Layers, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { ProjectSummary } from '@aljama/shared';
 
 interface HomeViewProps {
@@ -11,7 +11,7 @@ interface HomeViewProps {
   onOpenProject: (projectId: string) => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) => {
+export const HomeView: React.FC<HomeViewProps> = ({ projects = [], onOpenProject }) => {
   const { currentProject } = useProjectStore();
   const { headerTheme } = useThemeStore();
   const isDark = headerTheme === 'dark';
@@ -30,20 +30,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
         {/* Title */}
         <div className={`border-b pb-3 ${isDark ? 'border-[#30363d]' : 'border-slate-200'}`}>
           <h1 className={`text-xl font-normal ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
-            Home
+            Home Overview
           </h1>
         </div>
 
-        {/* 2-Column Layout (Matching Image 2) */}
+        {/* 2-Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column: Recently Viewed (Span 2) */}
+          {/* Left Column: Projects & Active Workspaces (Span 2) */}
           <div className="md:col-span-2 space-y-3">
             <h2
               className={`text-sm font-bold border-b pb-2 ${
                 isDark ? 'text-slate-100 border-[#30363d]' : 'text-slate-900 border-slate-100'
               }`}
             >
-              Recently Viewed
+              Assigned Projects & Workspaces
             </h2>
 
             <div
@@ -53,164 +53,97 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                   : 'bg-white border-slate-200 divide-slate-100'
               }`}
             >
-              {/* Recently viewed project item 1 */}
-              <div
-                onClick={() => currentProject && onOpenProject(currentProject.id)}
-                className={`p-3 flex items-center justify-between cursor-pointer transition-colors group ${
-                  isDark ? 'hover:bg-[#22272e]' : 'hover:bg-[#f0f7ff]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Folder className="w-4 h-4 text-blue-500 shrink-0" />
-                  <span className="font-semibold text-blue-600 group-hover:underline">
-                    {currentProject?.name || 'Medical Device Control System'}
-                  </span>
-                </div>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  Project
-                </Badge>
-              </div>
+              {projects.length > 0 ? (
+                projects.map(proj => {
+                  const isCurrent = currentProject?.id === proj.id;
+                  return (
+                    <div
+                      key={proj.id}
+                      onClick={() => onOpenProject(proj.id)}
+                      className={`p-3.5 flex items-center justify-between cursor-pointer transition-colors group ${
+                        isCurrent
+                          ? isDark
+                            ? 'bg-[#1f2937]'
+                            : 'bg-blue-50/70'
+                          : isDark
+                            ? 'hover:bg-[#22272e]'
+                            : 'hover:bg-[#f0f7ff]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Folder className="w-5 h-5 text-blue-500 shrink-0" />
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-blue-600 group-hover:underline text-sm truncate">
+                              {proj.name}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] font-mono">
+                              {proj.key}
+                            </Badge>
+                            {isCurrent && (
+                              <Badge
+                                variant="secondary"
+                                className="text-[9px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300"
+                              >
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 truncate max-w-xl">
+                            {proj.description ||
+                              'Enterprise requirements and verification specifications.'}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Recently viewed item 2 */}
-              <div
-                onClick={() => {
-                  if (currentProject) onOpenProject(currentProject.id);
-                }}
-                className={`p-3 flex items-center justify-between cursor-pointer transition-colors group ${
-                  isDark ? 'hover:bg-[#22272e]' : 'hover:bg-[#f0f7ff]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <FileText className="w-4 h-4 text-blue-500 shrink-0" />
-                  <span className="text-blue-600 group-hover:underline">
-                    {currentProject?.name}: 1. System Requirements
-                  </span>
+                      <div className="flex items-center gap-2 shrink-0 ml-4">
+                        <span className="text-[11px] text-slate-400 hidden sm:inline">
+                          {proj.status}
+                        </span>
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center text-slate-400 italic">
+                  No projects assigned. Contact your administrator to join a project.
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  Folder
-                </Badge>
-              </div>
-
-              {/* Recently viewed item 3 */}
-              <div
-                onClick={() => {
-                  if (currentProject) onOpenProject(currentProject.id);
-                }}
-                className={`p-3 flex items-center justify-between cursor-pointer transition-colors group ${
-                  isDark ? 'hover:bg-[#22272e]' : 'hover:bg-[#f0f7ff]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <FileText className="w-4 h-4 text-blue-500 shrink-0" />
-                  <span className="text-blue-600 group-hover:underline">
-                    {currentProject?.name}: 1.1 Safety & Alarms
-                  </span>
-                </div>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  Folder
-                </Badge>
-              </div>
-
-              {/* Recently viewed item 4 */}
-              <div
-                onClick={() => {
-                  if (currentProject) onOpenProject(currentProject.id);
-                }}
-                className={`p-3 flex items-center justify-between cursor-pointer transition-colors group ${
-                  isDark ? 'hover:bg-[#22272e]' : 'hover:bg-[#f0f7ff]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Layers className="w-4 h-4 text-purple-500 shrink-0" />
-                  <span className="text-blue-600 group-hover:underline">
-                    {currentProject?.name}: 2. Software Architecture
-                  </span>
-                </div>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  Folder
-                </Badge>
-              </div>
-
-              {/* Recently viewed item 5 */}
-              <div
-                onClick={() => {
-                  if (currentProject) onOpenProject(currentProject.id);
-                }}
-                className={`p-3 flex items-center justify-between cursor-pointer transition-colors group ${
-                  isDark ? 'hover:bg-[#22272e]' : 'hover:bg-[#f0f7ff]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <CheckSquare className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span className="text-blue-600 group-hover:underline">
-                    {currentProject?.name}: 3. Verification & Validation
-                  </span>
-                </div>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  Folder
-                </Badge>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column: Active Reviews & Stream Activity (Matching Image 2) */}
+          {/* Right Column: Active Reviews & Stream Activity */}
           <div className="space-y-6">
-            {/* Active Reviews Widget */}
+            {/* Review Center Widget */}
             <div className="space-y-2.5">
               <h2
                 className={`text-sm font-bold border-b pb-2 ${
                   isDark ? 'text-slate-100 border-[#30363d]' : 'text-slate-900 border-slate-100'
                 }`}
               >
-                Active Reviews
+                Review Center
               </h2>
               <Card
                 className={`p-4 space-y-3 shadow-xs ${
                   isDark ? 'bg-[#1c2128] border-[#30363d]' : 'bg-white border-slate-200'
                 }`}
               >
-                <div className={isDark ? 'text-slate-300' : 'text-slate-600'}>
-                  You have <strong className="text-blue-500 font-bold">1 active review</strong>
+                <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                  <Layers className="w-4 h-4 text-indigo-500" />
+                  <span>Review Baselines & Approvals</span>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-600 font-semibold hover:underline cursor-pointer">
-                      Set: Safety Requirements
-                    </span>
-                    <Badge variant="moderating">MODERATING</Badge>
-                  </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Collaborative peer reviews and electronic signature baselines are configured
+                  across requirement sets and specifications.
+                </p>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                    <span>14 days left</span>
-                    <div className="flex items-center gap-1.5">
-                      <span>Progress</span>
-                      <div
-                        className={`w-14 h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}
-                      >
-                        <div
-                          className="h-full bg-emerald-500 rounded-full"
-                          style={{ width: '25%' }}
-                        />
-                      </div>
-                      <span className="font-mono">25%</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className={`pt-2 border-t text-right ${isDark ? 'border-[#30363d]' : 'border-slate-100'}`}
-                >
-                  <a
-                    href="#reviews"
-                    onClick={e => {
-                      e.preventDefault();
-                      alert('Review Center is active across assigned review baselines!');
-                    }}
-                    className="text-xs text-blue-500 hover:underline font-semibold"
-                  >
-                    View All Reviews →
-                  </a>
+                <div className="pt-2 border-t border-slate-100 dark:border-[#30363d] flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Electronic Signatures</span>
+                  <span className="font-semibold text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Enabled
+                  </span>
                 </div>
               </Card>
             </div>
@@ -222,43 +155,26 @@ export const HomeView: React.FC<HomeViewProps> = ({ projects, onOpenProject }) =
                   isDark ? 'text-slate-100 border-[#30363d]' : 'text-slate-900 border-slate-100'
                 }`}
               >
-                Stream Activity
+                Collaboration Stream
               </h2>
               <Card
                 className={`p-4 space-y-3 shadow-xs ${
                   isDark ? 'bg-[#1c2128] border-[#30363d]' : 'bg-white border-slate-200'
                 }`}
               >
-                <div className={isDark ? 'text-slate-300' : 'text-slate-600'}>
-                  You are in{' '}
-                  <strong className="text-blue-500 font-bold">1 open conversation</strong>
+                <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                  <MessageSquare className="w-4 h-4 text-blue-500" />
+                  <span>Item Stream & @Mentions</span>
                 </div>
 
-                <div className="flex items-start gap-2.5 pt-1">
-                  <Flag className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-blue-500 hover:underline cursor-pointer">
-                      1 Open Issue
-                    </div>
-                    <div className="text-slate-400 text-[11px]">
-                      with Alex Morgan (Project Engineer)
-                    </div>
-                  </div>
-                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Comment threads, action flags, and team discussions are accessible directly from
+                  the side panel of each requirement item.
+                </p>
 
-                <div
-                  className={`pt-2 border-t text-right ${isDark ? 'border-[#30363d]' : 'border-slate-100'}`}
-                >
-                  <a
-                    href="#stream"
-                    onClick={e => {
-                      e.preventDefault();
-                      alert('Stream conversations are accessible directly from item panels!');
-                    }}
-                    className="text-xs text-blue-500 hover:underline font-semibold"
-                  >
-                    View All Stream Activity →
-                  </a>
+                <div className="pt-2 border-t border-slate-100 dark:border-[#30363d] flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Real-time collaboration</span>
+                  <span className="font-semibold text-blue-500">Active</span>
                 </div>
               </Card>
             </div>

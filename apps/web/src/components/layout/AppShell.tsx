@@ -14,6 +14,7 @@ import { ProjectDashboard } from '../../features/project/ProjectDashboard';
 import { ItemDetailView } from '../../features/item/components/item-detail-view';
 import { CreateItemModal } from '../../features/item/components/create-item-modal';
 import { TraceView } from '../../features/traceability/components/TraceView';
+import { ProjectStreamView } from '../../features/collaboration/ProjectStreamView';
 import { useProjectMeta } from '../../features/item/hooks/use-project-meta';
 import { ProjectSummary, LicenseType } from '@aljama/shared';
 
@@ -164,12 +165,21 @@ export const AppShell: React.FC = () => {
   // Fetch project meta (itemTypes, folders, members)
   const { itemTypes, folders, members } = useProjectMeta(projectId);
 
-  const handleOpenItem = (id: string, key: string, name: string) => {
+  const handleOpenItem = (id: string, key?: string, name?: string) => {
+    setMainNavTab('projects');
     setOpenItemTabs(prev => {
       if (prev.some(t => t.id === id)) return prev;
-      return [...prev, { id, key, name }];
+      return [...prev, { id, key: key || 'ITEM', name: name || 'Item Details' }];
     });
     setPerspective(`item:${id}`);
+  };
+
+  const handleOpenTraceability = () => {
+    setMainNavTab('projects');
+    if (!openTabs.includes('traceability')) {
+      setOpenTabs(prev => [...prev, 'traceability']);
+    }
+    setPerspective('traceability');
   };
 
   const handleSelectRootDashboard = () => {
@@ -236,13 +246,20 @@ export const AppShell: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-[#eef2f6] text-slate-800 overflow-hidden font-sans select-none">
       {/* 1. App Header: Supports Dark & Light header themes (Matching Image 2, 3, 4) */}
-      <AppHeader activeTab={mainNavTab} onTabChange={handleTabChange} />
+      <AppHeader
+        activeTab={mainNavTab}
+        onTabChange={handleTabChange}
+        onNavigateToItem={handleOpenItem}
+        onOpenTraceability={handleOpenTraceability}
+      />
 
       {/* 2. When Home Nav Tab is selected -> display Image 2 Home View WITHOUT tab bar */}
       {mainNavTab === 'home' ? (
         <div className="flex-1 flex flex-col overflow-hidden">
           <HomeView projects={projectsData} onOpenProject={handleOpenProject} />
         </div>
+      ) : mainNavTab === 'stream' ? (
+        <ProjectStreamView onOpenItem={handleOpenItem} />
       ) : mainNavTab === 'projects' ? (
         /* 3. Projects Workspace (Image 3 & 4) */
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -274,6 +291,7 @@ export const AppShell: React.FC = () => {
                 onSelectRootDashboard={handleSelectRootDashboard}
                 onSelectFolder={handleSelectFolder}
                 onSelectItem={handleOpenItem}
+                onOpenCreateItem={() => setIsCreateItemOpen(true)}
               />
             </aside>
 
@@ -303,10 +321,30 @@ export const AppShell: React.FC = () => {
               ) : perspective === 'welcome' ? (
                 /* Welcome Perspective inside workspace tab */
                 <HomeView projects={projectsData} onOpenProject={handleOpenProject} />
+              ) : perspective === 'traceability' ? (
+                /* Dedicated Traceability Matrix Tab */
+                <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                  {projectId && (
+                    <TraceView
+                      projectId={projectId}
+                      onNavigateToItem={id => {
+                        const it = itemsData?.items?.find((i: { id: string }) => i.id === id);
+                        handleOpenItem(id, it?.itemKey || 'Item', it?.name || '');
+                      }}
+                    />
+                  )}
+                </div>
               ) : (
-                /* Project Workspace: List View, Reading View or Traceability */
+                /* Project Workspace: List View or Reading View */
                 <div className="flex-1 overflow-hidden flex flex-col">
-                  {activeView === 'list' && (
+                  {activeView === 'reading' ? (
+                    <ReadingView
+                      items={readingItems || []}
+                      isLoading={isLoadingReading}
+                      onOpenItem={handleOpenItem}
+                      onOpenTraceability={handleOpenTraceability}
+                    />
+                  ) : (
                     <ListView
                       data={itemsData}
                       isLoading={isLoadingItems}
@@ -317,20 +355,7 @@ export const AppShell: React.FC = () => {
                       onSortChange={handleSortChange}
                       onOpenItem={handleOpenItem}
                       onOpenCreateItem={() => setIsCreateItemOpen(true)}
-                    />
-                  )}
-
-                  {activeView === 'reading' && (
-                    <ReadingView items={readingItems || []} isLoading={isLoadingReading} />
-                  )}
-
-                  {activeView === 'trace' && projectId && (
-                    <TraceView
-                      projectId={projectId}
-                      onNavigateToItem={id => {
-                        const it = itemsData?.items?.find((i: { id: string }) => i.id === id);
-                        handleOpenItem(id, it?.itemKey || 'Item', it?.name || '');
-                      }}
+                      onOpenTraceability={handleOpenTraceability}
                     />
                   )}
                 </div>

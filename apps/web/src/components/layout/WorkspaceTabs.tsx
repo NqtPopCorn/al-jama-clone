@@ -14,6 +14,7 @@ import {
   FileText,
   Layers,
   Check,
+  GitFork,
 } from 'lucide-react';
 import { ProjectSummary } from '@aljama/shared';
 
@@ -319,6 +320,42 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
           </div>
         )}
 
+        {/* Traceability Matrix Tab */}
+        {openTabs.includes('traceability') && (
+          <div
+            data-tab-id="traceability"
+            onClick={() => onPerspectiveChange('traceability')}
+            className={`group shrink-0 h-7 px-2.5 rounded-t border-t border-l border-r text-xs flex items-center gap-1.5 cursor-pointer transition-colors max-w-[200px] relative ${
+              activePerspective === 'traceability'
+                ? isDark
+                  ? 'bg-[#0d1117] text-white border-[#30363d] font-semibold -mb-px border-b border-b-[#0d1117] z-10'
+                  : 'bg-white text-slate-900 border-slate-300 font-semibold -mb-px border-b border-b-white z-10'
+                : isDark
+                  ? 'bg-[#161b22] text-slate-400 border-transparent hover:bg-[#282e38] hover:text-slate-200'
+                  : 'bg-[#dfe3e8] text-slate-600 border-transparent hover:bg-slate-200'
+            }`}
+            title={`Traceability Matrix: ${currentProject?.name || 'Project'}`}
+          >
+            <GitFork className="w-3.5 h-3.5 text-emerald-500 rotate-90 shrink-0" />
+            <span className="truncate font-medium">Traceability Matrix</span>
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                onCloseTab('traceability');
+              }}
+              className={`p-0.5 rounded ml-1 transition-colors shrink-0 ${
+                isDark
+                  ? 'text-slate-500 hover:text-slate-200 hover:bg-slate-700/60'
+                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-300/70'
+              }`}
+              title="Close Traceability Tab"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
         {/* Dynamic Item Tabs matching Image 4 & 5 */}
         {itemTabs.map(itemTab => {
           const tabId = `item:${itemTab.id}`;
@@ -562,6 +599,45 @@ export const WorkspaceTabs: React.FC<WorkspaceTabsProps> = ({
                         onClick={e => {
                           e.stopPropagation();
                           onCloseTab('workspace');
+                        }}
+                        className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400"
+                        title="Close tab"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {openTabs.includes('traceability') && (
+                  <div
+                    onClick={() => {
+                      onPerspectiveChange('traceability');
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`px-3 py-1.5 flex items-center justify-between cursor-pointer transition-colors ${
+                      activePerspective === 'traceability'
+                        ? isDark
+                          ? 'bg-blue-900/30 text-blue-400 font-medium'
+                          : 'bg-blue-50 text-blue-700 font-medium'
+                        : isDark
+                          ? 'hover:bg-slate-800 text-slate-300'
+                          : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <GitFork className="w-3.5 h-3.5 text-emerald-500 rotate-90 shrink-0" />
+                      <span className="truncate">Traceability Matrix</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {activePerspective === 'traceability' && (
+                        <Check className="w-3.5 h-3.5 text-blue-500" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onCloseTab('traceability');
                         }}
                         className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400"
                         title="Close tab"
