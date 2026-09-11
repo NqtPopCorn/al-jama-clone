@@ -15,6 +15,12 @@ import { ItemDetailView } from '../../features/item/components/item-detail-view'
 import { CreateItemModal } from '../../features/item/components/create-item-modal';
 import { TraceView } from '../../features/traceability/components/TraceView';
 import { ProjectStreamView } from '../../features/collaboration/ProjectStreamView';
+import {
+  ReviewsHomeView,
+  ReviewExecutionView,
+  StartReviewWizard,
+  ReviewWizardItemInfo,
+} from '../../features/review';
 import { useProjectMeta } from '../../features/item/hooks/use-project-meta';
 import { ProjectSummary, LicenseType } from '@aljama/shared';
 
@@ -42,6 +48,7 @@ export const AppShell: React.FC = () => {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState('updatedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
 
   // 1. Fetch User Projects
   const { data: projectsData } = useQuery({
@@ -161,6 +168,14 @@ export const AppShell: React.FC = () => {
     Array<{ id: string; key: string; name: string }>
   >([]);
   const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
+
+  // Review wizard state for context menu "Send for review"
+  const [reviewWizardState, setReviewWizardState] = useState<{
+    isOpen: boolean;
+    reviewName?: string;
+    sourceFilterName?: string;
+    items?: ReviewWizardItemInfo[];
+  }>({ isOpen: false });
 
   // Fetch project meta (itemTypes, folders, members)
   const { itemTypes, folders, members } = useProjectMeta(projectId);
@@ -292,6 +307,14 @@ export const AppShell: React.FC = () => {
                 onSelectFolder={handleSelectFolder}
                 onSelectItem={handleOpenItem}
                 onOpenCreateItem={() => setIsCreateItemOpen(true)}
+                onSendForReview={(config) => {
+                  setReviewWizardState({
+                    isOpen: true,
+                    reviewName: config.reviewName,
+                    sourceFilterName: config.sourceFilterName,
+                    items: config.items,
+                  });
+                }}
               />
             </aside>
 
@@ -363,8 +386,26 @@ export const AppShell: React.FC = () => {
             </main>
           </div>
         </div>
+      ) : mainNavTab === 'reviews' ? (
+        selectedReviewId ? (
+          <ReviewExecutionView
+            reviewId={selectedReviewId}
+            onBack={() => setSelectedReviewId(null)}
+          />
+        ) : (
+          <ReviewsHomeView
+            onSelectReview={(id) => setSelectedReviewId(id)}
+            projectId={projectId}
+            projectName={currentProject?.name}
+            projectMembers={members.map((m) => ({
+              userId: m.userId,
+              fullName: m.fullName,
+              username: m.username,
+            }))}
+          />
+        )
       ) : (
-        /* Other Navigation Tabs (Stream, Reviews, Admin) */
+        /* Other Navigation Tabs (Stream, Admin) */
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white">
           <div className="max-w-md space-y-3">
             <h2 className="text-xl font-bold text-slate-800 capitalize">{mainNavTab} Center</h2>
@@ -400,6 +441,30 @@ export const AppShell: React.FC = () => {
           members={members}
           onItemCreated={_newItemId => {
             // Can optionally focus the newly created item or list will refetch
+          }}
+        />
+      )}
+
+      {/* Start Review Wizard (Triggered from Explorer context menu or Filters tab context menu) */}
+      {reviewWizardState.isOpen && projectId && currentProject && (
+        <StartReviewWizard
+          isOpen={reviewWizardState.isOpen}
+          onClose={() => setReviewWizardState({ isOpen: false })}
+          projectId={projectId}
+          projectName={currentProject.name}
+          defaultReviewName={reviewWizardState.reviewName}
+          sourceFilterName={reviewWizardState.sourceFilterName}
+          initialItems={reviewWizardState.items}
+          preselectedItemIds={reviewWizardState.items?.map((i) => i.id)}
+          members={members.map((m) => ({
+            userId: m.userId,
+            fullName: m.fullName,
+            username: m.username,
+          }))}
+          onSuccess={(newReviewId) => {
+            setReviewWizardState({ isOpen: false });
+            setMainNavTab('reviews');
+            setSelectedReviewId(newReviewId);
           }}
         />
       )}

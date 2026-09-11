@@ -79,3 +79,18 @@ export enum ReviewItemStatusValue {
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
 }
+
+// Review Comment Labels (BR-REV-13)
+export enum ReviewCommentLabel {
+  GENERAL = 'GENERAL',
+  ISSUE = 'ISSUE',
+  QUESTION = 'QUESTION',
+  PROPOSED_CHANGE = 'PROPOSED_CHANGE',
+}
+
+// Review Template Types
+export enum ReviewTemplateType {
+  APPROVAL = 'APPROVAL',
+  PEER = 'PEER',
+}
+

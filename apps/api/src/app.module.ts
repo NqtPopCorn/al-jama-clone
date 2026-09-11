@@ -10,6 +10,7 @@ import { ItemModule } from './modules/item/item.module';
 import { TraceabilityModule } from './modules/traceability/traceability.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
+import { ReviewModule } from './modules/review/review.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -37,7 +38,9 @@ import { AppService } from './app.service';
     TraceabilityModule,
     NotificationModule,
     CollaborationModule,
+    ReviewModule,
   ],
+
   controllers: [AppController],
   providers: [AppService],
 })

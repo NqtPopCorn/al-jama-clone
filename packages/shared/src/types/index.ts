@@ -1,4 +1,14 @@
-import { LicenseType, UserStatus, ProjectRole, ProjectStatus } from '../constants';
+import {
+  LicenseType,
+  UserStatus,
+  ProjectRole,
+  ProjectStatus,
+  ReviewStatus,
+  ReviewRole,
+  ReviewItemStatusValue,
+  ReviewCommentLabel,
+  ReviewTemplateType,
+} from '../constants';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -297,3 +307,161 @@ export interface TraceMatrixResult {
   coveredItemsCount: number;
   coveragePercentage: number;
 }
+
+// -----------------------------------------------------------------------------
+// REVIEW CENTER (EPIC E5 & E6)
+// -----------------------------------------------------------------------------
+
+export interface ReviewSummary {
+  id: string;
+  key: string;
+  name: string;
+  projectId: string;
+  projectName: string;
+  isPublic: boolean;
+  status: ReviewStatus;
+  role?: ReviewRole | string | null;
+  revisionNumber: number;
+  moderatorNames: string[];
+  deadline?: string | null;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface ReviewTemplateSummary {
+  id: string;
+  projectId: string;
+  name: string;
+  type: ReviewTemplateType;
+  requiresSignature: boolean;
+  enableTimeTracking: boolean;
+  allowApproverAddParticipant: boolean;
+  allowDelegate: boolean;
+  isEditableOnCreate: boolean;
+}
+
+export interface ReviewParticipantSummary {
+  id: string;
+  reviewId: string;
+  userId: string;
+  username: string;
+  fullName: string;
+  avatarUrl?: string | null;
+  reviewRole: ReviewRole;
+  isSigner: boolean;
+  isFinished: boolean;
+  finishedAt?: string | null;
+}
+
+export interface ReviewItemReadingView {
+  id: string; // reviewItemId
+  itemId: string;
+  itemKey: string;
+  name: string;
+  itemTypeName?: string;
+  itemTypeIcon?: string | null;
+  orderIndex: number;
+  isContextOnly: boolean;
+  customFields?: Record<string, unknown> | null;
+  description?: string | null;
+  status: ReviewItemStatusValue;
+  commentCount: number;
+  hasUpdatedSinceLastRevision?: boolean;
+}
+
+export interface ReviewCommentMentionSummary {
+  userId: string;
+  username: string;
+  fullName: string;
+}
+
+export interface ReviewCommentSummary {
+  id: string;
+  reviewItemId: string;
+  parentCommentId?: string | null;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string | null;
+  revisionNumber: number;
+  label: ReviewCommentLabel;
+  content: string;
+  selectedText?: string | null;
+  isResolved: boolean;
+  createdAt: string;
+  mentions?: ReviewCommentMentionSummary[];
+  replies?: ReviewCommentSummary[];
+}
+
+export interface ReviewDetailStats {
+  totalItems: number;
+  approvedCount: number;
+  rejectedCount: number;
+  reviewedCount: number;
+  unmarkedCount: number;
+  totalComments: number;
+  myCommentsCount: number;
+  updatedSinceLastRevisionCount: number;
+}
+
+export interface ReviewDetail {
+  id: string;
+  key: string;
+  name: string;
+  description?: string | null;
+  projectId: string;
+  projectName: string;
+  template: ReviewTemplateSummary;
+  status: ReviewStatus;
+  deadline?: string | null;
+  currentRevisionNumber: number;
+  includeContext: boolean;
+  participants: ReviewParticipantSummary[];
+  items: ReviewItemReadingView[];
+  myRole?: ReviewRole;
+  myIsFinished?: boolean;
+  stats: ReviewDetailStats;
+}
+
+export interface CreateReviewParticipantInput {
+  userId?: string;
+  groupId?: string;
+  reviewRole: ReviewRole;
+  isSigner?: boolean;
+}
+
+export interface CreateReviewDto {
+  projectId: string;
+  templateId?: string;
+  name: string;
+  description?: string;
+  deadline?: string;
+  itemIds: string[];
+  participants: CreateReviewParticipantInput[];
+  includeContext?: boolean;
+  initiateImmediately?: boolean;
+}
+
+export interface InitiateReviewDto {
+  message?: string;
+  deadline?: string;
+}
+
+export interface UpdateReviewItemStatusDto {
+  status: ReviewItemStatusValue;
+  rejectionComment?: string;
+}
+
+export interface BatchUpdateReviewItemStatusDto {
+  reviewItemIds: string[];
+  status: ReviewItemStatusValue;
+  rejectionComment?: string;
+}
+
+export interface CreateReviewCommentDto {
+  content: string;
+  label?: ReviewCommentLabel;
+  selectedText?: string;
+  parentCommentId?: string;
+  mentionedUserIds?: string[];
+}
+
