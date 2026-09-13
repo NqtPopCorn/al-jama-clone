@@ -6,6 +6,7 @@ import { useThemeStore } from '../../stores/theme.store';
 import {
   Folder,
   FolderOpen,
+  FolderPlus,
   Plus,
   Minus,
   Settings,
@@ -371,6 +372,7 @@ interface ExplorerSidebarProps {
   onSelectFolder?: (folderId: string | null) => void;
   onSelectItem?: (itemId: string, key: string, name: string) => void;
   onOpenCreateItem?: () => void;
+  onOpenCreateFolder?: (parentFolderId?: string | null) => void;
   onSendForReview?: (config: {
     reviewName: string;
     sourceFilterName?: string;
@@ -386,6 +388,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   onSelectFolder,
   onSelectItem,
   onOpenCreateItem,
+  onOpenCreateFolder,
   onSendForReview,
 }) => {
   const { user } = useAuthStore();
@@ -424,16 +427,23 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
     data: { id: '', name: '' },
   });
 
+  // Add dropdown menu state
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+
   // Close context menu on external click or escape
   useEffect(() => {
     const handleOutsideClick = () => {
       if (contextMenu.isOpen) {
         setContextMenu(prev => ({ ...prev, isOpen: false }));
       }
+      if (isAddMenuOpen) {
+        setIsAddMenuOpen(false);
+      }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setContextMenu(prev => ({ ...prev, isOpen: false }));
+        setIsAddMenuOpen(false);
       }
     };
 
@@ -458,6 +468,13 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
       });
     }
   }, [nodes]);
+
+  // Automatically expand folder when selected or newly created
+  useEffect(() => {
+    if (selectedFolderId) {
+      setExpandedFolders(prev => new Set(prev).add(selectedFolderId));
+    }
+  }, [selectedFolderId]);
 
   // Helper to gather descendant items
   const collectDescendantItems = (node: ExplorerNode): ReviewWizardItemInfo[] => {
@@ -848,22 +865,66 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
               isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'
             }`}
           >
-            <button
-              type="button"
-              onClick={() => {
-                if (onOpenCreateItem) onOpenCreateItem();
-              }}
-              className={`px-2 py-0.5 rounded border text-xs font-semibold flex items-center gap-1 shadow-2xs transition-colors ${
-                isDark
-                  ? 'bg-[#21262d] border-[#30363d] text-slate-200 hover:bg-[#282e38]'
-                  : 'bg-[#f8fafc] border-slate-300 text-slate-700 hover:bg-slate-100'
-              }`}
-              title="Create New Item"
-            >
-              <Plus className="w-3 h-3 text-blue-500" />
-              <span>Add</span>
-              <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  setIsAddMenuOpen(prev => !prev);
+                }}
+                className={`px-2 py-0.5 rounded border text-xs font-semibold flex items-center gap-1 shadow-2xs transition-colors ${
+                  isDark
+                    ? 'bg-[#21262d] border-[#30363d] text-slate-200 hover:bg-[#282e38]'
+                    : 'bg-[#f8fafc] border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+                title="Add Item or Folder"
+              >
+                <Plus className="w-3 h-3 text-blue-500" />
+                <span>Add</span>
+                <ChevronDown
+                  className={`w-2.5 h-2.5 text-slate-400 transition-transform ${
+                    isAddMenuOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {isAddMenuOpen && (
+                <div
+                  className={`absolute left-0 top-full mt-1 w-36 rounded shadow-lg border py-1 z-30 ${
+                    isDark
+                      ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+                      : 'bg-white border-slate-200 text-slate-800'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddMenuOpen(false);
+                      onOpenCreateItem?.();
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 flex items-center gap-2 text-xs transition-colors ${
+                      isDark ? 'hover:bg-[#21262d] text-slate-200' : 'hover:bg-blue-50 text-slate-700'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-500" />
+                    <span>New Item</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddMenuOpen(false);
+                      onOpenCreateFolder?.(selectedFolderId || null);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 flex items-center gap-2 text-xs transition-colors ${
+                      isDark ? 'hover:bg-[#21262d] text-slate-200' : 'hover:bg-blue-50 text-slate-700'
+                    }`}
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                    <span>New Folder</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-1">
               <button
@@ -1374,21 +1435,76 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
           {/* Menu for Folder / Set in Explorer Tree */}
           {contextMenu.type === 'folder' && (
             <>
-              <button
-                type="button"
-                onClick={() => {
-                  if (contextMenu.data.id !== 'root') {
-                    handleFolderClick(contextMenu.data.id);
-                  }
-                  setContextMenu(prev => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
-              >
-                <FolderOpen className="w-3.5 h-3.5 text-slate-400" />
-                <span>Open Folder</span>
-              </button>
+              {contextMenu.data.id === 'root' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContextMenu(prev => ({ ...prev, isOpen: false }));
+                      onOpenCreateItem?.();
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Add Item</span>
+                  </button>
 
-              <div className="border-t border-slate-200 my-1" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContextMenu(prev => ({ ...prev, isOpen: false }));
+                      onOpenCreateFolder?.(null);
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Add Folder</span>
+                  </button>
+
+                  <div className="border-t border-slate-200 my-1" />
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFolderId(contextMenu.data.id);
+                      setContextMenu(prev => ({ ...prev, isOpen: false }));
+                      onOpenCreateItem?.();
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Add Item in Folder</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContextMenu(prev => ({ ...prev, isOpen: false }));
+                      onOpenCreateFolder?.(contextMenu.data.id);
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Add Subfolder</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleFolderClick(contextMenu.data.id);
+                      setContextMenu(prev => ({ ...prev, isOpen: false }));
+                    }}
+                    className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center gap-2 text-slate-700"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Open Folder</span>
+                  </button>
+
+                  <div className="border-t border-slate-200 my-1" />
+                </>
+              )}
 
               {/* Send set for review */}
               <button

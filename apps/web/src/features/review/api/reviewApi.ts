@@ -87,4 +87,19 @@ export const reviewApi = {
     );
     return res.data.data;
   },
+
+  closeForFeedback: async (reviewId: string) => {
+    const res = await api.post<ApiResponse<unknown>>(`/reviews/${reviewId}/close-for-feedback`);
+    return res.data.data;
+  },
+
+  reopenReview: async (reviewId: string) => {
+    const res = await api.post<ApiResponse<unknown>>(`/reviews/${reviewId}/reopen`);
+    return res.data.data;
+  },
+
+  finalizeReview: async (reviewId: string) => {
+    const res = await api.post<ApiResponse<unknown>>(`/reviews/${reviewId}/finalize`);
+    return res.data.data;
+  },
 };

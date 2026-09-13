@@ -2,6 +2,7 @@ import { api } from '../../../lib/api';
 import {
   ApiResponse,
   BulkUpdateItemsDto,
+  CreateFolderDto,
   CreateItemDto,
   FolderSummary,
   ItemDetail,
@@ -131,6 +132,11 @@ export const itemApi = {
 
   getProjectFolders: async (projectId: string) => {
     const res = await api.get<ApiResponse<FolderSummary[]>>(`/projects/${projectId}/folders`);
+    return res.data.data!;
+  },
+
+  createFolder: async (projectId: string, data: CreateFolderDto) => {
+    const res = await api.post<ApiResponse<FolderSummary>>(`/projects/${projectId}/folders`, data);
     return res.data.data!;
   },
 };

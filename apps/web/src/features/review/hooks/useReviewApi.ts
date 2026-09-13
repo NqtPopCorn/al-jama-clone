@@ -126,3 +126,37 @@ export function useCreateReviewCommentMutation() {
     },
   });
 }
+
+export function useCloseForFeedbackMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reviewId: string) => reviewApi.closeForFeedback(reviewId),
+    onSuccess: (_, reviewId) => {
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(reviewId) });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.lists() });
+    },
+  });
+}
+
+export function useReopenReviewMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reviewId: string) => reviewApi.reopenReview(reviewId),
+    onSuccess: (_, reviewId) => {
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(reviewId) });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.lists() });
+    },
+  });
+}
+
+export function useFinalizeReviewMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reviewId: string) => reviewApi.finalizeReview(reviewId),
+    onSuccess: (_, reviewId) => {
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(reviewId) });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.lists() });
+    },
+  });
+}
+

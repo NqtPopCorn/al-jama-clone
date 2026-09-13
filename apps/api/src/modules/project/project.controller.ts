@@ -1,4 +1,5 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { CreateFolderDto } from './dto/create-folder.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -101,6 +102,25 @@ export class ProjectController {
   @SwaggerResponse({ status: 200, description: 'Project folders returned' })
   async getProjectFolders(@Param('id') projectId: string): Promise<ApiResponse<FolderSummary[]>> {
     const data = await this.projectService.getProjectFolders(projectId);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post(':id/folders')
+  @RequireLicense(LicenseType.FULL)
+  @ApiOperation({ summary: 'Create a new folder in project' })
+  @SwaggerResponse({ status: 201, description: 'Folder created successfully' })
+  @SwaggerResponse({ status: 403, description: 'Forbidden if not a member or limited license' })
+  @SwaggerResponse({ status: 404, description: 'Parent folder not found' })
+  async createFolder(
+    @Param('id') projectId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateFolderDto,
+  ): Promise<ApiResponse<FolderSummary>> {
+    const data = await this.projectService.createFolder(projectId, userId, dto);
     return {
       success: true,
       data,

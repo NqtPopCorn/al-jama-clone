@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
+  CreateFolderDto,
   ExplorerNode,
   FolderSummary,
   ItemTypeWithFields,
@@ -277,5 +278,67 @@ export class ProjectService {
       parentFolderId: f.parentFolderId,
       orderIndex: f.orderIndex,
     }));
+  }
+
+  async createFolder(
+    projectId: string,
+    userId: string,
+    dto: CreateFolderDto,
+  ): Promise<FolderSummary> {
+    // 1. Verify project membership
+    const membership = await this.prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: { projectId, userId },
+      },
+    });
+
+    if (!membership) {
+      throw new ForbiddenException('You are not a member of this project');
+    }
+
+    // 2. If parentFolderId is specified, verify it exists and belongs to the same project
+    if (dto.parentFolderId) {
+      const parentFolder = await this.prisma.folder.findFirst({
+        where: {
+          id: dto.parentFolderId,
+          projectId,
+        },
+      });
+
+      if (!parentFolder) {
+        throw new NotFoundException('Parent folder not found in this project');
+      }
+    }
+
+    // 3. Determine orderIndex if not specified
+    let orderIndex = dto.orderIndex;
+    if (orderIndex === undefined || orderIndex === null) {
+      const maxOrderFolder = await this.prisma.folder.findFirst({
+        where: {
+          projectId,
+          parentFolderId: dto.parentFolderId || null,
+        },
+        orderBy: { orderIndex: 'desc' },
+        select: { orderIndex: true },
+      });
+      orderIndex = maxOrderFolder ? maxOrderFolder.orderIndex + 1 : 0;
+    }
+
+    // 4. Create the folder
+    const folder = await this.prisma.folder.create({
+      data: {
+        projectId,
+        name: dto.name.trim(),
+        parentFolderId: dto.parentFolderId || null,
+        orderIndex,
+      },
+    });
+
+    return {
+      id: folder.id,
+      name: folder.name,
+      parentFolderId: folder.parentFolderId,
+      orderIndex: folder.orderIndex,
+    };
   }
 }

@@ -13,6 +13,7 @@ import { ReadingView } from '../../features/item/ReadingView';
 import { ProjectDashboard } from '../../features/project/ProjectDashboard';
 import { ItemDetailView } from '../../features/item/components/item-detail-view';
 import { CreateItemModal } from '../../features/item/components/create-item-modal';
+import { CreateFolderModal } from '../../features/project/components/create-folder-modal';
 import { TraceView } from '../../features/traceability/components/TraceView';
 import { ProjectStreamView } from '../../features/collaboration/ProjectStreamView';
 import {
@@ -163,11 +164,14 @@ export const AppShell: React.FC = () => {
     }
   };
 
-  // Local item tabs and create item modal states
+  // Local item tabs and create item/folder modal states
   const [openItemTabs, setOpenItemTabs] = useState<
     Array<{ id: string; key: string; name: string }>
   >([]);
   const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
+  const [createItemDefaultTypeId, setCreateItemDefaultTypeId] = useState<string | null>(null);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [createFolderParentId, setCreateFolderParentId] = useState<string | null>(null);
 
   // Review wizard state for context menu "Send for review"
   const [reviewWizardState, setReviewWizardState] = useState<{
@@ -187,6 +191,16 @@ export const AppShell: React.FC = () => {
       return [...prev, { id, key: key || 'ITEM', name: name || 'Item Details' }];
     });
     setPerspective(`item:${id}`);
+  };
+
+  const handleOpenCreateItem = (itemTypeId?: string | null) => {
+    setCreateItemDefaultTypeId(itemTypeId || null);
+    setIsCreateItemOpen(true);
+  };
+
+  const handleOpenCreateFolder = (parentFolderId?: string | null) => {
+    setCreateFolderParentId(parentFolderId ?? selectedFolderId ?? null);
+    setIsCreateFolderOpen(true);
   };
 
   const handleOpenTraceability = () => {
@@ -312,7 +326,8 @@ export const AppShell: React.FC = () => {
                 onSelectRootDashboard={handleSelectRootDashboard}
                 onSelectFolder={handleSelectFolder}
                 onSelectItem={handleOpenItem}
-                onOpenCreateItem={() => setIsCreateItemOpen(true)}
+                onOpenCreateItem={() => handleOpenCreateItem(null)}
+                onOpenCreateFolder={handleOpenCreateFolder}
                 onSendForReview={config => {
                   setReviewWizardState({
                     isOpen: true,
@@ -383,7 +398,7 @@ export const AppShell: React.FC = () => {
                       onPageChange={setPage}
                       onSortChange={handleSortChange}
                       onOpenItem={handleOpenItem}
-                      onOpenCreateItem={() => setIsCreateItemOpen(true)}
+                      onOpenCreateItem={handleOpenCreateItem}
                       onOpenTraceability={handleOpenTraceability}
                     />
                   )}
@@ -442,11 +457,27 @@ export const AppShell: React.FC = () => {
           projectId={projectId}
           projectName={currentProject.name}
           defaultFolderId={selectedFolderId}
+          defaultItemTypeId={createItemDefaultTypeId}
           itemTypes={itemTypes}
           folders={folders}
           members={members}
           onItemCreated={_newItemId => {
             // Can optionally focus the newly created item or list will refetch
+          }}
+        />
+      )}
+
+      {/* Create Folder Modal */}
+      {projectId && currentProject && (
+        <CreateFolderModal
+          isOpen={isCreateFolderOpen}
+          onClose={() => setIsCreateFolderOpen(false)}
+          projectId={projectId}
+          projectName={currentProject.name}
+          defaultParentFolderId={createFolderParentId}
+          folders={folders}
+          onFolderCreated={newFolder => {
+            setSelectedFolderId(newFolder.id);
           }}
         />
       )}

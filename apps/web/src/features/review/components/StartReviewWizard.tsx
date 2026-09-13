@@ -16,6 +16,7 @@ import {
 import { useCreateReviewMutation } from '../hooks/useReviewApi';
 import { ReviewRole, ReviewTemplateType, CreateReviewParticipantInput } from '@aljama/shared';
 import { useAuthStore } from '../../../stores/auth.store';
+import { useProjectMeta } from '../../item/hooks/use-project-meta';
 import { ProjectItemPickerModal } from './ProjectItemPickerModal';
 
 export type SignerRole =
@@ -51,7 +52,7 @@ interface AvailableParticipant {
   userId?: string;
   name: string;
   email?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   isGroup?: boolean;
   subtitle?: string;
 }
@@ -62,42 +63,11 @@ interface AssignedParticipant {
   groupId?: string;
   name: string;
   email?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   isGroup?: boolean;
   signerRole: SignerRole;
   reviewRole: 'APPROVER' | 'REVIEWER';
 }
-
-const DEFAULT_AVAILABLE: AvailableParticipant[] = [
-  {
-    id: 'u-carleda',
-    name: 'Carleda Wade',
-    email: 'carleda.wade@jamacloud.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    isGroup: false,
-  },
-  { id: 'u-joe', name: 'Joe Johnson', email: 'joe.johnson@jamacloud.com', isGroup: false },
-  { id: 'u-liam', name: 'Liam Rotchford', email: 'liam.rotchford@jamacloud.com', isGroup: false },
-  { id: 'g-org-admin', name: 'Organization Admin', subtitle: 'Organization', isGroup: true },
-  { id: 'g-proj-admin', name: 'Project Admin', subtitle: 'Organization', isGroup: true },
-  { id: 'g-quality', name: 'Quality', subtitle: 'Organization', isGroup: true },
-  { id: 'g-rd', name: 'R&D', subtitle: 'Organization', isGroup: true },
-  {
-    id: 'u-rebecca',
-    name: 'Rebecca Requirements Writer',
-    email: 'rebecca@jamacloud.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-    isGroup: false,
-  },
-  {
-    id: 'u-sarah',
-    name: 'Sarah Approver',
-    email: 'sarah.approver@jamacloud.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    isGroup: false,
-  },
-  { id: 'u-steve', name: 'Steve Bush', email: 'steve.bush@jamacloud.com', isGroup: false },
-];
 
 interface StartReviewWizardProps {
   isOpen: boolean;
@@ -108,7 +78,7 @@ interface StartReviewWizardProps {
   initialItems?: ReviewWizardItemInfo[];
   defaultReviewName?: string;
   sourceFilterName?: string;
-  members?: Array<{ userId: string; fullName: string; username: string }>;
+  members?: Array<{ userId: string; fullName: string; username: string; avatarUrl?: string | null }>;
   onSuccess?: (reviewId: string) => void;
 }
 
@@ -146,10 +116,10 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   useEffect(() => {
     if (defaultReviewName !== undefined) {
       setName(defaultReviewName);
-      setSubject(defaultReviewName ? `Jama-Carleda Wade REVIEW: ${defaultReviewName}` : '');
+      setSubject(defaultReviewName ? `[AL-JAMA] REVIEW: ${defaultReviewName}` : '');
       setInvitationMessage(
         defaultReviewName
-          ? `You are invited to the following review of ${defaultReviewName}. Select the link below to begin the review and leave feedback.`
+          ? `Bạn được mời tham gia đợt review cho ${defaultReviewName}. Nhấp vào liên kết bên dưới để bắt đầu review và gửi ý kiến phản hồi.`
           : '',
       );
     }
@@ -184,59 +154,59 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   const [notifyParticipantFinishes, setNotifyParticipantFinishes] = useState(false);
   const [enableVoting, setEnableVoting] = useState(false);
 
-  // --- Step 3: Participants State (Khớp media_1789105342448.png) ---
+  // --- Step 3: Participants State ---
   const [participantTab, setParticipantTab] = useState<'team' | 'email'>('team');
   const [searchParticipant, setSearchParticipant] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
 
-  // Initial assignments matching Jama Connect screenshot
-  const [assignedParticipants, setAssignedParticipants] = useState<AssignedParticipant[]>([
-    {
-      id: 'u-carleda',
-      userId: members[0]?.userId,
-      name: 'Carleda Wade',
-      email: 'carleda.wade@jamacloud.com',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      signerRole: 'Regulatory',
-      reviewRole: 'APPROVER',
-    },
-    {
-      id: 'u-joe',
-      userId: members[1]?.userId,
-      name: 'Joe Johnson',
-      email: 'joe.johnson@jamacloud.com',
-      signerRole: 'R&D',
-      reviewRole: 'APPROVER',
-    },
-    {
-      id: 'u-rebecca',
-      userId: members[2]?.userId,
-      name: 'Rebecca Requirements Writer',
-      email: 'rebecca@jamacloud.com',
-      avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-      signerRole: 'Not assigned',
-      reviewRole: 'APPROVER',
-    },
-  ]);
+  // Fetch real project members if not passed from parent
+  const { members: queriedMembers } = useProjectMeta(projectId);
 
-  // Combine default list with project members
-  const availableParticipants = useMemo(() => {
-    const list: AvailableParticipant[] = [...DEFAULT_AVAILABLE];
-    if (members && members.length > 0) {
-      members.forEach(m => {
-        if (!list.some(item => item.userId === m.userId || item.name === m.fullName)) {
-          list.push({
-            id: m.userId,
-            userId: m.userId,
-            name: m.fullName,
-            email: `${m.username}@jamacloud.com`,
-            isGroup: false,
-          });
-        }
-      });
+  const effectiveMembers = useMemo(() => {
+    if (members && members.length > 0) return members;
+    return queriedMembers || [];
+  }, [members, queriedMembers]);
+
+  // Real available participants from project members
+  const availableParticipants = useMemo<AvailableParticipant[]>(() => {
+    if (!effectiveMembers || effectiveMembers.length === 0) return [];
+    return effectiveMembers.map(m => ({
+      id: m.userId,
+      userId: m.userId,
+      name: m.fullName || m.username,
+      email: `${m.username}@aljama.local`,
+      avatarUrl: m.avatarUrl,
+      isGroup: false,
+      subtitle: (m as { projectRole?: string }).projectRole || 'Thành viên dự án',
+    }));
+  }, [effectiveMembers]);
+
+  // Initial assignments with real project members
+  const [assignedParticipants, setAssignedParticipants] = useState<AssignedParticipant[]>([]);
+  const [hasInitializedAssignments, setHasInitializedAssignments] = useState(false);
+
+  useEffect(() => {
+    if (!hasInitializedAssignments && availableParticipants.length > 0) {
+      // By default, add project members (prioritize other members if current user is moderator)
+      const others = availableParticipants.filter(p => p.userId !== currentUser?.id);
+      const toAssign = others.length > 0 ? others : availableParticipants;
+      setAssignedParticipants(
+        toAssign.map(p => ({
+          id: p.id,
+          userId: p.userId,
+          name: p.name,
+          email: p.email,
+          avatarUrl: p.avatarUrl,
+          isGroup: false,
+          signerRole: 'Not assigned' as SignerRole,
+          reviewRole: p.name.toLowerCase().includes('reviewer')
+            ? ('REVIEWER' as const)
+            : ('APPROVER' as const),
+        })),
+      );
+      setHasInitializedAssignments(true);
     }
-    return list;
-  }, [members]);
+  }, [availableParticipants, currentUser?.id, hasInitializedAssignments]);
 
   const filteredAvailable = useMemo(() => {
     if (!searchParticipant.trim()) return availableParticipants;
@@ -251,13 +221,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
   // --- Step 4: Invitation State ---
   const [subject, setSubject] = useState(
-    defaultReviewName ? `Jama-Carleda Wade REVIEW: ${defaultReviewName}` : '',
+    defaultReviewName ? `[AL-JAMA] REVIEW: ${defaultReviewName}` : '',
   );
   const [isSubjectDirty, setIsSubjectDirty] = useState(false);
 
   const [invitationMessage, setInvitationMessage] = useState(
     defaultReviewName
-      ? `You are invited to the following review of ${defaultReviewName}. Select the link below to begin the review and leave feedback.`
+      ? `Bạn được mời tham gia đợt review cho ${defaultReviewName}. Nhấp vào liên kết bên dưới để bắt đầu review và gửi ý kiến phản hồi.`
       : '',
   );
   const [isMessageDirty, setIsMessageDirty] = useState(false);
@@ -266,12 +236,12 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   const handleNameChange = (newName: string) => {
     setName(newName);
     if (!isSubjectDirty) {
-      setSubject(newName.trim() ? `Jama-Carleda Wade REVIEW: ${newName}` : '');
+      setSubject(newName.trim() ? `[AL-JAMA] REVIEW: ${newName}` : '');
     }
     if (!isMessageDirty) {
       setInvitationMessage(
         newName.trim()
-          ? `You are invited to the following review of ${newName}. Select the link below to begin the review and leave feedback.`
+          ? `Bạn được mời tham gia đợt review cho ${newName}. Nhấp vào liên kết bên dưới để bắt đầu review và gửi ý kiến phản hồi.`
           : '',
       );
     }
@@ -284,12 +254,12 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   const participantsSummaryText = useMemo(() => {
     const parts: string[] = [];
     if (approversCount > 0) {
-      parts.push(`${approversCount} ${approversCount === 1 ? 'approver' : 'approvers'}`);
+      parts.push(`${approversCount} approver`);
     }
     if (reviewersCount > 0) {
-      parts.push(`${reviewersCount} ${reviewersCount === 1 ? 'reviewer' : 'reviewers'}`);
+      parts.push(`${reviewersCount} reviewer`);
     }
-    return parts.join(' and ') || '0 participants';
+    return parts.join(' và ') || '0 người tham gia';
   }, [approversCount, reviewersCount]);
 
   // Filter items in Step 1
@@ -313,46 +283,32 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
     setReviewItems([]);
   };
 
+  // Memoized IDs of currently selected review items
+  const alreadySelectedItemIds = useMemo(
+    () => reviewItems.map(i => i.id),
+    [reviewItems],
+  );
+
   // When items are selected from ProjectItemPickerModal
   const handleAddItemsFromTree = (newItems: ReviewWizardItemInfo[]) => {
-    setReviewItems(prev => {
-      const existingIds = new Set(prev.map(i => i.id));
-      const filteredNew = newItems.filter(i => !existingIds.has(i.id));
-      return [...prev, ...filteredNew];
-    });
+    setReviewItems(newItems);
     setError(null);
   };
 
   // Deadline formatting helper for email preview
   const formatDeadlineDisplay = (dateStr: string, timeStr: string) => {
-    if (!dateStr) return 'Wednesday, Oct 26th at 17:00 EDT';
+    if (!dateStr) return 'Ngày 26/10 lúc 17:00 EDT';
     try {
       const parts = dateStr.split('-');
       if (parts.length === 3) {
         const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
+        const month = parseInt(parts[1], 10);
         const day = parseInt(parts[2], 10);
-        const d = new Date(year, month, day);
-        const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
-        const monthName = d.toLocaleDateString('en-US', { month: 'short' });
-        const nth = (n: number) => {
-          if (n > 3 && n < 21) return 'th';
-          switch (n % 10) {
-            case 1:
-              return 'st';
-            case 2:
-              return 'nd';
-            case 3:
-              return 'rd';
-            default:
-              return 'th';
-          }
-        };
-        return `${dayName}, ${monthName} ${day}${nth(day)} at ${timeStr}`;
+        return `Ngày ${day}/${month}/${year} lúc ${timeStr}`;
       }
-      return `${dateStr} at ${timeStr}`;
+      return `${dateStr} lúc ${timeStr}`;
     } catch {
-      return `${dateStr} at ${timeStr}`;
+      return `${dateStr} lúc ${timeStr}`;
     }
   };
 
@@ -402,23 +358,30 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
   const handleInviteByEmail = () => {
     if (!inviteEmail.trim() || !inviteEmail.includes('@')) {
-      setError('Please enter a valid email address');
+      setError('Vui lòng nhập địa chỉ email hợp lệ');
       return;
     }
     const cleanEmail = inviteEmail.trim();
     if (assignedParticipants.some(p => p.email?.toLowerCase() === cleanEmail.toLowerCase())) {
-      setError('This email is already added as a participant');
+      setError('Email này đã được thêm vào danh sách người tham gia');
       return;
     }
 
-    const newId = `email-${Date.now()}`;
     const namePart = cleanEmail.split('@')[0];
+    const matchedMember = availableParticipants.find(
+      p =>
+        p.email?.toLowerCase() === cleanEmail.toLowerCase() ||
+        p.name.toLowerCase() === namePart.toLowerCase(),
+    );
+
     setAssignedParticipants(prev => [
       ...prev,
       {
-        id: newId,
-        name: namePart,
+        id: matchedMember ? matchedMember.id : `email-${Date.now()}`,
+        userId: matchedMember?.userId,
+        name: matchedMember?.name || namePart,
         email: cleanEmail,
+        avatarUrl: matchedMember?.avatarUrl,
         signerRole: 'Not assigned',
         reviewRole: 'APPROVER',
       },
@@ -434,7 +397,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
         return {
           ...p,
           reviewRole: role,
-          signerRole: role === 'REVIEWER' ? 'Not assigned' : p.signerRole,
+          signerRole: 'Not assigned',
         };
       }),
     );
@@ -454,13 +417,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
   const handleSubmit = async (initiateImmediately: boolean) => {
     if (!name.trim()) {
-      setError('Review name is required');
+      setError('Tên review là bắt buộc');
       setStep(1);
       return;
     }
 
     if (reviewItems.length === 0) {
-      setError('Please select at least one item from the project to review');
+      setError('Vui lòng chọn ít nhất một item từ dự án để review');
       setStep(1);
       return;
     }
@@ -469,11 +432,18 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
       setError(null);
       const combinedDeadline = deadlineDate ? new Date(deadlineDate).toISOString() : undefined;
 
-      const formattedParticipants: CreateReviewParticipantInput[] = assignedParticipants.map(p => ({
-        userId: p.userId,
+      const validParticipants = assignedParticipants.filter(p => !!p.userId);
+      if (validParticipants.length === 0 && assignedParticipants.length > 0) {
+        setError('Các người tham gia cần phải là thành viên trong hệ thống.');
+        setStep(3);
+        return;
+      }
+
+      const formattedParticipants: CreateReviewParticipantInput[] = validParticipants.map(p => ({
+        userId: p.userId!,
         groupId: p.groupId,
         reviewRole: p.reviewRole === 'APPROVER' ? ReviewRole.APPROVER : ReviewRole.REVIEWER,
-        isSigner: p.signerRole !== 'Not assigned',
+        isSigner: false, // Signer role is disabled / undefined
       }));
 
       const finalItemIds = reviewItems.map(i => i.id);
@@ -495,7 +465,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
       }
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
-      setError(e.response?.data?.message || e.message || 'Failed to initiate review');
+      setError(e.response?.data?.message || e.message || 'Khởi tạo review thất bại');
     }
   };
 
@@ -507,14 +477,14 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
         <div className="w-full max-w-4xl bg-white rounded-lg shadow-2xl border border-slate-300 flex flex-col max-h-[92vh] overflow-hidden text-slate-800">
           {/* Modal Top Header matching Jama Connect screenshots */}
           <div className="flex items-center justify-between px-6 pt-5 pb-2 bg-white">
-            <h2 className="font-bold text-lg text-slate-900">Initiate review</h2>
+            <h2 className="font-bold text-lg text-slate-900">Khởi tạo review</h2>
             <div className="flex items-center gap-4">
               <button
                 type="button"
                 className="text-blue-600 hover:text-blue-800 text-xs font-semibold flex items-center gap-1"
               >
                 <QuestionIcon className="w-4 h-4 rounded-full" />
-                <span>Learn more</span>
+                <span>Tìm hiểu thêm</span>
               </button>
               <button
                 onClick={onClose}
@@ -525,13 +495,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
             </div>
           </div>
 
-          {/* Stepper matching Jama Connect: 1 Definition, 2 Settings, 3 Participants, 4 Invitation */}
+          {/* Stepper matching Jama Connect: 1 Định nghĩa, 2 Cài đặt, 3 Người tham gia, 4 Lời mời */}
           <div className="flex items-center justify-between px-8 py-3 bg-white border-b border-slate-200 text-xs">
             {[
-              { num: 1, label: 'Definition' },
-              { num: 2, label: 'Settings' },
-              { num: 3, label: 'Participants' },
-              { num: 4, label: 'Invitation' },
+              { num: 1, label: 'Định nghĩa' },
+              { num: 2, label: 'Cài đặt' },
+              { num: 3, label: 'Người tham gia' },
+              { num: 4, label: 'Lời mời' },
             ].map((item, idx) => (
               <React.Fragment key={item.num}>
                 {idx > 0 && <div className="flex-1 max-w-[48px] h-px bg-slate-200 mx-2" />}
@@ -574,30 +544,30 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
           {/* Modal Body */}
           <div className="flex-1 overflow-y-auto px-8 py-5 space-y-4">
             {/* ========================================================================= */}
-            {/* STEP 1: DEFINITION                                                        */}
+            {/* STEP 1: ĐỊNH NGHĨA (DEFINITION)                                           */}
             {/* ========================================================================= */}
             {step === 1 && (
               <div className="space-y-4 text-xs">
                 {/* Name (With mandatory asterisk * and empty by default) */}
                 <div>
                   <label className="block font-medium text-slate-700 mb-1">
-                    Name <span className="text-red-500 font-bold">*</span>
+                    Tên review <span className="text-red-500 font-bold">*</span>
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={e => handleNameChange(e.target.value)}
                     className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder:text-slate-400"
-                    placeholder="Enter review name (e.g. System Requirements Ready for Review)..."
+                    placeholder="Nhập tên review (vd: System Requirements Ready for Review)..."
                   />
                   {!name.trim() && error && (
-                    <p className="text-[11px] text-red-600 mt-1">Review name is required</p>
+                    <p className="text-[11px] text-red-600 mt-1">Tên review là bắt buộc</p>
                   )}
                 </div>
 
                 {/* Deadline (Date + Time side by side) */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Deadline</label>
+                  <label className="block font-medium text-slate-700 mb-1">Hạn chót (Deadline)</label>
                   <div className="flex items-center gap-3">
                     <div className="relative flex-1 max-w-xs">
                       <input
@@ -607,7 +577,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                       />
                     </div>
-                    <div className="relative w-36">
+                    <div className="relative w-40">
                       <select
                         value={deadlineTime}
                         onChange={e => setDeadlineTime(e.target.value)}
@@ -616,7 +586,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         <option value="17:00 EDT">17:00 EDT</option>
                         <option value="09:00 EDT">09:00 EDT</option>
                         <option value="12:00 EDT">12:00 EDT</option>
-                        <option value="23:59 EDT">23:59 (End of day)</option>
+                        <option value="23:59 EDT">23:59 EDT (Cuối ngày)</option>
                       </select>
                     </div>
                   </div>
@@ -624,7 +594,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Project (Readonly with Search icon) */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Project</label>
+                  <label className="block font-medium text-slate-700 mb-1">Dự án (Project)</label>
                   <div className="relative">
                     <input
                       type="text"
@@ -640,13 +610,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block font-medium text-slate-700">
-                      Items for Review <span className="text-red-500 font-bold">*</span> (
+                      Các item cần review <span className="text-red-500 font-bold">*</span> (
                       {reviewItems.length})
                     </label>
                     <div className="flex items-center gap-2">
                       {sourceFilterName && (
                         <span className="text-[11px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-medium">
-                          Filter: {sourceFilterName}
+                          Bộ lọc: {sourceFilterName}
                         </span>
                       )}
 
@@ -658,7 +628,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       >
                         <Plus className="w-3 h-3" />
                         <span>
-                          {reviewItems.length === 0 ? 'Select items from project' : 'Add items'}
+                          {reviewItems.length === 0 ? 'Chọn item từ dự án' : 'Thêm item'}
                         </span>
                       </button>
 
@@ -669,7 +639,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             onClick={() => setIsItemListExpanded(!isItemListExpanded)}
                             className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-0.5 ml-1"
                           >
-                            <span>{isItemListExpanded ? 'Hide' : 'Show list'}</span>
+                            <span>{isItemListExpanded ? 'Thu gọn' : 'Hiện danh sách'}</span>
                             <ChevronDown
                               className={`w-3.5 h-3.5 transition-transform ${
                                 isItemListExpanded ? 'rotate-180' : ''
@@ -681,9 +651,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             type="button"
                             onClick={handleClearAllItems}
                             className="text-[11px] text-slate-400 hover:text-red-600 font-medium ml-1"
-                            title="Clear all selected items"
+                            title="Xoá tất cả item đã chọn"
                           >
-                            Clear all
+                            Xoá tất cả
                           </button>
                         </>
                       )}
@@ -695,11 +665,10 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                     <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50 space-y-2">
                       <FolderTree className="w-8 h-8 text-slate-400 mx-auto" />
                       <div className="text-xs font-semibold text-slate-700">
-                        No items selected yet
+                        Chưa có item nào được chọn
                       </div>
                       <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-                        Please select items from the project tree or filter to include in this
-                        review.
+                        Vui lòng chọn các item từ cây thư mục dự án hoặc bộ lọc để đưa vào review này.
                       </p>
                       <button
                         type="button"
@@ -707,7 +676,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#203a6b] hover:bg-[#162747] text-white text-xs font-semibold rounded shadow-xs transition-colors"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Select items from project tree</span>
+                        <span>Chọn item từ cây thư mục dự án</span>
                       </button>
                     </div>
                   ) : (
@@ -719,7 +688,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           <div className="relative flex-1">
                             <input
                               type="text"
-                              placeholder="Search items by ID, name, type, or status..."
+                              placeholder="Tìm kiếm item theo ID, tên, loại hoặc trạng thái..."
                               value={itemSearchQuery}
                               onChange={e => setItemSearchQuery(e.target.value)}
                               className="w-full text-xs px-2.5 py-1 pr-7 border border-slate-300 rounded bg-white outline-none focus:ring-1 focus:ring-blue-500"
@@ -727,7 +696,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1.5 pointer-events-none" />
                           </div>
                           <span className="text-[11px] text-slate-500 shrink-0 font-medium">
-                            Showing {filteredReviewItems.length} of {reviewItems.length} items
+                            Hiển thị {filteredReviewItems.length} trên tổng số {reviewItems.length} item
                           </span>
                         </div>
 
@@ -735,17 +704,17 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         <div className="max-h-52 overflow-y-auto">
                           {filteredReviewItems.length === 0 ? (
                             <div className="p-4 text-center text-xs text-slate-400 italic">
-                              No items match your search.
+                              Không tìm thấy item phù hợp.
                             </div>
                           ) : (
                             <table className="w-full text-left text-xs border-collapse">
                               <thead className="bg-[#f8f9fa] text-slate-600 border-b border-slate-200 font-semibold sticky top-0">
                                 <tr>
                                   <th className="py-1.5 px-3 w-28">ID</th>
-                                  <th className="py-1.5 px-3">Name</th>
-                                  <th className="py-1.5 px-3 w-24">Type</th>
-                                  <th className="py-1.5 px-3 w-28">Status</th>
-                                  <th className="py-1.5 px-3 w-16 text-center">Version</th>
+                                  <th className="py-1.5 px-3">Tên item</th>
+                                  <th className="py-1.5 px-3 w-24">Loại (Type)</th>
+                                  <th className="py-1.5 px-3 w-28">Trạng thái (Status)</th>
+                                  <th className="py-1.5 px-3 w-16 text-center">Phiên bản</th>
                                   <th className="py-1.5 px-2 w-10 text-center"></th>
                                 </tr>
                               </thead>
@@ -800,7 +769,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                         type="button"
                                         onClick={() => handleRemoveItem(item.id)}
                                         className="text-slate-300 group-hover:text-red-600 p-0.5 transition-colors"
-                                        title="Remove item from review"
+                                        title="Xoá item khỏi review"
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -827,8 +796,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="attachments" className="text-slate-700 cursor-pointer">
-                      Include item attachments (Reviewers must have proper project permissions to
-                      view attachments.)
+                      Đính kèm tệp của item (Reviewer cần có quyền dự án phù hợp để xem tệp đính kèm.)
                     </label>
                   </div>
 
@@ -841,7 +809,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="relatedItems" className="text-slate-700 cursor-pointer">
-                      Include related items
+                      Bao gồm các item liên quan (Related items)
                     </label>
                   </div>
                 </div>
@@ -850,7 +818,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 {includeRelatedItems && (
                   <div className="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-4 animate-in fade-in duration-150">
                     <h4 className="font-semibold text-slate-800 text-xs">
-                      Select related items to show in this review
+                      Chọn các item liên quan để hiển thị trong review này
                     </h4>
 
                     {/* Upstream Items */}
@@ -867,18 +835,18 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           htmlFor="showUpstream"
                           className="font-medium text-slate-800 cursor-pointer"
                         >
-                          Show upstream related items
+                          Hiển thị các item liên quan upstream
                         </label>
                       </div>
 
                       {showUpstream && (
                         <div className="pl-6 space-y-1.5 text-[11px] text-slate-600">
                           {[
-                            { label: 'Related FMEAs', count: 2, icon: '🔨' },
-                            { label: 'Related Preliminary Hazard Analyses', count: 1, icon: '📄' },
-                            { label: 'Related Risk Evaluations', count: 1, icon: '☣️' },
-                            { label: 'Related User Needs', count: 10, icon: '👥' },
-                            { label: 'Related xFMEAs', count: 1, icon: '📑' },
+                            { label: 'FMEA liên quan', count: 2, icon: '🔨' },
+                            { label: 'Phân tích mối nguy sơ bộ liên quan', count: 1, icon: '📄' },
+                            { label: 'Đánh giá rủi ro liên quan', count: 1, icon: '☣️' },
+                            { label: 'User Needs liên quan', count: 10, icon: '👥' },
+                            { label: 'xFMEA liên quan', count: 1, icon: '📑' },
                           ].map(rel => (
                             <div
                               key={rel.label}
@@ -893,13 +861,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                 />
                                 <span>{rel.icon}</span>
                                 <span className="font-medium text-slate-800">{rel.label}</span>
-                                <span className="text-slate-400">{rel.count} items</span>
+                                <span className="text-slate-400">{rel.count} item</span>
                               </label>
                               <button
                                 type="button"
                                 className="text-blue-600 hover:underline flex items-center text-[11px]"
                               >
-                                Show filters <ChevronRight className="w-3 h-3 ml-0.5" />
+                                Hiện bộ lọc <ChevronRight className="w-3 h-3 ml-0.5" />
                               </button>
                             </div>
                           ))}
@@ -921,16 +889,16 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           htmlFor="showDownstream"
                           className="font-medium text-slate-800 cursor-pointer"
                         >
-                          Show downstream related items
+                          Hiển thị các item liên quan downstream
                         </label>
                       </div>
 
                       {showDownstream && (
                         <div className="pl-6 space-y-1.5 text-[11px] text-slate-600">
                           {[
-                            { label: 'Related Subsystem Requirements', count: 12, icon: '💻' },
-                            { label: 'Related System Architectures', count: 8, icon: '🧩' },
-                            { label: 'Related Verifications', count: 5, icon: '✔️' },
+                            { label: 'Subsystem Requirements liên quan', count: 12, icon: '💻' },
+                            { label: 'System Architectures liên quan', count: 8, icon: '🧩' },
+                            { label: 'Verifications liên quan', count: 5, icon: '✔️' },
                           ].map(rel => (
                             <div
                               key={rel.label}
@@ -945,13 +913,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                 />
                                 <span>{rel.icon}</span>
                                 <span className="font-medium text-slate-800">{rel.label}</span>
-                                <span className="text-slate-400">{rel.count} items</span>
+                                <span className="text-slate-400">{rel.count} item</span>
                               </label>
                               <button
                                 type="button"
                                 className="text-blue-600 hover:underline flex items-center text-[11px]"
                               >
-                                Show filters <ChevronRight className="w-3 h-3 ml-0.5" />
+                                Hiện bộ lọc <ChevronRight className="w-3 h-3 ml-0.5" />
                               </button>
                             </div>
                           ))}
@@ -964,7 +932,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
             )}
 
             {/* ========================================================================= */}
-            {/* STEP 2: SETTINGS                                                          */}
+            {/* STEP 2: CÀI ĐẶT (SETTINGS)                                                */}
             {/* ========================================================================= */}
             {step === 2 && (
               <div className="space-y-5 text-xs">
@@ -991,7 +959,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       <div>
                         <div className="font-semibold text-slate-900">Approval review</div>
                         <p className="text-[11px] text-slate-500 mt-0.5">
-                          Read-only settings, configured in Review center admin.
+                          Cài đặt chỉ đọc (read-only), được cấu hình trong Review Center admin.
                         </p>
                       </div>
                     </div>
@@ -1015,7 +983,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       <div>
                         <div className="font-semibold text-slate-900">Peer review</div>
                         <p className="text-[11px] text-slate-500 mt-0.5">
-                          Customizable settings, configured in Review center admin.
+                          Cài đặt có thể tuỳ chỉnh, được cấu hình trong Review Center admin.
                         </p>
                       </div>
                     </div>
@@ -1024,42 +992,32 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Electronic signature settings */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <h4 className="font-semibold text-slate-700">Electronic signature settings</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-slate-700">Cài đặt Electronic signature</h4>
+                    <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                      Chưa định nghĩa (Disabled)
+                    </span>
+                  </div>
                   <div className="space-y-1.5 pl-1">
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? true : requireSignature}
-                        disabled={isApproval}
-                        onChange={e => setRequireSignature(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={false}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
-                      <span>Require electronic signatures from approvers</span>
+                      <span>Yêu cầu electronic signature từ approver (Chưa định nghĩa)</span>
                     </label>
 
-                    <label
-                      className={`flex items-center gap-2 pl-6 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 pl-6 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? true : enableSignerRole}
-                        disabled={isApproval}
-                        onChange={e => setEnableSignerRole(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={false}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>
-                        Enable signer role for approvers. This associates a signer role with an
-                        approver's signature.
+                        Bật signer role cho approver. Gắn vai trò người ký với chữ ký của approver. (Chưa định nghĩa)
                       </span>
                     </label>
                   </div>
@@ -1067,7 +1025,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Permission settings */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <h4 className="font-semibold text-slate-700">Permission settings</h4>
+                  <h4 className="font-semibold text-slate-700">Cài đặt quyền hạn (Permissions)</h4>
                   <div className="space-y-1.5 pl-1">
                     <label
                       className={`flex items-center gap-2 ${
@@ -1084,8 +1042,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
                       <span>
-                        Allow for review comments to also appear in the single item view within a
-                        project
+                        Cho phép comment trong review hiển thị ở single item view trong project
                       </span>
                     </label>
 
@@ -1103,7 +1060,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         onChange={e => setAllowApproversAddParticipants(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
-                      <span>Let approvers add reviewers and approvers</span>
+                      <span>Cho phép approver thêm reviewer và approver</span>
                     </label>
 
                     <label
@@ -1120,14 +1077,14 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         onChange={e => setAllowApproversDelegate(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
-                      <span>Let approvers delegate their review to others</span>
+                      <span>Cho phép approver uỷ quyền (delegate) review cho người khác</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Optional settings */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <h4 className="font-semibold text-slate-700">Optional settings</h4>
+                  <h4 className="font-semibold text-slate-700">Cài đặt tuỳ chọn (Optional settings)</h4>
                   <div className="space-y-1.5 pl-1">
                     <label
                       className={`flex items-center gap-2 ${
@@ -1143,7 +1100,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         onChange={e => setEnableTimeTracking(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
-                      <span>Enable time tracking</span>
+                      <span>Bật theo dõi thời gian (time tracking)</span>
                     </label>
 
                     <label
@@ -1160,7 +1117,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         onChange={e => setNotifyParticipantFinishes(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
-                      <span>Notify me when a participant finishes a review</span>
+                      <span>Thông báo khi người tham gia (participant) hoàn thành review</span>
                     </label>
 
                     <label
@@ -1177,7 +1134,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         onChange={e => setEnableVoting(e.target.checked)}
                         className="rounded text-blue-600 disabled:opacity-50"
                       />
-                      <span>Enable voting</span>
+                      <span>Bật bình chọn (voting)</span>
                     </label>
                   </div>
                 </div>
@@ -1185,27 +1142,27 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
             )}
 
             {/* ========================================================================= */}
-            {/* STEP 3: PARTICIPANTS (Dual-Column: Select participants -> Select assignments) */}
+            {/* STEP 3: NGƯỜI THAM GIA (PARTICIPANTS)                                      */}
             {/* ========================================================================= */}
             {step === 3 && (
               <div className="flex flex-col text-xs space-y-3">
                 {/* Dual-Column Header matching media_1789105342448.png */}
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
                   <h3 className="font-bold text-slate-900 text-xs w-[280px]">
-                    Select participants
+                    Chọn người tham gia
                   </h3>
                   <div className="w-5 h-5 rounded-full bg-slate-800 text-white flex items-center justify-center text-[11px] font-bold">
                     ➔
                   </div>
                   <div className="flex-1 flex items-center justify-between pl-2">
-                    <h3 className="font-bold text-slate-900 text-xs">Select assignments</h3>
+                    <h3 className="font-bold text-slate-900 text-xs">Phân công vai trò (Assignments)</h3>
                     {assignedParticipants.length > 0 && (
                       <button
                         type="button"
                         onClick={handleClearAllAssignments}
                         className="text-blue-600 hover:underline text-[11px] font-medium"
                       >
-                        Clear all participants
+                        Xoá tất cả người tham gia
                       </button>
                     )}
                   </div>
@@ -1226,7 +1183,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             : 'border-transparent text-slate-500 hover:text-slate-800'
                         }`}
                       >
-                        Project team
+                        Nhóm dự án (Project team)
                       </button>
                       <button
                         type="button"
@@ -1237,7 +1194,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             : 'border-transparent text-slate-500 hover:text-slate-800'
                         }`}
                       >
-                        Invite by email
+                        Mời qua email
                       </button>
                     </div>
 
@@ -1247,7 +1204,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         <div className="relative mb-2">
                           <input
                             type="text"
-                            placeholder="Search by email or name"
+                            placeholder="Tìm theo email hoặc tên..."
                             value={searchParticipant}
                             onChange={e => setSearchParticipant(e.target.value)}
                             className="w-full text-xs px-2.5 py-1.5 pr-7 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
@@ -1290,7 +1247,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                                   </div>
                                   {item.isGroup && (
                                     <div className="text-[10px] text-slate-400 leading-none mt-0.5">
-                                      Organization
+                                      Tổ chức (Organization)
                                     </div>
                                   )}
                                 </div>
@@ -1303,7 +1260,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       /* Invite by email tab */
                       <div className="space-y-3 pt-1">
                         <p className="text-[11px] text-slate-500">
-                          Invite external team members by entering their email address.
+                          Mời thành viên bên ngoài bằng cách nhập địa chỉ email của họ.
                         </p>
                         <input
                           type="email"
@@ -1319,7 +1276,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                           className="w-full py-1.5 bg-[#203a6b] hover:bg-[#162747] text-white text-xs font-semibold rounded transition-colors flex items-center justify-center gap-1"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>Add to assignments</span>
+                          <span>Thêm vào danh sách phân công</span>
                         </button>
                       </div>
                     )}
@@ -1329,8 +1286,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <div className="flex-1 flex flex-col min-w-0">
                     {/* Table Header */}
                     <div className="grid grid-cols-12 gap-2 pb-2 text-[11px] font-semibold text-slate-700 border-b border-slate-100 px-1">
-                      <div className="col-span-4">Participant</div>
-                      <div className="col-span-4">Signer role</div>
+                      <div className="col-span-5">Người tham gia (Participant)</div>
+                      <div className="col-span-3">Signer role</div>
                       <div className="col-span-3">Review role</div>
                       <div className="col-span-1 text-right"></div>
                     </div>
@@ -1338,7 +1295,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                     {/* Table Rows */}
                     {assignedParticipants.length === 0 ? (
                       <div className="flex-1 flex items-center justify-center p-8 text-center text-xs text-slate-400 italic">
-                        No participants added yet. Select team members or groups on the left.
+                        Chưa có người tham gia nào. Vui lòng chọn thành viên nhóm ở cột bên trái.
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100 overflow-y-auto max-h-[300px]">
@@ -1348,17 +1305,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             className="grid grid-cols-12 gap-2 py-2 items-center text-xs px-1"
                           >
                             {/* Participant Name & Avatar */}
-                            <div className="col-span-4 flex items-center gap-2 min-w-0">
+                            <div className="col-span-5 flex items-center gap-2 min-w-0">
                               {p.avatarUrl ? (
                                 <img
                                   src={p.avatarUrl}
                                   alt=""
                                   className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                                 />
-                              ) : p.isGroup ? (
-                                <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
-                                  <Users className="w-3.5 h-3.5" />
-                                </div>
                               ) : (
                                 <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 flex-shrink-0">
                                   <User className="w-3.5 h-3.5" />
@@ -1372,28 +1325,18 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                               </span>
                             </div>
 
-                            {/* Signer role Dropdown */}
-                            <div className="col-span-4">
+                            {/* Signer role Dropdown - Disabled because not defined */}
+                            <div className="col-span-3">
                               <div className="relative">
                                 <select
-                                  value={p.signerRole}
-                                  disabled={p.reviewRole === 'REVIEWER'}
-                                  onChange={e =>
-                                    handleUpdateSignerRole(p.id, e.target.value as SignerRole)
-                                  }
-                                  className={`w-full text-xs px-2 py-1 pr-6 border rounded bg-white outline-none appearance-none transition-colors ${
-                                    p.reviewRole === 'REVIEWER'
-                                      ? 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed'
-                                      : 'border-slate-300 text-slate-700 focus:ring-1 focus:ring-blue-500'
-                                  }`}
+                                  value="Chưa định nghĩa"
+                                  disabled={true}
+                                  title="Signer role chưa được định nghĩa trong hệ thống"
+                                  className="w-full text-xs px-2 py-1 pr-6 border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed rounded outline-none appearance-none font-normal"
                                 >
-                                  {SIGNER_ROLES.map(role => (
-                                    <option key={role} value={role}>
-                                      {role}
-                                    </option>
-                                  ))}
+                                  <option value="Chưa định nghĩa">Chưa định nghĩa</option>
                                 </select>
-                                <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-2 pointer-events-none" />
+                                <ChevronDown className="w-3 h-3 text-slate-300 absolute right-2 top-2 pointer-events-none" />
                               </div>
                             </div>
 
@@ -1426,10 +1369,10 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveAssignment(p.id)}
-                                className="text-blue-600 hover:text-red-600 p-0.5 inline-flex items-center"
-                                title="Remove assignment"
+                                className="text-slate-300 hover:text-red-500 p-1 transition-colors rounded inline-flex items-center"
+                                title="Xoá người tham gia"
                               >
-                                <X className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -1442,13 +1385,13 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
             )}
 
             {/* ========================================================================= */}
-            {/* STEP 4: INVITATION (Khớp media_1789105360969.png)                         */}
+            {/* STEP 4: LỜI MỜI (INVITATION)                                              */}
             {/* ========================================================================= */}
             {step === 4 && (
               <div className="space-y-4 text-xs">
                 {/* Participants summary */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Participants</label>
+                  <label className="block font-medium text-slate-700 mb-1">Người tham gia (Participants)</label>
                   <input
                     type="text"
                     readOnly
@@ -1459,7 +1402,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Subject */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Subject</label>
+                  <label className="block font-medium text-slate-700 mb-1">Tiêu đề email (Subject)</label>
                   <input
                     type="text"
                     value={subject}
@@ -1467,14 +1410,14 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       setSubject(e.target.value);
                       setIsSubjectDirty(true);
                     }}
-                    placeholder="Subject for review invitation email..."
+                    placeholder="Tiêu đề thư mời tham gia review..."
                     className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
 
                 {/* Message */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Message</label>
+                  <label className="block font-medium text-slate-700 mb-1">Nội dung thư (Message)</label>
                   <textarea
                     rows={3}
                     value={invitationMessage}
@@ -1482,7 +1425,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       setInvitationMessage(e.target.value);
                       setIsMessageDirty(true);
                     }}
-                    placeholder="Custom message to review participants..."
+                    placeholder="Tin nhắn tuỳ chỉnh gửi đến các người tham gia review..."
                     className="w-full text-xs p-2.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none leading-relaxed"
                   />
                 </div>
@@ -1491,10 +1434,10 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 <div className="pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-semibold text-slate-700">
-                      Included Items ({reviewItems.length})
+                      Các item đưa vào review ({reviewItems.length})
                     </span>
                     <span className="text-[11px] text-slate-400">
-                      Will be snapshotted into Review Baseline (v1)
+                      Sẽ được lưu snapshot vào Review Baseline (v1)
                     </span>
                   </div>
                   <div className="bg-slate-50 border border-slate-200 rounded-md p-2 max-h-24 overflow-y-auto space-y-1">
@@ -1510,7 +1453,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                     ))}
                     {reviewItems.length > 10 && (
                       <div className="text-[10px] text-slate-400 italic pt-0.5 text-center">
-                        ...and {reviewItems.length - 10} more items
+                        ...và thêm {reviewItems.length - 10} item khác
                       </div>
                     )}
                   </div>
@@ -1519,44 +1462,35 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 {/* Email preview matching screenshot */}
                 <div className="pt-2 text-xs text-slate-700 space-y-3 font-sans leading-relaxed border-t border-slate-100">
                   <div>
-                    Your review role is:{' '}
+                    Vai trò review của bạn là:{' '}
                     <span className="text-slate-500 font-mono text-[11px]">
                       *&#91; review role &#93;*
                     </span>
                   </div>
 
                   <div className="text-slate-500 text-[11px] italic">
-                    *&#91; If participant is an approver &#93;*
+                    *&#91; Nếu người tham gia là approver &#93;*
                   </div>
 
-                  <div className="pl-3 border-l-2 border-slate-200 space-y-1 text-slate-600 text-xs">
-                    <div>
-                      Your signer role is:{' '}
-                      <span className="text-slate-500 font-mono text-[11px]">
-                        *&#91; Assigned signer role &#93;*
-                      </span>
-                    </div>
-                    <div>
-                      Your signature will be used for the following meaning: I approve the content
-                      of this review.
-                    </div>
+                  <div className="pl-3 border-l-2 border-slate-200 space-y-1 text-slate-500 text-xs italic">
+                    <div>* Signer role: Chưa được kích hoạt trong hệ thống *</div>
                   </div>
 
                   <div className="pt-1 text-blue-600 text-xs break-all hover:underline cursor-pointer">
-                    https://jama-carledawade.jamacloud.com/review.req#/r:REV-??
+                    https://al-jama.connect.cloud/review#/r:REV-??
                   </div>
 
                   <div className="text-xs text-slate-700">
-                    Deadline:{' '}
+                    Hạn chót:{' '}
                     <span className="font-medium">
                       {formatDeadlineDisplay(deadlineDate, deadlineTime)}
                     </span>
                   </div>
 
                   <div className="pt-2 text-xs text-slate-700">
-                    <p>Thank you,</p>
+                    <p>Trân trọng,</p>
                     <p className="font-medium text-slate-900">
-                      {currentUser?.fullName || 'Carleda Wade'}
+                      {currentUser?.fullName || 'Người điều phối review'}
                     </p>
                   </div>
                 </div>
@@ -1573,7 +1507,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   onClick={() => setStep((step - 1) as 1 | 2 | 3 | 4)}
                   className="px-4 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 rounded border border-slate-300 transition-colors shadow-sm"
                 >
-                  Back
+                  Quay lại
                 </button>
               ) : (
                 <button
@@ -1581,11 +1515,11 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   onClick={onClose}
                   className="px-4 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 rounded border border-slate-300 transition-colors shadow-sm"
                 >
-                  Cancel
+                  Huỷ
                 </button>
               )}
               <span className="text-xs text-slate-500 font-medium">
-                {itemCount} items | {assignedParticipants.length} participants
+                {itemCount} item | {assignedParticipants.length} người tham gia
               </span>
             </div>
 
@@ -1596,11 +1530,11 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   onClick={() => {
                     if (step === 1) {
                       if (!name.trim()) {
-                        setError('Please enter a review name (required)');
+                        setError('Vui lòng nhập tên review (bắt buộc)');
                         return;
                       }
                       if (reviewItems.length === 0) {
-                        setError('Please select at least one item from the project to review');
+                        setError('Vui lòng chọn ít nhất một item từ dự án để review');
                         return;
                       }
                     }
@@ -1609,7 +1543,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   }}
                   className="px-6 py-1.5 text-xs font-semibold text-white bg-[#203a6b] hover:bg-[#162747] rounded shadow-sm transition-colors"
                 >
-                  Next
+                  Tiếp tục
                 </button>
               ) : (
                 <button
@@ -1619,7 +1553,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   className="px-6 py-1.5 text-xs font-semibold text-white bg-[#203a6b] hover:bg-[#162747] rounded shadow transition-colors flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <span>
-                    {createReviewMutation.isPending ? 'Initiating...' : 'Initiate review'}
+                    {createReviewMutation.isPending ? 'Đang khởi tạo...' : 'Khởi tạo review'}
                   </span>
                 </button>
               )}
@@ -1635,7 +1569,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
           onClose={() => setIsTreeModalOpen(false)}
           projectId={projectId}
           projectName={projectName}
-          alreadySelectedItemIds={reviewItems.map(i => i.id)}
+          alreadySelectedItemIds={alreadySelectedItemIds}
           onSelectItems={handleAddItemsFromTree}
         />
       )}

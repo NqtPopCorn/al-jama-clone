@@ -14,6 +14,7 @@ interface CreateItemModalProps {
   projectId: string;
   projectName: string;
   defaultFolderId?: string | null;
+  defaultItemTypeId?: string | null;
   itemTypes: ItemTypeWithFields[];
   folders: FolderSummary[];
   members: ProjectMemberSummary[];
@@ -26,6 +27,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
   projectId,
   projectName,
   defaultFolderId,
+  defaultItemTypeId,
   itemTypes,
   folders,
   members,
@@ -49,12 +51,14 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
 
   const createItemMutation = useCreateItem();
 
-  // Set default item type when types are loaded
+  // Set default item type when types are loaded or defaultItemTypeId changes
   useEffect(() => {
-    if (itemTypes.length > 0 && !selectedTypeId) {
+    if (defaultItemTypeId) {
+      setSelectedTypeId(defaultItemTypeId);
+    } else if (itemTypes.length > 0 && !selectedTypeId) {
       setSelectedTypeId(itemTypes[0].id);
     }
-  }, [itemTypes, selectedTypeId]);
+  }, [defaultItemTypeId, itemTypes, selectedTypeId]);
 
   useEffect(() => {
     if (defaultFolderId) {

@@ -40,7 +40,7 @@ interface ListViewProps {
   onSortChange: (sortBy: string) => void;
   onOpenFilter?: () => void;
   onOpenItem?: (itemId: string, itemKey: string, itemName: string) => void;
-  onOpenCreateItem?: () => void;
+  onOpenCreateItem?: (itemTypeId?: string) => void;
   onOpenTraceability?: () => void;
 }
 
@@ -69,11 +69,12 @@ export const ListView: React.FC<ListViewProps> = ({
   const { headerTheme } = useThemeStore();
   const isDark = headerTheme === 'dark';
 
-  const { folders, members } = useProjectMeta(currentProject?.id);
+  const { itemTypes, folders, members } = useProjectMeta(currentProject?.id);
   const queryClient = useQueryClient();
 
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   // Visible columns state
@@ -87,6 +88,14 @@ export const ListView: React.FC<ListViewProps> = ({
     createdDate: false,
     commentsCount: false,
   });
+
+  // Close Add menu on outside click
+  React.useEffect(() => {
+    if (!isAddMenuOpen) return;
+    const handleOutsideClick = () => setIsAddMenuOpen(false);
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [isAddMenuOpen]);
 
   const toggleColumn = (colId: string) => {
     setVisibleColumns(prev => ({
@@ -284,16 +293,69 @@ export const ListView: React.FC<ListViewProps> = ({
           </Button>
 
           {/* Add button */}
-          <Button
-            type="button"
-            variant="jama"
-            size="sm"
-            onClick={onOpenCreateItem}
-            className="h-7 px-3 gap-1 font-semibold text-xs text-slate-700"
-          >
-            <span>Add</span>
-            <ChevronDown className="w-2.5 h-2.5" />
-          </Button>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="jama"
+              size="sm"
+              onClick={e => {
+                e.stopPropagation();
+                setIsAddMenuOpen(prev => !prev);
+              }}
+              className="h-7 px-3 gap-1 font-semibold text-xs text-slate-700"
+            >
+              <span>Add</span>
+              <ChevronDown
+                className={`w-2.5 h-2.5 transition-transform ${isAddMenuOpen ? 'rotate-180' : ''}`}
+              />
+            </Button>
+            {isAddMenuOpen && (
+              <div
+                className={`absolute right-0 top-full mt-1 w-48 rounded shadow-lg border py-1 z-30 ${
+                  isDark
+                    ? 'bg-[#161b22] border-[#30363d] text-slate-200'
+                    : 'bg-white border-slate-200 text-slate-800'
+                }`}
+              >
+                {itemTypes && itemTypes.length > 0 ? (
+                  itemTypes.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        setIsAddMenuOpen(false);
+                        onOpenCreateItem?.(t.id);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs transition-colors ${
+                        isDark
+                          ? 'hover:bg-[#21262d] text-slate-200'
+                          : 'hover:bg-blue-50 text-slate-700'
+                      }`}
+                    >
+                      {renderTypeIcon(t.key)}
+                      <span className="truncate">Add {t.name}</span>
+                    </button>
+                  ))
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddMenuOpen(false);
+                      onOpenCreateItem?.();
+                    }}
+                    className={`w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs transition-colors ${
+                      isDark
+                        ? 'hover:bg-[#21262d] text-slate-200'
+                        : 'hover:bg-blue-50 text-slate-700'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    <span>Add Item</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -560,21 +622,43 @@ export const ListView: React.FC<ListViewProps> = ({
                 )}
               </tbody>
             </table>
+          </div>
 
-            {/* 3. Floating Bottom-Right Pagination Bar matching Image 3 & 4 */}
-            <div
-              className={`absolute right-4 bottom-4 rounded shadow-md px-2 py-1 flex items-center gap-1.5 text-xs z-20 border transition-colors ${
-                isDark
-                  ? 'bg-[#161b22] border-[#30363d] text-slate-200'
-                  : 'bg-white border-slate-300 text-slate-700'
-              }`}
-            >
+          {/* Sticky Bottom Pagination Bar */}
+          <div
+            className={`shrink-0 h-10 border-t px-4 flex items-center justify-between text-xs select-none transition-colors ${
+              isDark
+                ? 'bg-[#161b22] border-[#30363d] text-slate-300'
+                : 'bg-[#f6f8fa] border-slate-200 text-slate-700'
+            }`}
+          >
+            {/* Left: Item count & range */}
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+              <span>
+                Showing{' '}
+                <strong className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                  {items.length > 0 ? (page - 1) * 20 + 1 : 0}
+                </strong>{' '}
+                -{' '}
+                <strong className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                  {Math.min(page * 20, totalCount)}
+                </strong>{' '}
+                of{' '}
+                <strong className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                  {totalCount}
+                </strong>{' '}
+                items
+              </span>
+            </div>
+
+            {/* Right: Controls matching Image 3 & 4 */}
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 disabled={page <= 1}
                 onClick={() => onPageChange(1)}
                 className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
                 }`}
                 title="First Page"
               >
@@ -585,7 +669,7 @@ export const ListView: React.FC<ListViewProps> = ({
                 disabled={page <= 1}
                 onClick={() => onPageChange(page - 1)}
                 className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
                 }`}
                 title="Previous Page"
               >
@@ -597,7 +681,7 @@ export const ListView: React.FC<ListViewProps> = ({
                 type="text"
                 readOnly
                 value={page}
-                className={`w-7 text-center rounded py-0.5 text-xs font-semibold border ${
+                className={`w-8 text-center rounded py-0.5 text-xs font-semibold border ${
                   isDark
                     ? 'bg-[#0d1117] border-[#30363d] text-white'
                     : 'bg-white border-slate-300 text-slate-900'
@@ -612,7 +696,7 @@ export const ListView: React.FC<ListViewProps> = ({
                 disabled={page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
                 className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
                 }`}
                 title="Next Page"
               >
@@ -623,7 +707,7 @@ export const ListView: React.FC<ListViewProps> = ({
                 disabled={page >= totalPages}
                 onClick={() => onPageChange(totalPages)}
                 className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
+                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
                 }`}
                 title="Last Page"
               >

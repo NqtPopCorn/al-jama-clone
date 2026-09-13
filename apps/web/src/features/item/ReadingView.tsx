@@ -429,75 +429,97 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
             )}
           </div>
 
-          {/* Floating Bottom-Right Pagination Bar */}
+          {/* Sticky Bottom Pagination Bar */}
           {totalPages > 1 && (
             <div
-              className={`absolute right-4 bottom-4 rounded shadow-md px-2 py-1 flex items-center gap-1.5 text-xs z-20 border transition-colors ${
+              className={`shrink-0 h-10 border-t px-4 flex items-center justify-between text-xs select-none transition-colors ${
                 isDark
-                  ? 'bg-[#161b22] border-[#30363d] text-slate-200'
-                  : 'bg-white border-slate-300 text-slate-700'
+                  ? 'bg-[#161b22] border-[#30363d] text-slate-300'
+                  : 'bg-[#f6f8fa] border-slate-200 text-slate-700'
               }`}
             >
-              <button
-                type="button"
-                disabled={currentPage <= 1}
-                onClick={() => setPage(1)}
-                className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-                }`}
-                title="First Page"
-              >
-                <ChevronsLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                disabled={currentPage <= 1}
-                onClick={() => setPage(p => p - 1)}
-                className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-                }`}
-                title="Previous Page"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
+              {/* Left: Range info */}
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <span>
+                  Showing{' '}
+                  <strong className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                    {propItems.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
+                  </strong>{' '}
+                  -{' '}
+                  <strong className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                    {Math.min(currentPage * pageSize, totalItems)}
+                  </strong>{' '}
+                  of{' '}
+                  <strong className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                    {totalItems}
+                  </strong>{' '}
+                  items
+                </span>
+              </div>
 
-              <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>Page</span>
-              <input
-                type="text"
-                readOnly
-                value={currentPage}
-                className={`w-7 text-center rounded py-0.5 text-xs font-semibold border ${
-                  isDark
-                    ? 'bg-[#0d1117] border-[#30363d] text-white'
-                    : 'bg-white border-slate-300 text-slate-900'
-                }`}
-              />
-              <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>
-                of {totalPages}
-              </span>
+              {/* Right: Controls */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage(1)}
+                  className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="First Page"
+                >
+                  <ChevronsLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage(p => p - 1)}
+                  className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
 
-              <button
-                type="button"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-                className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-                }`}
-                title="Next Page"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage(totalPages)}
-                className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                  isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
-                }`}
-                title="Last Page"
-              >
-                <ChevronsRight className="w-3.5 h-3.5" />
-              </button>
+                <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>Page</span>
+                <input
+                  type="text"
+                  readOnly
+                  value={currentPage}
+                  className={`w-8 text-center rounded py-0.5 text-xs font-semibold border ${
+                    isDark
+                      ? 'bg-[#0d1117] border-[#30363d] text-white'
+                      : 'bg-white border-slate-300 text-slate-900'
+                  }`}
+                />
+                <span className={isDark ? 'px-1 text-slate-400' : 'px-1 text-slate-600'}>
+                  of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                  className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage(totalPages)}
+                  className={`p-1 disabled:opacity-30 rounded transition-colors ${
+                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="Last Page"
+                >
+                  <ChevronsRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           )}
         </div>

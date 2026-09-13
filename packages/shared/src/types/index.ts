@@ -172,6 +172,12 @@ export interface FolderSummary {
   orderIndex: number;
 }
 
+export interface CreateFolderDto {
+  name: string;
+  parentFolderId?: string | null;
+  orderIndex?: number;
+}
+
 export interface ProjectMemberSummary {
   id: string;
   userId: string;
@@ -353,6 +359,13 @@ export interface ReviewParticipantSummary {
   finishedAt?: string | null;
 }
 
+export interface ReviewItemUserStatus {
+  userId: string;
+  fullName: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
 export interface ReviewItemReadingView {
   id: string; // reviewItemId
   itemId: string;
@@ -367,6 +380,14 @@ export interface ReviewItemReadingView {
   status: ReviewItemStatusValue;
   commentCount: number;
   hasUpdatedSinceLastRevision?: boolean;
+  overallStatusSummary?: {
+    approvedCount: number;
+    rejectedCount: number;
+    reviewedCount: number;
+    totalApprovers: number;
+    approvedUsers?: ReviewItemUserStatus[];
+    rejectedUsers?: ReviewItemUserStatus[];
+  };
 }
 
 export interface ReviewCommentMentionSummary {
@@ -420,6 +441,9 @@ export interface ReviewDetail {
   myRole?: ReviewRole;
   myIsFinished?: boolean;
   stats: ReviewDetailStats;
+  createdBy?: string;
+  isModerator?: boolean;
+  availableRoles?: ('MODERATOR' | 'APPROVER' | 'REVIEWER')[];
 }
 
 export interface CreateReviewParticipantInput {

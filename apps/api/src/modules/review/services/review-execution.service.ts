@@ -282,4 +282,110 @@ export class ReviewExecutionService {
 
     return updated;
   }
+
+  /**
+   * Đóng nhận phản hồi review (QT-09: Close for Feedback trước khi batch edit hoặc hoàn tất)
+   */
+  async closeForFeedback(reviewId: string, currentUserId: string) {
+    const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+    if (!review) throw new NotFoundException(`Review ${reviewId} not found`);
+
+    const participant = await this.prisma.reviewParticipant.findUnique({
+      where: { reviewId_userId: { reviewId, userId: currentUserId } },
+    });
+    if (review.createdBy !== currentUserId && participant?.reviewRole !== ReviewRole.MODERATOR) {
+      throw new ForbiddenException('Only a Moderator can close the review for feedback');
+    }
+
+    if (review.status !== ReviewStatus.ACTIVE) {
+      throw new ConflictException('Review must be ACTIVE to close for feedback');
+    }
+
+    const updated = await this.prisma.review.update({
+      where: { id: reviewId },
+      data: { status: ReviewStatus.CLOSED_FOR_FEEDBACK },
+    });
+
+    this.eventEmitter.emit('review.status_changed', {
+      reviewId,
+      status: ReviewStatus.CLOSED_FOR_FEEDBACK,
+      userId: currentUserId,
+    });
+
+    return updated;
+  }
+
+  /**
+   * Mở lại nhận phản hồi review (Reopen review)
+   */
+  async reopenReview(reviewId: string, currentUserId: string) {
+    const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+    if (!review) throw new NotFoundException(`Review ${reviewId} not found`);
+
+    const participant = await this.prisma.reviewParticipant.findUnique({
+      where: { reviewId_userId: { reviewId, userId: currentUserId } },
+    });
+    if (review.createdBy !== currentUserId && participant?.reviewRole !== ReviewRole.MODERATOR) {
+      throw new ForbiddenException('Only a Moderator can reopen the review');
+    }
+
+    const updated = await this.prisma.review.update({
+      where: { id: reviewId },
+      data: { status: ReviewStatus.ACTIVE },
+    });
+
+    this.eventEmitter.emit('review.status_changed', {
+      reviewId,
+      status: ReviewStatus.ACTIVE,
+      userId: currentUserId,
+    });
+
+    return updated;
+  }
+
+  /**
+   * Hoàn tất đợt Review (Finalize Review / Complete Review & Baseline) (QT-06)
+   */
+  async finalizeReview(reviewId: string, currentUserId: string) {
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+      include: { items: true },
+    });
+    if (!review) throw new NotFoundException(`Review ${reviewId} not found`);
+
+    const participant = await this.prisma.reviewParticipant.findUnique({
+      where: { reviewId_userId: { reviewId, userId: currentUserId } },
+    });
+    if (review.createdBy !== currentUserId && participant?.reviewRole !== ReviewRole.MODERATOR) {
+      throw new ForbiddenException('Only a Moderator can finalize the review');
+    }
+
+    // QT-06: Kiểm tra nếu còn item nào bị REJECTED ở revision hiện tại
+    const rejectedCount = await this.prisma.reviewItemStatus.count({
+      where: {
+        reviewItemId: { in: review.items.map(i => i.id) },
+        revisionNumber: review.currentRevisionNumber,
+        status: ReviewItemStatusValue.REJECTED,
+      },
+    });
+
+    if (rejectedCount > 0) {
+      throw new ConflictException(
+        `Cannot finalize review: ${rejectedCount} item(s) have been rejected. A new revision must be published and resolved before finalizing (QT-06).`,
+      );
+    }
+
+    const updated = await this.prisma.review.update({
+      where: { id: reviewId },
+      data: { status: ReviewStatus.FINALIZED },
+    });
+
+    this.eventEmitter.emit('review.finalized', {
+      reviewId,
+      userId: currentUserId,
+    });
+
+    return updated;
+  }
 }
+

@@ -7,6 +7,7 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
+import Placeholder from '@tiptap/extension-placeholder';
 import {
   Bold,
   Italic,
@@ -68,7 +69,17 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       TableRow,
       TableHeader,
       TableCell,
+      Placeholder.configure({
+        placeholder,
+        emptyEditorClass: 'is-editor-empty',
+      }),
     ],
+    editorProps: {
+      attributes: {
+        class:
+          'focus:outline-none focus:ring-0 outline-none border-none min-h-[120px] text-xs leading-relaxed font-sans text-slate-800 dark:text-slate-200 cursor-text',
+      },
+    },
     content: content || '',
     editable,
     onUpdate: ({ editor }) => {
@@ -340,8 +351,11 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       )}
 
       {/* 2. Editor Canvas with Tiptap ProseMirror styling */}
-      <div className="p-3 flex-1 overflow-y-auto min-h-[140px] text-xs leading-relaxed font-sans prose prose-sm max-w-none dark:prose-invert">
-        <EditorContent editor={editor} placeholder={placeholder} />
+      <div
+        onClick={() => editor.chain().focus().run()}
+        className="p-3 flex-1 overflow-y-auto min-h-[140px] cursor-text text-xs leading-relaxed font-sans prose prose-sm max-w-none dark:prose-invert"
+      >
+        <EditorContent editor={editor} className="outline-none focus:outline-none min-h-full" />
       </div>
     </div>
   );

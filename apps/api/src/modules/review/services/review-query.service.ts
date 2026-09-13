@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { QueryReviewsDto } from '../dto/query-reviews.dto';
-import { ReviewItemStatusValue, Prisma } from '@prisma/client';
+import {
+  ReviewItemStatusValue,
+  ReviewRole,
+  ReviewTemplateType,
+  Prisma,
+} from '@prisma/client';
 
 @Injectable()
 export class ReviewQueryService {
@@ -156,11 +161,16 @@ export class ReviewQueryService {
       throw new ForbiddenException('You do not have access to this review');
     }
 
-    // Lấy trạng thái của toàn bộ items ở revision hiện tại
+    // Lấy trạng thái của toàn bộ items ở revision hiện tại kèm thông tin user
     const currentStatuses = await this.prisma.reviewItemStatus.findMany({
       where: {
         reviewItemId: { in: review.items.map(i => i.id) },
         revisionNumber: review.currentRevisionNumber,
+      },
+      include: {
+        user: {
+          select: { id: true, fullName: true, username: true, avatarUrl: true },
+        },
       },
     });
 
@@ -187,6 +197,8 @@ export class ReviewQueryService {
       if (c.authorId === currentUserId) myCommentsCount++;
     }
 
+    const approversCount = review.participants.filter(p => p.reviewRole === ReviewRole.APPROVER).length;
+
     const readingItems = review.items.map(ri => {
       // Trạng thái của current user cho item này
       const myStatusRow = currentStatuses.find(
@@ -200,6 +212,36 @@ export class ReviewQueryService {
       else unmarkedCount++;
 
       const itemCommentsCount = commentsInRevision.filter(c => c.reviewItemId === ri.id).length;
+
+      // Tính tổng hợp trạng thái duyệt của tất cả người tham gia cho item này
+      const itemStatuses = currentStatuses.filter(s => s.reviewItemId === ri.id);
+      const itemApprovedCount = itemStatuses.filter(
+        s => s.status === ReviewItemStatusValue.APPROVED,
+      ).length;
+      const itemRejectedCount = itemStatuses.filter(
+        s => s.status === ReviewItemStatusValue.REJECTED,
+      ).length;
+      const itemReviewedCount = itemStatuses.filter(
+        s => s.status === ReviewItemStatusValue.REVIEWED,
+      ).length;
+
+      const approvedUsers = itemStatuses
+        .filter(s => s.status === ReviewItemStatusValue.APPROVED)
+        .map(s => ({
+          userId: s.user.id,
+          fullName: s.user.fullName || s.user.username,
+          username: s.user.username,
+          avatarUrl: s.user.avatarUrl,
+        }));
+
+      const rejectedUsers = itemStatuses
+        .filter(s => s.status === ReviewItemStatusValue.REJECTED)
+        .map(s => ({
+          userId: s.user.id,
+          fullName: s.user.fullName || s.user.username,
+          username: s.user.username,
+          avatarUrl: s.user.avatarUrl,
+        }));
 
       return {
         id: ri.id,
@@ -215,6 +257,14 @@ export class ReviewQueryService {
         status: statusVal,
         commentCount: itemCommentsCount,
         hasUpdatedSinceLastRevision: review.currentRevisionNumber > 1,
+        overallStatusSummary: {
+          approvedCount: itemApprovedCount,
+          rejectedCount: itemRejectedCount,
+          reviewedCount: itemReviewedCount,
+          totalApprovers: approversCount,
+          approvedUsers,
+          rejectedUsers,
+        },
       };
     });
 
@@ -230,6 +280,26 @@ export class ReviewQueryService {
       isFinished: p.isFinished,
       finishedAt: p.finishedAt ? p.finishedAt.toISOString() : null,
     }));
+
+    const isUserModerator =
+      review.createdBy === currentUserId ||
+      myParticipant?.reviewRole === ReviewRole.MODERATOR;
+
+    const availableRoles: ('MODERATOR' | 'APPROVER' | 'REVIEWER')[] = [];
+    if (isUserModerator) {
+      availableRoles.push('MODERATOR');
+      if (review.template.type === ReviewTemplateType.PEER) {
+        availableRoles.push('REVIEWER');
+      } else {
+        availableRoles.push('APPROVER');
+      }
+    } else if (myParticipant?.reviewRole === ReviewRole.APPROVER) {
+      availableRoles.push('APPROVER');
+    } else if (myParticipant?.reviewRole === ReviewRole.REVIEWER) {
+      availableRoles.push('REVIEWER');
+    } else {
+      availableRoles.push('REVIEWER');
+    }
 
     return {
       id: review.id,
@@ -255,8 +325,11 @@ export class ReviewQueryService {
       includeContext: review.includeContext,
       participants: participantsSummary,
       items: readingItems,
-      myRole: myParticipant?.reviewRole || 'REVIEWER',
+      myRole: myParticipant?.reviewRole || (isUserModerator ? ReviewRole.MODERATOR : 'REVIEWER'),
       myIsFinished: myParticipant?.isFinished || false,
+      createdBy: review.createdBy,
+      isModerator: isUserModerator,
+      availableRoles,
       stats: {
         totalItems: review.items.length,
         approvedCount,

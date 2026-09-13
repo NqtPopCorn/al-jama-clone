@@ -250,12 +250,41 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({
             </Button>
           </div>
 
-          {/* Right Controls: Edit button / Lock indicator matching Image 4 */}
+          {/* Right Controls: Edit button / Lock indicator & Quick actions matching Image 4 */}
           <div className="flex items-center gap-2">
             {isEditing ? (
-              <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5" /> Editing Mode (Locked)
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 mr-1">
+                  <Lock className="w-3.5 h-3.5" /> Editing Mode (Locked)
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelEditing}
+                  className="h-6 px-2.5 text-xs hover:bg-slate-200/60 dark:hover:bg-slate-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => handleSave(false)}
+                  disabled={updateItemMutation.isPending}
+                  className="h-6 px-2.5 text-xs bg-slate-700 hover:bg-slate-800 text-white font-medium shadow-2xs"
+                >
+                  Save
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={updateItemMutation.isPending}
+                  className="h-6 px-2.5 text-xs bg-[#24a0d9] hover:bg-[#1f8ec3] text-white font-medium shadow-2xs"
+                >
+                  {updateItemMutation.isPending ? 'Saving...' : 'Save & Done'}
+                </Button>
+              </div>
             ) : isLockedBySomeoneElse ? (
               <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
                 <Lock className="w-3.5 h-3.5" /> Locked by {item.lockedBy?.fullName}
@@ -549,40 +578,6 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({
             </div>
           )}
 
-          {/* Bottom Action Buttons when Editing (matching Image 4) */}
-          {isEditing && (
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800 select-none">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={cancelEditing}
-                className="h-8 text-xs px-3"
-              >
-                Cancel
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => handleSave(false)}
-                disabled={updateItemMutation.isPending}
-                className="h-8 text-xs bg-slate-700 hover:bg-slate-800 text-white font-medium px-4 shadow-xs"
-              >
-                Save
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => handleSave(true)}
-                disabled={updateItemMutation.isPending}
-                className="h-8 text-xs bg-[#24a0d9] hover:bg-[#1f8ec3] text-white font-medium px-4 shadow-xs"
-              >
-                {updateItemMutation.isPending ? 'Saving...' : 'Save & Done'}
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* 3. Bottom Sliding Drawer for Versions (Matching Image 5) */}

@@ -218,18 +218,27 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
     return SAMPLE_PROJECT_TREE;
   }, [treeData]);
 
-  // Expand all top-level folders on mount/open
+  // Initialize selected IDs with already selected items when modal opens
   useEffect(() => {
     if (isOpen) {
-      const topIds = new Set<string>();
-      nodes.forEach(n => {
-        if (n.type === 'folder') topIds.add(n.id);
-      });
-      setExpandedFolderIds(topIds);
-      // Initialize selected IDs with already selected items
       setSelectedItemIds(new Set(alreadySelectedItemIds));
+      setSearchQuery('');
     }
-  }, [isOpen, nodes, alreadySelectedItemIds]);
+  }, [isOpen]);
+
+  // Expand top folders when nodes load and modal is open
+  useEffect(() => {
+    if (isOpen && nodes.length > 0) {
+      setExpandedFolderIds(prev => {
+        if (prev.size > 0) return prev;
+        const topIds = new Set<string>();
+        nodes.forEach(n => {
+          if (n.type === 'folder') topIds.add(n.id);
+        });
+        return topIds;
+      });
+    }
+  }, [isOpen, nodes]);
 
   // Collect all item nodes into a map for fast lookup
   const allItemsMap = useMemo(() => {
@@ -406,6 +415,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               ref={el => {
                 if (el) el.indeterminate = isPartiallySelected;
               }}
+              onClick={e => e.stopPropagation()}
               onChange={() => toggleFolderSelect(node)}
               className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 cursor-pointer"
             />
@@ -413,7 +423,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
             <Folder className="w-3.5 h-3.5 text-blue-500 shrink-0" />
             <span
               onClick={e => toggleFolderExpand(node.id, e)}
-              className="font-semibold text-slate-800 truncate flex-1"
+              className="font-semibold text-slate-800 truncate flex-1 select-none"
             >
               {node.name}
             </span>
@@ -445,7 +455,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
         <div
           key={node.id}
           onClick={() => toggleItemSelect(node.id)}
-          className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer text-xs transition-colors ${
+          className={`flex items-center gap-1.5 py-1 px-1.5 rounded cursor-pointer text-xs transition-colors select-none ${
             isSelected
               ? 'bg-blue-50/70 text-blue-900 font-medium'
               : 'hover:bg-slate-50 text-slate-700'
@@ -459,6 +469,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
           <input
             type="checkbox"
             checked={isSelected}
+            onClick={e => e.stopPropagation()}
             onChange={() => toggleItemSelect(node.id)}
             className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5 cursor-pointer"
           />
@@ -492,10 +503,10 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-900">
-                Select Items from Project Hierarchy
+                Chọn Item từ Cấu trúc Dự án
               </h3>
               <p className="text-[11px] text-slate-500">
-                {projectName || 'Project'} • Select items or sets to include in this review
+                {projectName || 'Dự án'} • Chọn các item hoặc set để đưa vào review này
               </p>
             </div>
           </div>
@@ -513,7 +524,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Search items by ID or name..."
+              placeholder="Tìm kiếm item theo ID hoặc tên..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full text-xs px-3 py-1.5 pr-8 border border-slate-300 rounded bg-white outline-none focus:ring-1 focus:ring-blue-500"
@@ -527,14 +538,14 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               onClick={handleSelectAll}
               className="px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded transition-colors"
             >
-              Select all
+              Chọn tất cả
             </button>
             <button
               type="button"
               onClick={handleDeselectAll}
               className="px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded transition-colors"
             >
-              Deselect all
+              Bỏ chọn tất cả
             </button>
           </div>
         </div>
@@ -543,7 +554,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
         <div className="flex-1 overflow-y-auto p-4 space-y-1 font-sans text-xs min-h-[280px]">
           {isLoading ? (
             <div className="py-12 text-center text-slate-400 text-xs italic">
-              Loading project tree...
+              Đang tải cây thư mục dự án...
             </div>
           ) : (
             nodes.map(node => renderTreeNode(node, 0))
@@ -553,7 +564,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
         {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 text-xs">
           <span className="font-semibold text-slate-700">
-            {selectedItemIds.size} {selectedItemIds.size === 1 ? 'item' : 'items'} selected
+            Đã chọn {selectedItemIds.size} item
           </span>
 
           <div className="flex items-center gap-2">
@@ -562,7 +573,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               onClick={onClose}
               className="px-4 py-1.5 font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded shadow-2xs transition-colors"
             >
-              Cancel
+              Huỷ
             </button>
             <button
               type="button"
@@ -571,7 +582,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
             >
               <Plus className="w-3.5 h-3.5" />
               <span>
-                Add {selectedItemIds.size} {selectedItemIds.size === 1 ? 'item' : 'items'} to Review
+                Thêm {selectedItemIds.size} item vào Review
               </span>
             </button>
           </div>

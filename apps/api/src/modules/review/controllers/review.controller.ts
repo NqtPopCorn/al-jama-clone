@@ -163,4 +163,44 @@ export class ReviewController {
       timestamp: new Date().toISOString(),
     };
   }
+
+  @Post(':id/close-for-feedback')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Đóng nhận phản hồi review (QT-09)' })
+  async closeForFeedback(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const result = await this.executionService.closeForFeedback(id, userId);
+    return {
+      success: true,
+      data: result,
+      message: 'Review closed for feedback successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post(':id/reopen')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Mở lại nhận phản hồi review' })
+  async reopenReview(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const result = await this.executionService.reopenReview(id, userId);
+    return {
+      success: true,
+      data: result,
+      message: 'Review reopened successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post(':id/finalize')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Hoàn tất đợt review (Finalize review & Baseline) (QT-06)' })
+  async finalizeReview(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const result = await this.executionService.finalizeReview(id, userId);
+    return {
+      success: true,
+      data: result,
+      message: 'Review finalized successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
+

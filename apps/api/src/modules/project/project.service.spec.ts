@@ -28,6 +28,8 @@ describe('ProjectService', () => {
       },
       folder: {
         findMany: jest.fn(),
+        findFirst: jest.fn(),
+        create: jest.fn(),
       },
     };
 
@@ -134,4 +136,96 @@ describe('ProjectService', () => {
       expect(result[1].parentFolderId).toBe('f1');
     });
   });
+
+  describe('createFolder', () => {
+    it('should create a root folder successfully and calculate next orderIndex', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId,
+        userId,
+      });
+      prisma.folder.findFirst.mockResolvedValueOnce({
+        orderIndex: 2,
+      }); // max orderIndex
+      prisma.folder.create.mockResolvedValue({
+        id: 'f-new',
+        name: 'New Folder',
+        parentFolderId: null,
+        orderIndex: 3,
+      });
+
+      const result = await service.createFolder(projectId, userId, {
+        name: 'New Folder',
+      });
+
+      expect(result).toEqual({
+        id: 'f-new',
+        name: 'New Folder',
+        parentFolderId: null,
+        orderIndex: 3,
+      });
+      expect(prisma.folder.create).toHaveBeenCalledWith({
+        data: {
+          projectId,
+          name: 'New Folder',
+          parentFolderId: null,
+          orderIndex: 3,
+        },
+      });
+    });
+
+    it('should create a subfolder when parentFolderId is valid', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId,
+        userId,
+      });
+      prisma.folder.findFirst
+        .mockResolvedValueOnce({ id: 'f-parent', projectId }) // parent exists
+        .mockResolvedValueOnce(null); // max orderIndex is null -> starts at 0
+      prisma.folder.create.mockResolvedValue({
+        id: 'f-child',
+        name: 'Sub Folder',
+        parentFolderId: 'f-parent',
+        orderIndex: 0,
+      });
+
+      const result = await service.createFolder(projectId, userId, {
+        name: 'Sub Folder',
+        parentFolderId: 'f-parent',
+      });
+
+      expect(result).toEqual({
+        id: 'f-child',
+        name: 'Sub Folder',
+        parentFolderId: 'f-parent',
+        orderIndex: 0,
+      });
+    });
+
+    it('should throw ForbiddenException if user is not a project member', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.createFolder(projectId, userId, { name: 'Unauthorized Folder' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw NotFoundException if parent folder does not exist in project', async () => {
+      prisma.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+        projectId,
+        userId,
+      });
+      prisma.folder.findFirst.mockResolvedValueOnce(null); // parent not found
+
+      await expect(
+        service.createFolder(projectId, userId, {
+          name: 'Orphan Folder',
+          parentFolderId: 'non-existent-folder',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });
+
