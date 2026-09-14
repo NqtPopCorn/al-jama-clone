@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
@@ -47,6 +57,17 @@ export class ReviewController {
       success: true,
       data: review,
       message: 'Review created successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('templates')
+  @ApiOperation({ summary: 'Lấy danh sách review templates của dự án' })
+  async getTemplates(@CurrentUser('id') userId: string, @Query('projectId') projectId: string) {
+    const templates = await this.queryService.getProjectTemplates(projectId, userId);
+    return {
+      success: true,
+      data: templates,
       timestamp: new Date().toISOString(),
     };
   }
@@ -164,6 +185,58 @@ export class ReviewController {
     };
   }
 
+  @Get(':id/comments')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Lấy toàn bộ bình luận của đợt review tập trung (Feedback View)' })
+  async getAllReviewComments(
+    @Param('id') id: string,
+    @Query('revisionNumber') revisionNumber?: number,
+  ) {
+    const comments = await this.commentService.getAllReviewComments(
+      id,
+      revisionNumber ? Number(revisionNumber) : undefined,
+    );
+    return {
+      success: true,
+      data: comments,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Patch(':id/comments/:commentId/resolve')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Resolve hoặc Reopen bình luận/proposed change kèm ghi chú xử lý' })
+  async resolveComment(
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: { isResolved: boolean; resolvedNote?: string },
+  ) {
+    const updated = await this.commentService.resolveComment(id, commentId, userId, dto);
+    return {
+      success: true,
+      data: updated,
+      message: dto.isResolved ? 'Góp ý đã được đánh dấu giải quyết' : 'Đã mở lại góp ý',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Delete(':id/comments/:commentId')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Xóa bình luận review' })
+  async deleteComment(
+    @Param('id') id: string,
+    @Param('commentId') commentId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    await this.commentService.deleteComment(id, commentId, userId);
+    return {
+      success: true,
+      message: 'Comment deleted successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post(':id/close-for-feedback')
   @UseGuards(ReviewParticipantGuard)
   @ApiOperation({ summary: 'Đóng nhận phản hồi review (QT-09)' })
@@ -202,5 +275,21 @@ export class ReviewController {
       timestamp: new Date().toISOString(),
     };
   }
-}
 
+  @Post(':id/publish-revision')
+  @UseGuards(ReviewParticipantGuard)
+  @ApiOperation({ summary: 'Xuất bản revision mới cho review (QT-05)' })
+  async publishRevision(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() body: { changeDescription?: string; deadline?: string; notifyParticipants?: boolean },
+  ) {
+    const result = await this.executionService.publishRevision(id, userId, body);
+    return {
+      success: true,
+      data: result,
+      message: 'Revision published successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+}

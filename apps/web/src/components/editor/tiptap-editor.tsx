@@ -8,19 +8,28 @@ import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
 import {
+  Scissors,
+  Copy,
+  Clipboard,
   Bold,
   Italic,
+  Underline as UnderlineIcon,
   Strikethrough,
-  Code,
-  List,
-  ListOrdered,
-  Quote,
-  Heading1,
-  Heading2,
-  Heading3,
-  Table as TableIcon,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
   Link as LinkIcon,
+  Unlink,
+  Image as ImageIcon,
+  Table as TableIcon,
   Undo,
   Redo,
   Plus,
@@ -53,6 +62,12 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           levels: [1, 2, 3],
         },
       }),
+      Underline,
+      Subscript,
+      Superscript,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -77,7 +92,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     editorProps: {
       attributes: {
         class:
-          'focus:outline-none focus:ring-0 outline-none border-none min-h-[120px] text-xs leading-relaxed font-sans text-slate-800 dark:text-slate-200 cursor-text',
+          'focus:outline-none focus:ring-0 outline-none border-none min-h-[140px] text-xs leading-relaxed font-sans text-slate-800 dark:text-slate-200 cursor-text',
       },
     },
     content: content || '',
@@ -113,10 +128,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('URL', previousUrl);
 
-    if (url === null) {
-      return;
-    }
-
+    if (url === null) return;
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
@@ -125,93 +137,153 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
+  const addImage = () => {
+    const url = window.prompt('Image URL');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  // Determine current format label
+  const getCurrentFormat = () => {
+    if (editor.isActive('heading', { level: 1 })) return 'h1';
+    if (editor.isActive('heading', { level: 2 })) return 'h2';
+    if (editor.isActive('heading', { level: 3 })) return 'h3';
+    return 'p';
+  };
+
+  const handleFormatChange = (val: string) => {
+    if (val === 'h1') {
+      editor.chain().focus().toggleHeading({ level: 1 }).run();
+    } else if (val === 'h2') {
+      editor.chain().focus().toggleHeading({ level: 2 }).run();
+    } else if (val === 'h3') {
+      editor.chain().focus().toggleHeading({ level: 3 }).run();
+    } else {
+      editor.chain().focus().setParagraph().run();
+    }
+  };
+
   return (
     <div
-      className={`border rounded-md transition-colors flex flex-col ${
+      className={`border rounded transition-colors flex flex-col ${
         isDark
           ? 'bg-[#0d1117] border-[#30363d] text-slate-200'
           : 'bg-white border-slate-300 text-slate-800'
       } ${className}`}
     >
-      {/* 1. Rich Text Toolbar (matching Jama Connect Image 1 & 4) */}
+      {/* Rich Text Toolbar matching screenshot layout */}
       {editable && (
         <div
-          className={`flex flex-wrap items-center gap-0.5 p-1.5 border-b text-xs select-none ${
-            isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-[#f4f6f8] border-slate-200'
+          className={`flex flex-wrap items-center gap-1 px-2 py-1.5 border-b text-xs select-none ${
+            isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-[#f8fafc] border-slate-200'
           }`}
         >
-          {/* Heading 1-3 */}
+          {/* 1. Format dropdown */}
+          <select
+            value={getCurrentFormat()}
+            onChange={e => handleFormatChange(e.target.value)}
+            className="h-6 px-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:border-blue-500"
+          >
+            <option value="p">Paragraph</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+          </select>
+
+          {/* 2. Size dropdown */}
+          <select
+            defaultValue="11pt"
+            className="h-6 px-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:border-blue-500"
+          >
+            <option value="10pt">10pt</option>
+            <option value="11pt">11pt</option>
+            <option value="12pt">12pt</option>
+            <option value="14pt">14pt</option>
+            <option value="16pt">16pt</option>
+          </select>
+
+          <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
+
+          {/* 3. Clipboard (Cut, Copy, Paste) */}
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('heading', { level: 1 })
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold'
-                : ''
-            }`}
-            title="Heading 1"
+            onClick={() => document.execCommand('cut')}
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            title="Cut"
           >
-            <Heading1 className="w-3.5 h-3.5" />
+            <Scissors className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('heading', { level: 2 })
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold'
-                : ''
-            }`}
-            title="Heading 2"
+            onClick={() => document.execCommand('copy')}
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            title="Copy"
           >
-            <Heading2 className="w-3.5 h-3.5" />
+            <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('heading', { level: 3 })
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold'
-                : ''
-            }`}
-            title="Heading 3"
+            onClick={async () => {
+              try {
+                const text = await navigator.clipboard.readText();
+                if (text) editor.chain().focus().insertContent(text).run();
+              } catch {
+                document.execCommand('paste');
+              }
+            }}
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            title="Paste"
           >
-            <Heading3 className="w-3.5 h-3.5" />
+            <Clipboard className="w-3.5 h-3.5" />
           </button>
 
           <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Formatting: Bold, Italic, Strikethrough, Code */}
+          {/* 4. Text styling (Bold, Italic, Underline, Strikethrough, Subscript, Superscript) */}
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
               editor.isActive('bold')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600 font-bold'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
-            title="Bold (Ctrl+B)"
+            title="Bold"
           >
             <Bold className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
               editor.isActive('italic')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600 font-bold'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
-            title="Italic (Ctrl+I)"
+            title="Italic"
           >
             <Italic className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive('underline')
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600 font-bold'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+            title="Underline"
+          >
+            <UnderlineIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
               editor.isActive('strike')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600 font-bold'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
             title="Strikethrough"
           >
@@ -219,121 +291,160 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('code')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+            onClick={() => editor.chain().focus().toggleSubscript().run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive('subscript')
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600 font-bold'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
-            title="Inline Code"
+            title="Subscript"
           >
-            <Code className="w-3.5 h-3.5" />
+            <SubscriptIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleSuperscript().run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive('superscript')
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600 font-bold'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+            title="Superscript"
+          >
+            <SuperscriptIcon className="w-3.5 h-3.5" />
           </button>
 
           <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Lists & Quote */}
+          {/* 5. Alignment (Left, Center, Right, Justify) */}
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('bulletList')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive({ textAlign: 'left' })
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
-            title="Bullet List"
+            title="Align Left"
           >
-            <List className="w-3.5 h-3.5" />
+            <AlignLeft className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('orderedList')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive({ textAlign: 'center' })
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
-            title="Numbered List"
+            title="Align Center"
           >
-            <ListOrdered className="w-3.5 h-3.5" />
+            <AlignCenter className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('blockquote')
-                ? 'bg-slate-200 dark:bg-slate-700 font-bold text-blue-600'
-                : ''
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive({ textAlign: 'right' })
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600'
+                : 'text-slate-600 dark:text-slate-300'
             }`}
-            title="Quote"
+            title="Align Right"
           >
-            <Quote className="w-3.5 h-3.5" />
+            <AlignRight className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive({ textAlign: 'justify' })
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+            title="Justify"
+          >
+            <AlignJustify className="w-3.5 h-3.5" />
           </button>
 
           <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Table Operations */}
+          {/* 6. Link, Unlink, Image, Table */}
+          <button
+            type="button"
+            onClick={setLink}
+            className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${
+              editor.isActive('link')
+                ? 'bg-slate-200 dark:bg-slate-700 text-blue-600'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+            title="Insert Link"
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().unsetLink().run()}
+            disabled={!editor.isActive('link')}
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"
+            title="Unlink"
+          >
+            <Unlink className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={addImage}
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            title="Insert Image"
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+          </button>
           <button
             type="button"
             onClick={() =>
               editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
             }
-            className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
             title="Insert Table (3x3)"
           >
             <TableIcon className="w-3.5 h-3.5" />
           </button>
           {editor.isActive('table') && (
-            <>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => editor.chain().focus().addRowAfter().run()}
-                className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] flex items-center gap-0.5"
+                className="text-[10px] px-1 hover:bg-slate-200 rounded flex items-center gap-0.5"
                 title="Add Row"
               >
-                <Plus className="w-3 h-3" /> Row
+                <Plus className="w-2.5 h-2.5" /> Row
               </button>
               <button
                 type="button"
                 onClick={() => editor.chain().focus().addColumnAfter().run()}
-                className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] flex items-center gap-0.5"
+                className="text-[10px] px-1 hover:bg-slate-200 rounded flex items-center gap-0.5"
                 title="Add Column"
               >
-                <Plus className="w-3 h-3" /> Col
+                <Plus className="w-2.5 h-2.5" /> Col
               </button>
               <button
                 type="button"
                 onClick={() => editor.chain().focus().deleteTable().run()}
-                className="p-1.5 rounded hover:bg-red-100 text-red-600"
+                className="text-[10px] px-1 hover:bg-red-100 text-red-600 rounded"
                 title="Delete Table"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-2.5 h-2.5" />
               </button>
-            </>
+            </div>
           )}
 
           <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
 
-          {/* Link */}
-          <button
-            type="button"
-            onClick={setLink}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
-              editor.isActive('link') ? 'bg-slate-200 dark:bg-slate-700 text-blue-600' : ''
-            }`}
-            title="Insert / Edit Link"
-          >
-            <LinkIcon className="w-3.5 h-3.5" />
-          </button>
-
-          <div className="flex-1" />
-
-          {/* Undo / Redo */}
+          {/* 7. Undo / Redo */}
           <button
             type="button"
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 text-slate-600 dark:text-slate-300 transition-colors"
             title="Undo"
           >
             <Undo className="w-3.5 h-3.5" />
@@ -342,7 +453,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
             type="button"
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30"
+            className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 text-slate-600 dark:text-slate-300 transition-colors"
             title="Redo"
           >
             <Redo className="w-3.5 h-3.5" />
@@ -350,10 +461,10 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
         </div>
       )}
 
-      {/* 2. Editor Canvas with Tiptap ProseMirror styling */}
+      {/* Editor Content Canvas */}
       <div
         onClick={() => editor.chain().focus().run()}
-        className="p-3 flex-1 overflow-y-auto min-h-[140px] cursor-text text-xs leading-relaxed font-sans prose prose-sm max-w-none dark:prose-invert"
+        className="p-3.5 flex-1 overflow-y-auto min-h-[160px] cursor-text text-xs leading-relaxed font-sans prose prose-sm max-w-none dark:prose-invert"
       >
         <EditorContent editor={editor} className="outline-none focus:outline-none min-h-full" />
       </div>

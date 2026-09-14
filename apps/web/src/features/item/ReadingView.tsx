@@ -464,7 +464,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
                   disabled={currentPage <= 1}
                   onClick={() => setPage(1)}
                   className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                    isDark
+                      ? 'hover:bg-slate-700 text-slate-300'
+                      : 'hover:bg-slate-200 text-slate-700'
                   }`}
                   title="First Page"
                 >
@@ -475,7 +477,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
                   disabled={currentPage <= 1}
                   onClick={() => setPage(p => p - 1)}
                   className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                    isDark
+                      ? 'hover:bg-slate-700 text-slate-300'
+                      : 'hover:bg-slate-200 text-slate-700'
                   }`}
                   title="Previous Page"
                 >
@@ -502,7 +506,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage(p => p + 1)}
                   className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                    isDark
+                      ? 'hover:bg-slate-700 text-slate-300'
+                      : 'hover:bg-slate-200 text-slate-700'
                   }`}
                   title="Next Page"
                 >
@@ -513,7 +519,9 @@ export const ReadingView: React.FC<ReadingViewProps> = ({
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage(totalPages)}
                   className={`p-1 disabled:opacity-30 rounded transition-colors ${
-                    isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-200 text-slate-700'
+                    isDark
+                      ? 'hover:bg-slate-700 text-slate-300'
+                      : 'hover:bg-slate-200 text-slate-700'
                   }`}
                   title="Last Page"
                 >

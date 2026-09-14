@@ -96,13 +96,14 @@ export async function seedReviews() {
       name: 'Use Cases',
       description:
         'Parent set containing functional use case specifications for clinical workflow.',
-      customFields: {},
+      customFields: { actor: 'Clinical Staff & System Administrator' },
     },
     {
       key: '2.1.1',
       name: 'Schedule Patient Appointment',
       description: 'Workflow specification for scheduling patient visits and procedures.',
       customFields: {
+        actor: 'Receptionist',
         Trigger:
           'Patient needs an appointment. Can be initiated by phone during appointment or after appointment completed.',
         'Primary Flow':
@@ -117,6 +118,7 @@ export async function seedReviews() {
       name: 'Perform Patient Procedure',
       description: 'Operating steps during clinical dental procedure.',
       customFields: {
+        actor: 'Clinician / Dentist',
         Trigger: 'Patient is seated in operatory room with sterilized tools prepared.',
         'Primary Flow':
           '1. Clinician reviews patient history.\n2. Clinician records treatment code and marks tooth or tooth region treated.\n3. System verifies procedure compatibility with insurance plan.',
@@ -128,6 +130,7 @@ export async function seedReviews() {
       name: 'Bill Insurance Provider',
       description: 'Submission of claims to carrier via EDI 837 transaction.',
       customFields: {
+        actor: 'Billing Specialist',
         Trigger: 'Treatment marked completed by attending provider.',
         'Primary Flow':
           '1. Generate claim form CMS-1500.\n2. Validate procedure code against fee schedule.',
@@ -137,20 +140,62 @@ export async function seedReviews() {
       key: '2.1.4',
       name: 'Add X-Ray Results',
       description: 'DICOM imaging upload and attachment.',
+      customFields: { actor: 'Radiology Technician' },
     },
-    { key: '2.1.5', name: 'Update Admin Password', description: 'Credential lifecycle security.' },
-    { key: '2.1.6', name: 'Update Patient Bills', description: 'Adjustment of copay and balance.' },
-    { key: '2.1.7', name: 'Print out Insurer Bills', description: 'Paper statement generation.' },
-    { key: '2.1.8', name: 'Search available dates', description: 'Calendar query optimization.' },
-    { key: '2.1.9', name: 'Attach Note', description: 'Clinical encounter progress note.' },
-    { key: '2.1.10', name: 'Upload to Share-D', description: 'Cloud repository synchronization.' },
+    {
+      key: '2.1.5',
+      name: 'Update Admin Password',
+      description: 'Credential lifecycle security.',
+      customFields: { actor: 'System Administrator' },
+    },
+    {
+      key: '2.1.6',
+      name: 'Update Patient Bills',
+      description: 'Adjustment of copay and balance.',
+      customFields: { actor: 'Billing Specialist' },
+    },
+    {
+      key: '2.1.7',
+      name: 'Print out Insurer Bills',
+      description: 'Paper statement generation.',
+      customFields: { actor: 'Billing Specialist' },
+    },
+    {
+      key: '2.1.8',
+      name: 'Search available dates',
+      description: 'Calendar query optimization.',
+      customFields: { actor: 'Receptionist' },
+    },
+    {
+      key: '2.1.9',
+      name: 'Attach Note',
+      description: 'Clinical encounter progress note.',
+      customFields: { actor: 'Attending Clinician' },
+    },
+    {
+      key: '2.1.10',
+      name: 'Upload to Share-D',
+      description: 'Cloud repository synchronization.',
+      customFields: { actor: 'IT Support' },
+    },
     {
       key: '2.1.11',
       name: 'Download from Share-D',
       description: 'Retrieve archived historical chart.',
+      customFields: { actor: 'Clinician' },
     },
-    { key: '2.1.12', name: 'Manage Patient Information', description: 'Demographics and consent.' },
-    { key: '2.1.13', name: 'Login as employee', description: 'Role-based access verification.' },
+    {
+      key: '2.1.12',
+      name: 'Manage Patient Information',
+      description: 'Demographics and consent.',
+      customFields: { actor: 'Receptionist' },
+    },
+    {
+      key: '2.1.13',
+      name: 'Login as employee',
+      description: 'Role-based access verification.',
+      customFields: { actor: 'Employee' },
+    },
   ];
 
   const createdItems = [];
@@ -263,6 +308,13 @@ export async function seedReviews() {
       ],
     });
 
+    const r1Participants = await prisma.reviewParticipant.findMany({
+      where: { reviewId: review1.id },
+    });
+    const adminPart = r1Participants.find(p => p.userId === adminUser.id);
+    const memberPart = r1Participants.find(p => p.userId === memberUser.id);
+    const reviewerPart = r1Participants.find(p => p.userId === reviewerUser.id);
+
     // Review Items
     for (let i = 0; i < createdItems.length; i++) {
       const ri = await prisma.reviewItem.create({
@@ -278,21 +330,21 @@ export async function seedReviews() {
         data: [
           {
             reviewItemId: ri.id,
-            participantId: adminUser.id,
+            participantId: adminPart!.id,
             userId: adminUser.id,
             revisionNumber: 2,
             status: i < 3 ? ReviewItemStatusValue.APPROVED : ReviewItemStatusValue.NOT_REVIEWED,
           },
           {
             reviewItemId: ri.id,
-            participantId: memberUser.id,
+            participantId: memberPart!.id,
             userId: memberUser.id,
             revisionNumber: 2,
             status: i === 0 ? ReviewItemStatusValue.APPROVED : ReviewItemStatusValue.NOT_REVIEWED,
           },
           {
             reviewItemId: ri.id,
-            participantId: reviewerUser.id,
+            participantId: reviewerPart!.id,
             userId: reviewerUser.id,
             revisionNumber: 2,
             status: i < 2 ? ReviewItemStatusValue.REVIEWED : ReviewItemStatusValue.NOT_REVIEWED,
@@ -433,6 +485,7 @@ export async function seedReviews() {
         name: '10/16 Risk Evaluation Demo',
         description: 'Formal risk mitigations evaluation baseline.',
         status: ReviewStatus.FINALIZED,
+        finalizedAt: new Date('2026-10-06T17:00:00Z'),
         currentRevisionNumber: 2,
         deadline: new Date('2026-10-06'),
         createdBy: adminUser.id,

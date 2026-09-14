@@ -903,7 +903,9 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                       onOpenCreateItem?.();
                     }}
                     className={`w-full text-left px-2.5 py-1.5 flex items-center gap-2 text-xs transition-colors ${
-                      isDark ? 'hover:bg-[#21262d] text-slate-200' : 'hover:bg-blue-50 text-slate-700'
+                      isDark
+                        ? 'hover:bg-[#21262d] text-slate-200'
+                        : 'hover:bg-blue-50 text-slate-700'
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5 text-blue-500" />
@@ -916,7 +918,9 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                       onOpenCreateFolder?.(selectedFolderId || null);
                     }}
                     className={`w-full text-left px-2.5 py-1.5 flex items-center gap-2 text-xs transition-colors ${
-                      isDark ? 'hover:bg-[#21262d] text-slate-200' : 'hover:bg-blue-50 text-slate-700'
+                      isDark
+                        ? 'hover:bg-[#21262d] text-slate-200'
+                        : 'hover:bg-blue-50 text-slate-700'
                     }`}
                   >
                     <FolderPlus className="w-3.5 h-3.5 text-amber-500" />

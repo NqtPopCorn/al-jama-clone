@@ -23,10 +23,7 @@ export const ReviewParticipantsModal: React.FC<ReviewParticipantsModalProps> = (
             <Users className="w-4 h-4 text-blue-600" />
             Review Participants & Roles
           </h3>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <CloseIcon className="w-4 h-4" />
           </button>
         </div>
@@ -44,9 +41,7 @@ export const ReviewParticipantsModal: React.FC<ReviewParticipantsModalProps> = (
               </div>
               <span
                 className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                  p.isFinished
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-amber-100 text-amber-700'
+                  p.isFinished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                 }`}
               >
                 {p.isFinished ? 'Finished' : 'In Progress'}

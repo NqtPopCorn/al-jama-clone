@@ -82,7 +82,9 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
       <div
         className={`w-full max-w-md rounded-lg shadow-2xl border flex flex-col overflow-hidden transition-colors ${
-          isDark ? 'bg-[#161b22] border-[#30363d] text-slate-100' : 'bg-white border-slate-300 text-slate-900'
+          isDark
+            ? 'bg-[#161b22] border-[#30363d] text-slate-100'
+            : 'bg-white border-slate-300 text-slate-900'
         }`}
       >
         {/* Modal Window Header */}
@@ -152,7 +154,9 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
               value={parentFolderId}
               onChange={e => setParentFolderId(e.target.value)}
               className={`w-full h-8 px-2 border rounded text-xs focus:ring-0 ${
-                isDark ? 'bg-[#21262d] border-[#30363d] text-white' : 'bg-white border-slate-300 text-slate-900'
+                isDark
+                  ? 'bg-[#21262d] border-[#30363d] text-white'
+                  : 'bg-white border-slate-300 text-slate-900'
               }`}
             >
               <option value="">Project Root (Top Level)</option>
@@ -163,7 +167,8 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
               ))}
             </select>
             <p className="text-[11px] text-slate-500 leading-tight">
-              Select &quot;Project Root&quot; to place this folder at the top level of the project, or choose an existing folder to nest it.
+              Select &quot;Project Root&quot; to place this folder at the top level of the project,
+              or choose an existing folder to nest it.
             </p>
           </div>
 

@@ -577,7 +577,6 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({
               />
             </div>
           )}
-
         </div>
 
         {/* 3. Bottom Sliding Drawer for Versions (Matching Image 5) */}

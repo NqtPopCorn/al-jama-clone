@@ -300,68 +300,74 @@ Nhóm bảng theo module:
 | current_revision_number              | INT DEFAULT 1                                                       |                 |
 | created_by, created_at, finalized_at |                                                                     |                 |
 
-**`review_items`** — id, review_id FK, item_id FK items, item_version_at_send_id FK item_versions, include_upstream BOOLEAN, include_downstream BOOLEAN _(BR-REV-04)_
+**`review_items`** — id, review_id FK, item_id FK items, order_index INT DEFAULT 0, item_version_at_send_id FK item_versions (nullable), include_upstream BOOLEAN DEFAULT false, include_downstream BOOLEAN DEFAULT false _(BR-REV-04)_ — UNIQUE(review_id, item_id)
 
 **`review_participants`**
 
-| Cột                | Kiểu                                    | Ghi chú   |
-| ------------------ | --------------------------------------- | --------- |
-| id                 | UUID PK                                 |           |
-| review_id          | FK reviews                              |           |
-| user_id            | FK users (nullable nếu thêm theo group) |           |
-| group_id           | FK user_groups (nullable)               | BR-REV-06 |
-| review_role        | ENUM('moderator','approver','reviewer') |           |
-| is_signer          | BOOLEAN                                 |           |
-| added_by, added_at |                                         |           |
+| Cột         | Kiểu                                    | Ghi chú                    |
+| ----------- | --------------------------------------- | -------------------------- |
+| id          | UUID PK                                 |                            |
+| review_id   | FK reviews                              |                            |
+| user_id     | FK users (nullable nếu thêm theo group) |                            |
+| group_id    | FK user_groups (nullable)               | BR-REV-06                  |
+| review_role | ENUM('moderator','approver','reviewer') |                            |
+| is_signer   | BOOLEAN DEFAULT false                   |                            |
+| is_finished | BOOLEAN DEFAULT false                   |                            |
+| finished_at | TIMESTAMP (nullable)                    |                            |
+| invited_by  | FK users (nullable)                     |                            |
+| invited_at  | TIMESTAMP DEFAULT now()                 |                            |
+|             |                                         | UNIQUE(review_id, user_id) |
 
 **`review_item_status`** — trạng thái approve/reject/reviewed, **theo từng revision** để giữ lịch sử (QT-05)
 
-| Cột             | Kiểu                                                  | Ghi chú                                                     |
-| --------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
-| id              | UUID PK                                               |                                                             |
-| review_id       | FK reviews                                            |                                                             |
-| item_id         | FK items                                              |                                                             |
-| participant_id  | FK review_participants                                |                                                             |
-| revision_number | INT                                                   |                                                             |
-| status          | ENUM('not_reviewed','reviewed','approved','rejected') | QT-04                                                       |
-| updated_at      | TIMESTAMP                                             |                                                             |
-|                 |                                                       | UNIQUE(review_id, item_id, participant_id, revision_number) |
+| Cột             | Kiểu                                                  | Ghi chú                                          |
+| --------------- | ----------------------------------------------------- | ------------------------------------------------ |
+| id              | UUID PK                                               |                                                  |
+| review_item_id  | FK review_items                                       |                                                  |
+| participant_id  | FK review_participants                                |                                                  |
+| user_id         | FK users                                              |                                                  |
+| revision_number | INT                                                   |                                                  |
+| status          | ENUM('not_reviewed','reviewed','approved','rejected') | QT-04                                            |
+| updated_at      | TIMESTAMP                                             |                                                  |
+|                 |                                                       | UNIQUE(review_item_id, user_id, revision_number) |
 
 > Khi publish revision mới (BR-REV-24), **không xoá dữ liệu cũ** — chỉ tạo dòng mới với `revision_number` tăng, ứng dụng chỉ đọc theo `current_revision_number` mới nhất → vừa đáp ứng "reset trạng thái" vừa giữ audit trail.
 
 **`review_comments`**
 
-| Cột                      | Kiểu                                                 | Ghi chú                   |
-| ------------------------ | ---------------------------------------------------- | ------------------------- |
-| id                       | UUID PK                                              |                           |
-| review_id                | FK reviews                                           |                           |
-| item_id                  | FK items                                             |                           |
-| parent_comment_id        | FK review_comments (self, nullable)                  | BR-REV-12                 |
-| author_id                | FK users                                             |                           |
-| content                  | TEXT                                                 |                           |
-| label                    | ENUM('general','question','proposed_change','issue') | BR-REV-13                 |
-| selected_text_snippet    | TEXT (nullable)                                      | Bình luận vào đoạn cụ thể |
-| is_resolved              | BOOLEAN                                              | BR-REV-30                 |
-| resolved_note            | TEXT (nullable)                                      |                           |
-| resolved_by, resolved_at | (nullable)                                           |                           |
-| created_at               |                                                      |                           |
+| Cột                    | Kiểu                                                 | Ghi chú                   |
+| ---------------------- | ---------------------------------------------------- | ------------------------- |
+| id                     | UUID PK                                              |                           |
+| review_item_id         | FK review_items                                      |                           |
+| parent_comment_id      | FK review_comments (self, nullable)                  | BR-REV-12                 |
+| author_id              | FK users                                             |                           |
+| revision_number        | INT                                                  |                           |
+| content                | TEXT                                                 |                           |
+| label                  | ENUM('general','question','proposed_change','issue') | BR-REV-13                 |
+| selected_text          | TEXT (nullable)                                      | Bình luận vào đoạn cụ thể |
+| is_resolved            | BOOLEAN DEFAULT false                                | BR-REV-30                 |
+| resolved_note          | TEXT (nullable)                                      |                           |
+| resolved_by            | FK users (nullable)                                  |                           |
+| resolved_at            | TIMESTAMP (nullable)                                 |                           |
+| created_at, updated_at | TIMESTAMP                                            |                           |
 
 **`review_comment_mentions`** — id, review_comment_id FK, mentioned_user_id FK _(BR-REV-16)_
 
-**`review_revisions`** — id, review_id FK, revision_number INT, published_by FK, published_at, notification_sent BOOLEAN — UNIQUE(review_id, revision_number) _(BR-REV-32)_
+**`review_revisions`** — id, review_id FK, revision_number INT, change_description TEXT (nullable), notification_sent BOOLEAN DEFAULT false, published_by FK users, published_at — UNIQUE(review_id, revision_number) _(BR-REV-32)_
 
 **`review_baselines`**
 
-| Cột                       | Kiểu                                       | Ghi chú                                                 |
-| ------------------------- | ------------------------------------------ | ------------------------------------------------------- |
-| id                        | UUID PK                                    |                                                         |
-| review_id                 | FK reviews                                 |                                                         |
-| trigger_type              | ENUM('review_initiate','revision_publish') | BR-REV-38                                               |
-| revision_number           | INT                                        |                                                         |
-| snapshot_item_version_ids | JSONB                                      | Mảng `item_versions.id` được đóng băng tại thời điểm đó |
-| created_at                |                                            |                                                         |
+| Cột             | Kiểu                                       | Ghi chú                                                             |
+| --------------- | ------------------------------------------ | ------------------------------------------------------------------- |
+| id              | UUID PK                                    |                                                                     |
+| review_id       | FK reviews                                 |                                                                     |
+| trigger_type    | ENUM('review_initiate','revision_publish') | BR-REV-38                                                           |
+| revision_number | INT                                        |                                                                     |
+| item_version_id | FK item_versions                           | FK trỏ đến version cụ thể — N rows per revision (Relational design) |
+| created_at      | TIMESTAMP DEFAULT now()                    |                                                                     |
+|                 |                                            | UNIQUE(review_id, revision_number, item_version_id, trigger_type)   |
 
-**`review_signatures`** — id, review_id FK, user_id FK, signed_at, signer_role_meaning TEXT, reauth_confirmed BOOLEAN _(BR-REV-22)_
+**`review_signatures`** — id, review_id FK, user_id FK, signer_name VARCHAR(255), meaning VARCHAR(255), reauth_confirmed BOOLEAN DEFAULT false, signed_at TIMESTAMP _(BR-REV-22)_
 
 ---
 

@@ -9,7 +9,7 @@ export type ActiveFilter =
   | 'UPDATED_SINCE_V1'
   | 'UNMARKED';
 
-export type ViewMode = 'READING_VIEW' | 'SINGLE_ITEM_VIEW';
+export type ViewMode = 'READING_VIEW' | 'SINGLE_ITEM_VIEW' | 'FEEDBACK_VIEW';
 
 export interface ReviewExecutionContext {
   review: ReviewDetail;

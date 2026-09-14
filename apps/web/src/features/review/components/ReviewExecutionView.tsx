@@ -22,6 +22,10 @@ import {
   ReviewModeratorSingleView,
   ReviewParticipantsModal,
   ReviewPaginationBar,
+  ReviewItemEditModal,
+  ReviewFeedbackStreamView,
+  ReviewPublishRevisionModal,
+  ReviewDiffEditsModal,
 } from './execution';
 
 interface ReviewExecutionViewProps {
@@ -30,8 +34,8 @@ interface ReviewExecutionViewProps {
 }
 
 export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ reviewId, onBack }) => {
-  // Sidebar states
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Sidebar states - default collapsed/closed matching reference screenshots
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'summary' | 'toc'>('summary');
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,11 +43,13 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   // View mode: Reading View (all items) vs Single Item View (Moderator detailed review)
   const [viewMode, setViewMode] = useState<ViewMode>('READING_VIEW');
   const [singleItemIndex, setSingleItemIndex] = useState(0);
+  const [hasInitializedViewMode, setHasInitializedViewMode] = useState(false);
 
   // Toolbar toggles & menus
   const [highlightingEnabled, setHighlightingEnabled] = useState(true);
   const [showRemovedItems, setShowRemovedItems] = useState(true);
   const [showAddParticipantModal, setShowAddParticipantModal] = useState(false);
+  const [showPublishRevisionModal, setShowPublishRevisionModal] = useState(false);
 
   // Selected items for batch actions
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
@@ -51,6 +57,18 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   // Modals state
   const [activeCommentItem, setActiveCommentItem] = useState<ReviewItemReadingView | null>(null);
   const [activeRejectItem, setActiveRejectItem] = useState<ReviewItemReadingView | null>(null);
+  const [editingItem, setEditingItem] = useState<ReviewItemReadingView | null>(null);
+  const [diffModalItem, setDiffModalItem] = useState<ReviewItemReadingView | null>(null);
+  const [pendingEditedMap, setPendingEditedMap] = useState<
+    Record<
+      string,
+      {
+        name?: string;
+        description?: string | null;
+        customFields?: Record<string, unknown> | null;
+      }
+    >
+  >({});
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
   const [actionErrorMsg, setActionErrorMsg] = useState<string | null>(null);
@@ -64,45 +82,75 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   const reopenReviewMutation = useReopenReviewMutation();
   const finalizeReviewMutation = useFinalizeReviewMutation();
 
-  // Determine current user available roles in this review
-  const userAvailableRoles = useMemo<ReviewRole[]>(() => {
-    if (!review || !review.participants) return [];
-    const roles: ReviewRole[] = [];
-    if (review.myRole) {
-      roles.push(review.myRole);
-    }
-    review.participants.forEach(p => {
-      if (p.reviewRole && !roles.includes(p.reviewRole)) {
-        roles.push(p.reviewRole);
-      }
-    });
-    return roles.length > 0 ? roles : [ReviewRole.REVIEWER];
-  }, [review]);
-
-  // Active viewing role with role switcher
-  const [selectedRole, setSelectedRole] = useState<ReviewRole | null>(null);
+  // Determine active role strictly from user's review assignment or ?role= url param for testing
   const activeRole: ReviewRole = useMemo(() => {
-    if (selectedRole && userAvailableRoles.includes(selectedRole)) {
-      return selectedRole;
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role')?.toUpperCase();
+    if (roleParam === 'MODERATOR') return ReviewRole.MODERATOR;
+    if (roleParam === 'APPROVER') return ReviewRole.APPROVER;
+    if (roleParam === 'REVIEWER') return ReviewRole.REVIEWER;
+
+    if (review?.myRole) {
+      return review.myRole as ReviewRole;
     }
-    if (userAvailableRoles.includes(ReviewRole.MODERATOR)) return ReviewRole.MODERATOR;
-    if (userAvailableRoles.includes(ReviewRole.APPROVER)) return ReviewRole.APPROVER;
-    if (userAvailableRoles.includes(ReviewRole.REVIEWER)) return ReviewRole.REVIEWER;
-    return userAvailableRoles[0] || ReviewRole.REVIEWER;
-  }, [selectedRole, userAvailableRoles]);
+    if (review?.isModerator) {
+      return ReviewRole.MODERATOR;
+    }
+    return ReviewRole.REVIEWER;
+  }, [review]);
 
   const isModeratorMode = activeRole === ReviewRole.MODERATOR;
   const isApproverMode = activeRole === ReviewRole.APPROVER;
   const isReviewerMode = activeRole === ReviewRole.REVIEWER;
 
+  // Initialize view mode: Moderator view defaults to SINGLE_ITEM_VIEW matching Image 2
+  React.useEffect(() => {
+    if (review && !hasInitializedViewMode) {
+      if (isModeratorMode) {
+        setViewMode('SINGLE_ITEM_VIEW');
+      } else {
+        setViewMode('READING_VIEW');
+      }
+      setHasInitializedViewMode(true);
+    }
+  }, [review, isModeratorMode, hasInitializedViewMode]);
+
   // Refs for scrolling to item
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Merge pending edited state with items from backend
+  const mergedItems = useMemo(() => {
+    if (!review?.items) return [];
+    return review.items.map(item => {
+      const pendingEdit = pendingEditedMap[item.id] || pendingEditedMap[item.itemId];
+      if (pendingEdit) {
+        return {
+          ...item,
+          hasUpdatedSinceLastRevision: true,
+          editedContent: {
+            name: pendingEdit.name ?? item.name,
+            description:
+              pendingEdit.description !== undefined ? pendingEdit.description : item.description,
+            customFields: pendingEdit.customFields ?? item.customFields,
+          },
+          // Giữ nguyên hiển thị baseline trong review cho đến khi publish revision mới
+          name: item.baselineContent?.name || item.name,
+          description:
+            item.baselineContent?.description !== undefined
+              ? item.baselineContent.description
+              : item.description,
+          customFields: item.baselineContent?.customFields || item.customFields,
+        };
+      }
+      return item;
+    });
+  }, [review?.items, pendingEditedMap]);
+
   // Filter items based on active quick filter & search query
   const filteredItems = useMemo(() => {
-    if (!review || !review.items) return [];
+    if (!mergedItems) return [];
 
-    return review.items.filter(item => {
+    return mergedItems.filter(item => {
       // Search text query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -134,7 +182,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
           return true;
       }
     });
-  }, [review, activeFilter, searchQuery]);
+  }, [mergedItems, activeFilter, searchQuery]);
 
   // Item selection toggles
   const toggleSelectItem = (itemId: string) => {
@@ -243,9 +291,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   const handleBatchApprove = async () => {
     if (!review) return;
     const targetIds =
-      selectedItemIds.size > 0
-        ? Array.from(selectedItemIds)
-        : filteredItems.map(i => i.id);
+      selectedItemIds.size > 0 ? Array.from(selectedItemIds) : filteredItems.map(i => i.id);
     if (targetIds.length === 0) return;
 
     try {
@@ -268,9 +314,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   const handleBatchReject = async () => {
     if (!review) return;
     const targetIds =
-      selectedItemIds.size > 0
-        ? Array.from(selectedItemIds)
-        : filteredItems.map(i => i.id);
+      selectedItemIds.size > 0 ? Array.from(selectedItemIds) : filteredItems.map(i => i.id);
     if (targetIds.length === 0) return;
 
     try {
@@ -294,9 +338,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   const handleBatchReviewed = async () => {
     if (!review) return;
     const targetIds =
-      selectedItemIds.size > 0
-        ? Array.from(selectedItemIds)
-        : filteredItems.map(i => i.id);
+      selectedItemIds.size > 0 ? Array.from(selectedItemIds) : filteredItems.map(i => i.id);
     if (targetIds.length === 0) return;
 
     try {
@@ -319,9 +361,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
   const handleBatchClear = async () => {
     if (!review) return;
     const targetIds =
-      selectedItemIds.size > 0
-        ? Array.from(selectedItemIds)
-        : filteredItems.map(i => i.id);
+      selectedItemIds.size > 0 ? Array.from(selectedItemIds) : filteredItems.map(i => i.id);
     if (targetIds.length === 0) return;
 
     try {
@@ -395,7 +435,9 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
       setActionSuccessMsg('Review đã được Finalize & Complete thành công.');
       setTimeout(() => setActionSuccessMsg(null), 3000);
     } catch (err: any) {
-      setActionErrorMsg(err?.response?.data?.message || 'Không thể finalize review (kiểm tra reject).');
+      setActionErrorMsg(
+        err?.response?.data?.message || 'Không thể finalize review (kiểm tra reject).',
+      );
       setTimeout(() => setActionErrorMsg(null), 3000);
     }
   };
@@ -456,26 +498,20 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden font-sans">
-      {/* 1. Review Top Bar with Role Switcher */}
+      {/* 1. Review Top Bar */}
       <ReviewTopBar
         review={review}
         onBack={onBack}
         activeRole={activeRole}
-        userAvailableRoles={userAvailableRoles}
-        onRoleChange={setSelectedRole}
         isModeratorMode={isModeratorMode}
         isApproverMode={isApproverMode}
         isReviewerMode={isReviewerMode}
-        onPublishRevision={() => {
-          setActionSuccessMsg('Revision publish workflow opened.');
-          setTimeout(() => setActionSuccessMsg(null), 3000);
-        }}
+        onPublishRevision={() => setShowPublishRevisionModal(true)}
         onCloseForFeedback={handleCloseForFeedback}
         onReopenReview={handleReopenReview}
         onFinalizeReview={handleFinalizeReview}
         onOpenParticipantsModal={() => setShowAddParticipantModal(true)}
         onCompleteReview={handleCompleteReview}
-        onMarkPageAsReviewed={handleMarkPageAsReviewed}
         isActionPending={
           updateStatusMutation.isPending ||
           batchStatusMutation.isPending ||
@@ -487,6 +523,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
       <ReviewToolbar
         itemCount={filteredItems.length}
         selectedCount={selectedItemIds.size}
+        pendingUpdateCount={mergedItems.filter(i => i.hasUpdatedSinceLastRevision).length}
         highlightingEnabled={highlightingEnabled}
         onToggleHighlighting={() => setHighlightingEnabled(!highlightingEnabled)}
         showRemovedItems={showRemovedItems}
@@ -498,10 +535,27 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
         onRefresh={() => refetch()}
         isApproverMode={isApproverMode}
         isReviewerMode={isReviewerMode}
+        isModeratorMode={isModeratorMode}
         onBatchApprove={handleBatchApprove}
         onBatchReject={handleBatchReject}
         onBatchReviewed={handleBatchReviewed}
         onBatchClear={handleBatchClear}
+        onSelectReadingView={() => {
+          setViewMode('READING_VIEW');
+          setIsSidebarOpen(false);
+        }}
+        onToggleStats={() => {
+          setSidebarTab('summary');
+          setIsSidebarOpen(prev => !prev);
+          setViewMode('READING_VIEW');
+        }}
+        onSelectFeedbackView={() => {
+          setViewMode('FEEDBACK_VIEW');
+          setIsSidebarOpen(false);
+        }}
+        isReadingViewActive={viewMode === 'READING_VIEW' && !isSidebarOpen}
+        isStatsActive={isSidebarOpen && sidebarTab === 'summary'}
+        isFeedbackActive={viewMode === 'FEEDBACK_VIEW'}
       />
 
       {/* 3. Notifications banner */}
@@ -524,17 +578,20 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
 
       {/* 4. Body Content Area with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
-        <ReviewSidebar
-          review={review}
-          isOpen={isSidebarOpen}
-          onToggleOpen={() => setIsSidebarOpen(!isSidebarOpen)}
-          tab={sidebarTab}
-          onTabChange={setSidebarTab}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-          onScrollToItem={handleScrollToItem}
-          filteredItems={filteredItems}
-        />
+        {/* Only render sidebar in reading view when toggled open */}
+        {viewMode === 'READING_VIEW' && (
+          <ReviewSidebar
+            review={review}
+            isOpen={isSidebarOpen}
+            onToggleOpen={() => setIsSidebarOpen(!isSidebarOpen)}
+            tab={sidebarTab}
+            onTabChange={setSidebarTab}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            onScrollToItem={handleScrollToItem}
+            filteredItems={filteredItems}
+          />
+        )}
 
         {/* 5. Center Reading Area */}
         <main className="flex-1 flex flex-col bg-white overflow-hidden">
@@ -563,26 +620,37 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
             </div>
           )}
 
-          {/* VIEW MODE 1: SINGLE ITEM VIEW (matching screenshot [17:06]) */}
-          {viewMode === 'SINGLE_ITEM_VIEW' ? (
+          {/* VIEW MODE 1: FEEDBACK VIEW (Centralized review feedback) */}
+          {viewMode === 'FEEDBACK_VIEW' ? (
+            <ReviewFeedbackStreamView
+              review={review}
+              items={filteredItems}
+              isModeratorMode={isModeratorMode}
+              onOpenSingleItemView={index => {
+                setSingleItemIndex(index);
+                setViewMode('SINGLE_ITEM_VIEW');
+              }}
+            />
+          ) : viewMode === 'SINGLE_ITEM_VIEW' ? (
             <ReviewModeratorSingleView
               items={filteredItems}
               currentIndex={singleItemIndex}
+              currentRevisionNumber={review.currentRevisionNumber}
               onNavigateIndex={setSingleItemIndex}
               onBackToReadingView={() => setViewMode('READING_VIEW')}
               renderHighlightedText={renderHighlightedText}
+              onEditItem={item => setEditingItem(item)}
+              onOpenPublishModal={() => setShowPublishRevisionModal(true)}
             />
           ) : (
             /* VIEW MODE 2: READING VIEW (All items list) */
             <>
               <ReviewItemList
                 items={filteredItems}
-                selectedItemIds={selectedItemIds}
                 isApproverMode={isApproverMode}
                 isReviewerMode={isReviewerMode}
                 isModeratorMode={isModeratorMode}
                 itemRefs={itemRefs}
-                onToggleSelect={toggleSelectItem}
                 onOpenComments={setActiveCommentItem}
                 onApprove={handleApprove}
                 onReject={setActiveRejectItem}
@@ -592,6 +660,7 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
                   setSingleItemIndex(index);
                   setViewMode('SINGLE_ITEM_VIEW');
                 }}
+                onOpenCompareEdits={item => setDiffModalItem(item)}
                 renderHighlightedText={renderHighlightedText}
               />
 
@@ -638,6 +707,64 @@ export const ReviewExecutionView: React.FC<ReviewExecutionViewProps> = ({ review
         onClose={() => setShowAddParticipantModal(false)}
         review={review}
       />
+
+      {/* 4. Edit Item Modal (Direct editing inside review) */}
+      {editingItem && (
+        <ReviewItemEditModal
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          reviewId={review.id}
+          projectId={review.projectId}
+          item={editingItem}
+          onSaveSuccess={savedData => {
+            // Đánh dấu pending edit với nội dung mới vừa lưu
+            setPendingEditedMap(prev => ({
+              ...prev,
+              [editingItem.id]: {
+                name: savedData?.name || editingItem.name,
+                description: savedData?.description || editingItem.description,
+                customFields: savedData?.customFields || editingItem.customFields,
+              },
+            }));
+            setActionSuccessMsg(
+              `Đã lưu thay đổi cho item ${editingItem.itemKey}. Nội dung review tiếp tục hiển thị bản Baseline của Revision V${review.currentRevisionNumber} và được đánh dấu Edited cho đến khi Publish new revision.`,
+            );
+            refetch();
+          }}
+        />
+      )}
+
+      {/* 5. Diff Edits Modal from reading view */}
+      {diffModalItem && (
+        <ReviewDiffEditsModal
+          isOpen={!!diffModalItem}
+          onClose={() => setDiffModalItem(null)}
+          item={diffModalItem}
+          currentRevisionNumber={review.currentRevisionNumber}
+          onOpenPublishModal={() => {
+            setDiffModalItem(null);
+            setShowPublishRevisionModal(true);
+          }}
+        />
+      )}
+
+      {/* 6. Publish New Revision Modal */}
+      {showPublishRevisionModal && (
+        <ReviewPublishRevisionModal
+          isOpen={showPublishRevisionModal}
+          onClose={() => setShowPublishRevisionModal(false)}
+          reviewId={review.id}
+          currentRevisionNumber={review.currentRevisionNumber}
+          editedItems={mergedItems.filter(i => i.hasUpdatedSinceLastRevision)}
+          onPublishSuccess={() => {
+            setPendingEditedMap({});
+            setActionSuccessMsg(
+              `Đã xuất bản thành công Revision V${review.currentRevisionNumber + 1}! Tất cả trạng thái phê duyệt đã được reset về Not Reviewed (QT-05).`,
+            );
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 };

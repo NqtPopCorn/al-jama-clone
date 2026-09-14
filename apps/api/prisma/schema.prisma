@@ -130,6 +130,13 @@ enum ReviewCommentLabel {
   @@map("review_comment_label")
 }
 
+enum BaselineTriggerType {
+  REVIEW_INITIATE  @map("review_initiate")
+  REVISION_PUBLISH @map("revision_publish")
+
+  @@map("baseline_trigger_type")
+}
+
 enum TestResult {
   NOT_RUN          @map("not_run")
   PASS             @map("pass")
@@ -177,7 +184,10 @@ model User {
   reviewParticipants      ReviewParticipant[]
   reviewItemStatuses      ReviewItemStatus[]
   reviewComments          ReviewComment[]         @relation("ReviewCommentAuthor")
+  resolvedReviewComments  ReviewComment[]         @relation("ReviewCommentResolvedBy")
   reviewSignatures        ReviewSignature[]
+  publishedRevisions      ReviewRevision[]        @relation("RevisionPublishedBy")
+  invitedParticipants     ReviewParticipant[]     @relation("ParticipantInvitedBy")
   createdTestPlans        TestPlan[]              @relation("TestPlanCreatedBy")
   testPlanTesters         TestPlanTester[]
   createdTestCycles       TestCycle[]             @relation("TestCycleCreatedBy")
@@ -388,6 +398,7 @@ model ItemVersion {
   item            Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
   user            User             @relation("VersionChangedBy", fields: [changedBy], references: [id])
   reviewBaselines ReviewBaseline[]
+  reviewItems     ReviewItem[]
 
   @@unique([itemId, versionNumber])
   @@map("item_versions")
@@ -562,6 +573,7 @@ model Review {
   deadline              DateTime?
   currentRevisionNumber Int              @default(1) @map("current_revision_number")
   includeContext        Boolean          @default(false) @map("include_context")
+  finalizedAt           DateTime?        @map("finalized_at")
   createdBy             String           @map("created_by") @db.Uuid
   createdAt             DateTime         @default(now()) @map("created_at")
   updatedAt             DateTime         @updatedAt @map("updated_at")
@@ -579,17 +591,20 @@ model Review {
 }
 
 model ReviewItem {
-  id            String   @id @default(uuid()) @db.Uuid
-  reviewId      String   @map("review_id") @db.Uuid
-  itemId        String   @map("item_id") @db.Uuid
-  orderIndex    Int      @default(0) @map("order_index")
-  isContextOnly Boolean  @default(false) @map("is_context_only")
-  createdAt     DateTime @default(now()) @map("created_at")
+  id                  String   @id @default(uuid()) @db.Uuid
+  reviewId            String   @map("review_id") @db.Uuid
+  itemId              String   @map("item_id") @db.Uuid
+  orderIndex          Int      @default(0) @map("order_index")
+  itemVersionAtSendId String?  @map("item_version_at_send_id") @db.Uuid
+  includeUpstream     Boolean  @default(false) @map("include_upstream")
+  includeDownstream   Boolean  @default(false) @map("include_downstream")
+  createdAt           DateTime @default(now()) @map("created_at")
 
-  review   Review             @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  item     Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  statuses ReviewItemStatus[]
-  comments ReviewComment[]
+  review            Review             @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  item              Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemVersionAtSend ItemVersion?       @relation(fields: [itemVersionAtSendId], references: [id])
+  statuses          ReviewItemStatus[]
+  comments          ReviewComment[]
 
   @@unique([reviewId, itemId])
   @@map("review_items")
@@ -605,10 +620,13 @@ model ReviewParticipant {
   isFinished Boolean    @default(false) @map("is_finished")
   finishedAt DateTime?  @map("finished_at")
   invitedAt  DateTime   @default(now()) @map("invited_at")
+  invitedBy  String?    @map("invited_by") @db.Uuid
 
-  review Review     @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group  UserGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  review   Review             @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group    UserGroup?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  inviter  User?              @relation("ParticipantInvitedBy", fields: [invitedBy], references: [id])
+  statuses ReviewItemStatus[]
 
   @@unique([reviewId, userId])
   @@map("review_participants")
@@ -623,8 +641,9 @@ model ReviewItemStatus {
   status         ReviewItemStatusValue @default(NOT_REVIEWED)
   updatedAt      DateTime              @updatedAt @map("updated_at")
 
-  reviewItem ReviewItem @relation(fields: [reviewItemId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewItem  ReviewItem        @relation(fields: [reviewItemId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participant ReviewParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
   @@unique([reviewItemId, userId, revisionNumber])
   @@map("review_item_status")
@@ -640,6 +659,9 @@ model ReviewComment {
   content         String             @db.Text
   selectedText    String?            @map("selected_text") @db.Text
   isResolved      Boolean            @default(false) @map("is_resolved")
+  resolvedNote    String?            @map("resolved_note") @db.Text
+  resolvedBy      String?            @map("resolved_by") @db.Uuid
+  resolvedAt      DateTime?          @map("resolved_at")
   createdAt       DateTime           @default(now()) @map("created_at")
   updatedAt       DateTime           @updatedAt @map("updated_at")
 
@@ -647,6 +669,7 @@ model ReviewComment {
   parent     ReviewComment?         @relation("ReviewCommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   replies    ReviewComment[]        @relation("ReviewCommentReplies")
   author     User                   @relation("ReviewCommentAuthor", fields: [authorId], references: [id])
+  resolver   User?                  @relation("ReviewCommentResolvedBy", fields: [resolvedBy], references: [id])
   mentions   ReviewCommentMention[]
 
   @@map("review_comments")
@@ -667,36 +690,40 @@ model ReviewRevision {
   reviewId          String   @map("review_id") @db.Uuid
   revisionNumber    Int      @map("revision_number")
   changeDescription String?  @map("change_description") @db.Text
+  notificationSent  Boolean  @default(false) @map("notification_sent")
   publishedAt       DateTime @default(now()) @map("published_at")
   publishedBy       String   @map("published_by") @db.Uuid
 
-  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  review    Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  publisher User   @relation("RevisionPublishedBy", fields: [publishedBy], references: [id])
 
   @@unique([reviewId, revisionNumber])
   @@map("review_revisions")
 }
 
 model ReviewBaseline {
-  id             String   @id @default(uuid()) @db.Uuid
-  reviewId       String   @map("review_id") @db.Uuid
-  revisionNumber Int      @map("revision_number")
-  itemVersionId  String   @map("item_version_id") @db.Uuid
-  createdAt      DateTime @default(now()) @map("created_at")
+  id             String              @id @default(uuid()) @db.Uuid
+  reviewId       String              @map("review_id") @db.Uuid
+  triggerType    BaselineTriggerType @default(REVIEW_INITIATE) @map("trigger_type")
+  revisionNumber Int                 @map("revision_number")
+  itemVersionId  String              @map("item_version_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at")
 
   review      Review      @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   itemVersion ItemVersion @relation(fields: [itemVersionId], references: [id], onDelete: Cascade)
 
-  @@unique([reviewId, revisionNumber, itemVersionId])
+  @@unique([reviewId, revisionNumber, itemVersionId, triggerType])
   @@map("review_baselines")
 }
 
 model ReviewSignature {
-  id         String   @id @default(uuid()) @db.Uuid
-  reviewId   String   @map("review_id") @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
-  signerName String   @map("signer_name") @db.VarChar(255)
-  meaning    String   @db.VarChar(255)
-  signedAt   DateTime @default(now()) @map("signed_at")
+  id              String   @id @default(uuid()) @db.Uuid
+  reviewId        String   @map("review_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  signerName      String   @map("signer_name") @db.VarChar(255)
+  meaning         String   @db.VarChar(255)
+  reauthConfirmed Boolean  @default(false) @map("reauth_confirmed")
+  signedAt        DateTime @default(now()) @map("signed_at")
 
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id])

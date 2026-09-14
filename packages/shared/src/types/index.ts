@@ -8,6 +8,7 @@ import {
   ReviewItemStatusValue,
   ReviewCommentLabel,
   ReviewTemplateType,
+  BaselineTriggerType,
 } from '../constants';
 
 export interface ApiResponse<T = unknown> {
@@ -374,12 +375,25 @@ export interface ReviewItemReadingView {
   itemTypeName?: string;
   itemTypeIcon?: string | null;
   orderIndex: number;
-  isContextOnly: boolean;
+  includeUpstream: boolean;
+  includeDownstream: boolean;
   customFields?: Record<string, unknown> | null;
   description?: string | null;
   status: ReviewItemStatusValue;
   commentCount: number;
   hasUpdatedSinceLastRevision?: boolean;
+  baselineVersion?: number;
+  latestVersion?: number;
+  baselineContent?: {
+    name?: string;
+    description?: string | null;
+    customFields?: Record<string, unknown> | null;
+  };
+  editedContent?: {
+    name?: string;
+    description?: string | null;
+    customFields?: Record<string, unknown> | null;
+  };
   overallStatusSummary?: {
     approvedCount: number;
     rejectedCount: number;
@@ -399,6 +413,8 @@ export interface ReviewCommentMentionSummary {
 export interface ReviewCommentSummary {
   id: string;
   reviewItemId: string;
+  itemKey?: string;
+  itemName?: string;
   parentCommentId?: string | null;
   authorId: string;
   authorName: string;
@@ -408,6 +424,11 @@ export interface ReviewCommentSummary {
   content: string;
   selectedText?: string | null;
   isResolved: boolean;
+  resolvedNote?: string | null;
+  resolvedBy?: string | null;
+  resolvedAt?: string | null;
+  likesCount?: number;
+  isBookmarked?: boolean;
   createdAt: string;
   mentions?: ReviewCommentMentionSummary[];
   replies?: ReviewCommentSummary[];

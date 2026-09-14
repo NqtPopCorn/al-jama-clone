@@ -502,9 +502,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               <FolderTree className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900">
-                Chọn Item từ Cấu trúc Dự án
-              </h3>
+              <h3 className="font-bold text-sm text-slate-900">Chọn Item từ Cấu trúc Dự án</h3>
               <p className="text-[11px] text-slate-500">
                 {projectName || 'Dự án'} • Chọn các item hoặc set để đưa vào review này
               </p>
@@ -563,9 +561,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
 
         {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 text-xs">
-          <span className="font-semibold text-slate-700">
-            Đã chọn {selectedItemIds.size} item
-          </span>
+          <span className="font-semibold text-slate-700">Đã chọn {selectedItemIds.size} item</span>
 
           <div className="flex items-center gap-2">
             <button
@@ -581,9 +577,7 @@ export const ProjectItemPickerModal: React.FC<ProjectItemPickerModalProps> = ({
               className="px-5 py-1.5 font-semibold text-white bg-[#203a6b] hover:bg-[#162747] rounded shadow transition-colors flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>
-                Thêm {selectedItemIds.size} item vào Review
-              </span>
+              <span>Thêm {selectedItemIds.size} item vào Review</span>
             </button>
           </div>
         </div>

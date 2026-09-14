@@ -50,6 +50,7 @@ describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
       },
       reviewItem: {
         createMany: jest.fn(),
+        update: jest.fn(),
       },
       reviewParticipant: {
         createMany: jest.fn(),
@@ -193,6 +194,7 @@ describe('ReviewInitiationService (BR-REV-01 -> BR-REV-09, BR-REV-38)', () => {
           reviewId,
           revisionNumber: 1,
           itemVersionId: 'ver-item-1',
+          triggerType: 'REVIEW_INITIATE',
         }),
       });
 

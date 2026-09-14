@@ -93,3 +93,9 @@ export enum ReviewTemplateType {
   APPROVAL = 'APPROVAL',
   PEER = 'PEER',
 }
+
+// Review Baseline Trigger Types (BR-REV-38)
+export enum BaselineTriggerType {
+  REVIEW_INITIATE = 'REVIEW_INITIATE',
+  REVISION_PUBLISH = 'REVISION_PUBLISH',
+}

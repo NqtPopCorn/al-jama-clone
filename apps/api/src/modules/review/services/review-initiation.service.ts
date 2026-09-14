@@ -14,6 +14,7 @@ import {
   ReviewRole,
   ReviewTemplateType,
   ReviewItemStatusValue,
+  BaselineTriggerType,
 } from '@prisma/client';
 
 @Injectable()
@@ -262,7 +263,13 @@ export class ReviewInitiationService {
               reviewId,
               revisionNumber: 1,
               itemVersionId: itemVersion.id,
+              triggerType: BaselineTriggerType.REVIEW_INITIATE,
             },
+          });
+
+          await tx.reviewItem.update({
+            where: { id: ri.id },
+            data: { itemVersionAtSendId: itemVersion.id },
           });
         }
       }

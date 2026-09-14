@@ -188,13 +188,18 @@ async function createBaseline(
     }),
   );
 
-  return prisma.reviewBaseline.create({
-    data: {
+  // Lưu N rows vào review_baselines — mỗi item version 1 row (Relational architecture)
+  const baselineData = snapshotVersionIds
+    .filter((id): id is string => Boolean(id))
+    .map(versionId => ({
       reviewId,
       triggerType,
       revisionNumber,
-      snapshotItemVersionIds: snapshotVersionIds.filter(Boolean),
-    },
+      itemVersionId: versionId,
+    }));
+
+  return prisma.reviewBaseline.createMany({
+    data: baselineData,
   });
 }
 ```
@@ -218,7 +223,11 @@ async function signReview(reviewId: string, userId: string, password: string) {
   // 2. Check no rejected items
   const rejectedCount = await prisma.reviewItemStatus.count({
     where: {
-      reviewId,
+      reviewItemId: {
+        in: (await prisma.reviewItem.findMany({ where: { reviewId }, select: { id: true } })).map(
+          i => i.id,
+        ),
+      },
       revisionNumber: review.currentRevisionNumber,
       status: 'REJECTED',
     },
@@ -243,8 +252,9 @@ async function signReview(reviewId: string, userId: string, password: string) {
     data: {
       reviewId,
       userId,
+      signerName: user.fullName || user.username,
+      meaning: `Approved in role of ${participant.reviewRole}`,
       reauthConfirmed: true,
-      signerRoleMeaning: participant.reviewRole,
     },
   });
 }

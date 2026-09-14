@@ -10,13 +10,24 @@ import {
 
 export const reviewQueryKeys = {
   all: ['reviews'] as const,
+  templates: (projectId: string) => [...reviewQueryKeys.all, 'templates', projectId] as const,
   lists: () => [...reviewQueryKeys.all, 'list'] as const,
   list: (params: FetchReviewsParams) => [...reviewQueryKeys.lists(), params] as const,
   details: () => [...reviewQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...reviewQueryKeys.details(), id] as const,
   comments: (reviewId: string, itemId: string) =>
     [...reviewQueryKeys.detail(reviewId), 'items', itemId, 'comments'] as const,
+  allComments: (reviewId: string) => [...reviewQueryKeys.detail(reviewId), 'all-comments'] as const,
 };
+
+export function useReviewTemplates(projectId?: string) {
+  return useQuery({
+    queryKey: reviewQueryKeys.templates(projectId || ''),
+    queryFn: () => reviewApi.getTemplates(projectId!),
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export function useReviewsList(params: FetchReviewsParams = {}) {
   return useQuery({
@@ -122,6 +133,54 @@ export function useCreateReviewCommentMutation() {
       queryClient.invalidateQueries({
         queryKey: reviewQueryKeys.comments(variables.reviewId, variables.itemId),
       });
+      queryClient.invalidateQueries({
+        queryKey: reviewQueryKeys.allComments(variables.reviewId),
+      });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(variables.reviewId) });
+    },
+  });
+}
+
+export function useAllReviewCommentsQuery(reviewId?: string, revisionNumber?: number) {
+  return useQuery({
+    queryKey: [...reviewQueryKeys.allComments(reviewId || ''), revisionNumber],
+    queryFn: () => reviewApi.getAllComments(reviewId!, revisionNumber),
+    enabled: !!reviewId,
+  });
+}
+
+export function useResolveCommentMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      reviewId,
+      commentId,
+      isResolved,
+      resolvedNote,
+    }: {
+      reviewId: string;
+      commentId: string;
+      isResolved: boolean;
+      resolvedNote?: string;
+    }) => reviewApi.resolveComment(reviewId, commentId, isResolved, resolvedNote),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: reviewQueryKeys.allComments(variables.reviewId),
+      });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(variables.reviewId) });
+    },
+  });
+}
+
+export function useDeleteCommentMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ reviewId, commentId }: { reviewId: string; commentId: string }) =>
+      reviewApi.deleteComment(reviewId, commentId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: reviewQueryKeys.allComments(variables.reviewId),
+      });
       queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(variables.reviewId) });
     },
   });
@@ -160,3 +219,20 @@ export function useFinalizeReviewMutation() {
   });
 }
 
+export function usePublishRevisionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      reviewId,
+      dto,
+    }: {
+      reviewId: string;
+      dto?: { changeDescription?: string; deadline?: string; notifyParticipants?: boolean };
+    }) => reviewApi.publishRevision(reviewId, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.detail(variables.reviewId) });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reviewQueryKeys.allComments(variables.reviewId) });
+    },
+  });
+}

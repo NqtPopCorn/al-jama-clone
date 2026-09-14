@@ -1,22 +1,54 @@
 import React from 'react';
-import {
-  Check,
-  X as CloseIcon,
-  MinusCircle,
-  MessageSquare,
-  Square,
-  CheckSquare,
-} from 'lucide-react';
+import { Check, X as CloseIcon, ChevronDown, ChevronRight } from 'lucide-react';
 import { ReviewItemReadingView } from '@aljama/shared';
+
+// Speech bubble or count button matching Jama Connect screenshots
+export const CommentBubbleButton: React.FC<{
+  count: number;
+  onClick: () => void;
+}> = ({ count, onClick }) => {
+  if (count > 0) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={`${count} comment${count > 1 ? 's' : ''} - Click to open`}
+        className="w-5 h-5 rounded-xs bg-[#0099cc] hover:bg-[#0088b8] text-white font-bold text-[11px] flex items-center justify-center shadow-2xs transition-colors cursor-pointer flex-shrink-0"
+      >
+        {count}
+      </button>
+    );
+  }
+
+  // When count is 0: empty speech bubble outline matching Image 1
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Add comment"
+      className="w-5 h-5 rounded-xs flex items-center justify-center transition-transform active:scale-95 focus:outline-hidden flex-shrink-0 hover:bg-slate-100 cursor-pointer"
+    >
+      <svg width="20" height="18" viewBox="0 0 24 22" fill="none">
+        <path
+          d="M 2 3 C 2 1.3 3.3 0 5 0 L 19 0 C 20.7 0 22 1.3 22 3 L 22 13 C 22 14.7 20.7 16 19 16 L 8 16 L 4 20 L 4 16 L 4 16 C 2.3 16 2 14.7 2 13 Z"
+          fill="#ffffff"
+          stroke="#0284c7"
+          strokeWidth="1.6"
+          className="hover:stroke-blue-700 transition-colors"
+        />
+      </svg>
+    </button>
+  );
+};
 
 interface ReviewItemGutterProps {
   item: ReviewItemReadingView;
   index: number;
-  isSelected: boolean;
   isApproverMode: boolean;
   isReviewerMode: boolean;
   isModeratorMode: boolean;
-  onToggleSelect: (itemId: string) => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
   onOpenComments: (item: ReviewItemReadingView) => void;
   onApprove?: (item: ReviewItemReadingView) => void;
   onReject?: (item: ReviewItemReadingView) => void;
@@ -28,11 +60,11 @@ interface ReviewItemGutterProps {
 export const ReviewItemGutter: React.FC<ReviewItemGutterProps> = ({
   item,
   index,
-  isSelected,
   isApproverMode,
   isReviewerMode,
   isModeratorMode,
-  onToggleSelect,
+  isCollapsed = false,
+  onToggleCollapse,
   onOpenComments,
   onApprove,
   onReject,
@@ -44,168 +76,118 @@ export const ReviewItemGutter: React.FC<ReviewItemGutterProps> = ({
   const isItemRejected = item.status === 'REJECTED';
   const isItemReviewed = item.status === 'REVIEWED';
 
+  const approvedCount = item.overallStatusSummary?.approvedCount ?? (isItemApproved ? 1 : 0);
+  const rejectedCount = item.overallStatusSummary?.rejectedCount ?? (isItemRejected ? 1 : 0);
+
   return (
-    <div className="w-32 flex-shrink-0 flex items-center justify-start gap-1.5 pt-0.5">
-      {/* 1. Item Selection Checkbox for Batch actions */}
-      <button
-        onClick={() => onToggleSelect(item.id)}
-        className={`p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ${
-          isSelected ? 'text-blue-600' : ''
-        }`}
-        title={isSelected ? 'Deselect item' : 'Select item for batch actions'}
-      >
-        {isSelected ? (
-          <CheckSquare className="w-4 h-4 text-blue-600" />
-        ) : (
-          <Square className="w-4 h-4 text-slate-400" />
-        )}
-      </button>
+    <div className="flex-shrink-0 flex items-center justify-start gap-1.5 pt-0.5 select-none">
+      {/* 1. NÚT XEM COMMENT (Image 1: outline bubble khi 0 comment, Image 2: [ 4 ] xanh dương khi có comment) */}
+      <CommentBubbleButton count={item.commentCount} onClick={() => onOpenComments(item)} />
 
-      {/* 2. Comment Bubble with count */}
-      <button
-        onClick={() => onOpenComments(item)}
-        className={`flex items-center justify-center rounded transition-colors ${
-          item.commentCount > 0
-            ? 'w-5 h-5 bg-[#0099cc] hover:bg-[#0088b8] text-white font-bold text-[10px] shadow-2xs'
-            : 'w-5 h-5 text-slate-300 hover:text-slate-600 hover:bg-slate-100 border border-slate-200'
-        }`}
-        title={`${item.commentCount} comments`}
-      >
-        {item.commentCount > 0 ? (
-          item.commentCount
-        ) : (
-          <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-        )}
-      </button>
-
-      {/* 3. Approver Actions (Approve [✓], Reject [✕], Clear [⊝]) */}
-      {isApproverMode && (
-        <div className="flex items-center gap-1">
-          {/* Approve Button: Checked -> Highlight xanh lá, Chưa checked -> Icon xám (KHÔNG DÙNG DẠNG CHECKBOX) */}
-          <button
-            onClick={() => onApprove?.(item)}
-            title={
-              isItemApproved
-                ? 'Đã duyệt (Approve) - Click để hủy'
-                : 'Duyệt (Approve item)'
-            }
-            className="p-1 rounded hover:bg-slate-100 transition-colors flex items-center justify-center"
-          >
-            <Check
-              className={`w-4 h-4 transition-colors ${
-                isItemApproved
-                  ? 'text-emerald-600 stroke-[3] drop-shadow-sm'
-                  : 'text-slate-300 hover:text-emerald-600 stroke-[2.5]'
-              }`}
-            />
-          </button>
-
-          {/* Reject Button: Checked -> Highlight đỏ, Chưa checked -> Icon xám */}
-          <button
-            onClick={() => onReject?.(item)}
-            title={
-              isItemRejected
-                ? 'Đã từ chối (Rejected) - Click để hủy'
-                : 'Từ chối (Reject item)'
-            }
-            className="p-1 rounded hover:bg-slate-100 transition-colors flex items-center justify-center"
-          >
-            <CloseIcon
-              className={`w-4 h-4 transition-colors ${
-                isItemRejected
-                  ? 'text-red-600 stroke-[3] drop-shadow-sm'
-                  : 'text-slate-300 hover:text-red-600 stroke-[2.5]'
-              }`}
-            />
-          </button>
-
-          {/* Clear Button */}
-          <button
-            onClick={() => onClearStatus(item)}
-            title="Bỏ đánh dấu (Clear status)"
-            className="p-1 rounded text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center"
-          >
-            <MinusCircle className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* 4. Reviewer Action matching screenshot [13:04]: [ ✓ ] [ ⊝ ] */}
-      {isReviewerMode && (
-        <div className="flex items-center gap-1">
-          {/* Reviewed Button: Checked -> Highlight xanh lá, Chưa checked -> Icon xám (KHÔNG DÙNG DẠNG CHECKBOX) */}
-          <button
-            onClick={() => onToggleReviewed?.(item)}
-            title={
-              isItemReviewed
-                ? 'Đã xem (Reviewed) - Click để bỏ đánh dấu'
-                : 'Đánh dấu là đã xem (Reviewed)'
-            }
-            className="p-1 rounded hover:bg-slate-100 transition-colors flex items-center justify-center"
-          >
-            <Check
-              className={`w-4 h-4 transition-colors ${
-                isItemReviewed
-                  ? 'text-emerald-600 stroke-[3] drop-shadow-sm'
-                  : 'text-slate-300 hover:text-emerald-600 stroke-[2.5]'
-              }`}
-            />
-          </button>
-
-          {/* Reset / Clear status */}
-          <button
-            onClick={() => onClearStatus(item)}
-            title="Bỏ đánh dấu (Clear status)"
-            className="p-1 rounded text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center"
-          >
-            <MinusCircle className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* 5. Moderator Overall Status Badge */}
-      {isModeratorMode && (
-        <div className="flex items-center">
-          {item.overallStatusSummary &&
-          item.overallStatusSummary.rejectedCount > 0 ? (
-            <button
-              onClick={() => onOpenSingleItemView(index)}
-              title={`${item.overallStatusSummary.rejectedCount} participant(s) rejected this item. Click to view breakdown`}
-              className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 transition-colors"
-            >
-              Needs work ({item.overallStatusSummary.rejectedCount})
-            </button>
-          ) : item.overallStatusSummary &&
-            item.overallStatusSummary.approvedCount ===
-              item.overallStatusSummary.totalApprovers &&
-            item.overallStatusSummary.totalApprovers > 0 ? (
-            <button
-              onClick={() => onOpenSingleItemView(index)}
-              title="Approved by all approvers"
-              className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-200 flex items-center gap-0.5 transition-colors"
-            >
-              <Check className="w-3 h-3 stroke-[3]" /> All Approved
-            </button>
-          ) : item.overallStatusSummary &&
-            item.overallStatusSummary.approvedCount > 0 ? (
-            <button
-              onClick={() => onOpenSingleItemView(index)}
-              title={`${item.overallStatusSummary.approvedCount} of ${item.overallStatusSummary.totalApprovers} approvers approved`}
-              className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors"
-            >
-              {item.overallStatusSummary.approvedCount}/
-              {item.overallStatusSummary.totalApprovers} Approved
-            </button>
+      {/* 2. BADGE SỐ APPROVE (Image 2: ô 0 khi 0 approve, xanh lá khi có approve) */}
+      {isApproverMode ? (
+        <button
+          type="button"
+          onClick={() => onApprove?.(item)}
+          title={isItemApproved ? 'Approved (Click to undo)' : 'Approve (0 approvals)'}
+          className={`w-5 h-5 rounded-xs flex items-center justify-center text-[11px] font-bold border transition-colors cursor-pointer ${
+            isItemApproved || approvedCount > 0
+              ? 'bg-[#16a34a] border-[#16a34a] text-white hover:bg-emerald-700'
+              : 'bg-white border-slate-300 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+          }`}
+        >
+          {isItemApproved ? (
+            <Check className="w-3.5 h-3.5 stroke-[3]" />
+          ) : approvedCount > 0 ? (
+            approvedCount
           ) : (
-            <button
-              onClick={() => onOpenSingleItemView(index)}
-              className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 transition-colors"
-            >
-              Pending
-            </button>
+            '0'
           )}
+        </button>
+      ) : isReviewerMode ? (
+        <button
+          type="button"
+          onClick={() => onToggleReviewed?.(item)}
+          title={isItemReviewed ? 'Marked as reviewed (Click to undo)' : 'Mark as reviewed'}
+          className={`w-5 h-5 rounded-xs flex items-center justify-center text-[11px] font-bold border transition-colors cursor-pointer ${
+            isItemReviewed
+              ? 'bg-[#16a34a] border-[#16a34a] text-white hover:bg-emerald-700'
+              : 'bg-white border-slate-300 text-slate-600 hover:border-emerald-500 hover:text-emerald-600'
+          }`}
+        >
+          {isItemReviewed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : '0'}
+        </button>
+      ) : /* Moderator Mode: Badge số approve */
+      approvedCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => onOpenSingleItemView(index)}
+          title={`${approvedCount} approval${approvedCount > 1 ? 's' : ''}. Click to view details`}
+          className="w-5 h-5 rounded-xs bg-[#16a34a] hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center shadow-2xs cursor-pointer transition-colors"
+        >
+          {approvedCount}
+        </button>
+      ) : (
+        <div
+          title="0 approvals"
+          className="w-5 h-5 rounded-xs border border-slate-300 bg-white flex items-center justify-center text-[11px] font-semibold text-slate-600"
+        >
+          0
         </div>
       )}
+
+      {/* 3. BADGE SỐ REJECT (Image 2: [ 2 ] màu đỏ khi có reject, ô 0 khi 0 reject) */}
+      {isApproverMode ? (
+        <button
+          type="button"
+          onClick={() => onReject?.(item)}
+          title={isItemRejected ? 'Rejected (Click to undo)' : 'Reject (0 rejections)'}
+          className={`w-5 h-5 rounded-xs flex items-center justify-center text-[11px] font-bold border transition-colors cursor-pointer ${
+            isItemRejected || rejectedCount > 0
+              ? 'bg-[#e11d48] border-[#e11d48] text-white hover:bg-red-700'
+              : 'bg-white border-slate-300 text-slate-600 hover:border-red-500 hover:text-red-600 hover:bg-red-50'
+          }`}
+        >
+          {isItemRejected ? (
+            <CloseIcon className="w-3.5 h-3.5 stroke-[3]" />
+          ) : rejectedCount > 0 ? (
+            rejectedCount
+          ) : (
+            '0'
+          )}
+        </button>
+      ) : /* Moderator & Reviewer Mode: Badge số reject */
+      rejectedCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => onOpenSingleItemView(index)}
+          title={`${rejectedCount} rejection${rejectedCount > 1 ? 's' : ''}. Click to view details`}
+          className="w-5 h-5 rounded-xs bg-[#e11d48] hover:bg-red-700 text-white font-bold text-[11px] flex items-center justify-center shadow-2xs cursor-pointer transition-colors"
+        >
+          {rejectedCount}
+        </button>
+      ) : (
+        <div
+          title="0 rejections"
+          className="w-5 h-5 rounded-xs border border-slate-300 bg-white flex items-center justify-center text-[11px] font-semibold text-slate-600"
+        >
+          0
+        </div>
+      )}
+
+      {/* 4. NÚT TOGGLE THU GỌN ITEM (▼ khi mở rộng, ▶ khi thu gọn) */}
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        title={isCollapsed ? 'Expand item' : 'Collapse item'}
+        className="w-5 h-5 rounded-xs hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer"
+      >
+        {isCollapsed ? (
+          <ChevronRight className="w-3.5 h-3.5" />
+        ) : (
+          <ChevronDown className="w-3.5 h-3.5" />
+        )}
+      </button>
     </div>
   );
 };

@@ -7,3 +7,8 @@ export * from './ReviewItemList';
 export * from './ReviewModeratorSingleView';
 export * from './ReviewParticipantsModal';
 export * from './ReviewPaginationBar';
+export * from './ReviewResolveModal';
+export * from './ReviewItemEditModal';
+export * from './ReviewFeedbackStreamView';
+export * from './ReviewDiffEditsModal';
+export * from './ReviewPublishRevisionModal';

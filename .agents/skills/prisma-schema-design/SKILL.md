@@ -156,13 +156,23 @@ model Comment {
 
 ```prisma
 model ReviewItemStatus {
-  reviewId       String @map("review_id") @db.Uuid
-  itemId         String @map("item_id") @db.Uuid
+  reviewItemId   String @map("review_item_id") @db.Uuid
   participantId  String @map("participant_id") @db.Uuid
+  userId         String @map("user_id") @db.Uuid
   revisionNumber Int    @map("revision_number")
 
-  @@unique([reviewId, itemId, participantId, revisionNumber])
+  @@unique([reviewItemId, userId, revisionNumber])
   @@map("review_item_status")
+}
+
+model ReviewBaseline {
+  reviewId       String              @map("review_id") @db.Uuid
+  revisionNumber Int                 @map("revision_number")
+  itemVersionId  String              @map("item_version_id") @db.Uuid
+  triggerType    BaselineTriggerType @map("trigger_type")
+
+  @@unique([reviewId, revisionNumber, itemVersionId, triggerType])
+  @@map("review_baselines")
 }
 ```
 

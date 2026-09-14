@@ -14,6 +14,7 @@ import {
   ReviewRole,
   ReviewItemStatusValue,
   ReviewCommentLabel,
+  BaselineTriggerType,
 } from '@prisma/client';
 
 @Injectable()
@@ -377,7 +378,10 @@ export class ReviewExecutionService {
 
     const updated = await this.prisma.review.update({
       where: { id: reviewId },
-      data: { status: ReviewStatus.FINALIZED },
+      data: {
+        status: ReviewStatus.FINALIZED,
+        finalizedAt: new Date(),
+      },
     });
 
     this.eventEmitter.emit('review.finalized', {
@@ -387,5 +391,124 @@ export class ReviewExecutionService {
 
     return updated;
   }
-}
 
+  /**
+   * Xuất bản một revision mới cho Review (Publish New Revision)
+   * Tuân thủ quy tắc QT-05: Publish revision -> snapshot baseline mới, reset tất cả status về not_reviewed
+   */
+  async publishRevision(
+    reviewId: string,
+    currentUserId: string,
+    dto?: { changeDescription?: string; deadline?: string; notifyParticipants?: boolean },
+  ) {
+    // 1. Kiểm tra review
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+      include: {
+        items: {
+          include: { item: true },
+        },
+        participants: true,
+      },
+    });
+
+    if (!review) {
+      throw new NotFoundException(`Review ${reviewId} not found`);
+    }
+
+    // 2. Quyền Moderator
+    const participant = review.participants.find(p => p.userId === currentUserId);
+    if (review.createdBy !== currentUserId && participant?.reviewRole !== ReviewRole.MODERATOR) {
+      throw new ForbiddenException('Only a Moderator can publish a new revision');
+    }
+
+    if (review.status === ReviewStatus.FINALIZED) {
+      throw new ConflictException('Cannot publish a new revision for a finalized review');
+    }
+
+    const nextRevisionNumber = review.currentRevisionNumber + 1;
+
+    await this.prisma.$transaction(async tx => {
+      // Cập nhật Review sang ACTIVE và tăng currentRevisionNumber
+      await tx.review.update({
+        where: { id: reviewId },
+        data: {
+          currentRevisionNumber: nextRevisionNumber,
+          status: ReviewStatus.ACTIVE,
+          deadline: dto?.deadline ? new Date(dto.deadline) : review.deadline,
+        },
+      });
+
+      // Tạo ReviewRevision mới
+      await tx.reviewRevision.create({
+        data: {
+          reviewId,
+          revisionNumber: nextRevisionNumber,
+          changeDescription: dto?.changeDescription || `Revision ${nextRevisionNumber} published`,
+          publishedBy: currentUserId,
+        },
+      });
+
+      // Snapshot baselines mới cho toàn bộ review items tại currentVersion mới nhất của từng item
+      for (const ri of review.items) {
+        const latestItemVersion = await tx.itemVersion.findFirst({
+          where: {
+            itemId: ri.itemId,
+            versionNumber: ri.item.currentVersion,
+          },
+        });
+
+        if (latestItemVersion) {
+          await tx.reviewBaseline.create({
+            data: {
+              reviewId,
+              revisionNumber: nextRevisionNumber,
+              itemVersionId: latestItemVersion.id,
+              triggerType: BaselineTriggerType.REVISION_PUBLISH,
+            },
+          });
+
+          await tx.reviewItem.update({
+            where: { id: ri.id },
+            data: { itemVersionAtSendId: latestItemVersion.id },
+          });
+        }
+
+        // QT-05: Reset status của tất cả participant về NOT_REVIEWED cho revision mới
+        for (const rp of review.participants) {
+          await tx.reviewItemStatus.create({
+            data: {
+              reviewItemId: ri.id,
+              participantId: rp.id,
+              userId: rp.userId,
+              revisionNumber: nextRevisionNumber,
+              status: ReviewItemStatusValue.NOT_REVIEWED,
+            },
+          });
+        }
+      }
+
+      // Reset isFinished của tất cả participant để yêu cầu review lại revision mới
+      await tx.reviewParticipant.updateMany({
+        where: { reviewId },
+        data: {
+          isFinished: false,
+          finishedAt: null,
+        },
+      });
+    });
+
+    this.eventEmitter.emit('review.revision_published', {
+      reviewId,
+      revisionNumber: nextRevisionNumber,
+      userId: currentUserId,
+      changeDescription: dto?.changeDescription,
+    });
+
+    return {
+      success: true,
+      reviewId,
+      newRevisionNumber: nextRevisionNumber,
+    };
+  }
+}

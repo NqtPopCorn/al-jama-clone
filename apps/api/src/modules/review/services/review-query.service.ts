@@ -1,10 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { QueryReviewsDto } from '../dto/query-reviews.dto';
+import { ReviewTemplateSummary } from '@aljama/shared';
 import {
   ReviewItemStatusValue,
   ReviewRole,
   ReviewTemplateType,
+  BaselineTriggerType,
+  ReviewStatus,
   Prisma,
 } from '@prisma/client';
 
@@ -138,6 +146,7 @@ export class ReviewQueryService {
                 itemType: { select: { id: true, name: true, icon: true } },
               },
             },
+            itemVersionAtSend: true,
             statuses: {
               where: {
                 revisionNumber: { equals: undefined }, // sẽ filter theo currentRevisionNumber
@@ -159,6 +168,52 @@ export class ReviewQueryService {
     const myParticipant = review.participants.find(p => p.userId === currentUserId);
     if (!myParticipant && review.createdBy !== currentUserId) {
       throw new ForbiddenException('You do not have access to this review');
+    }
+
+    // Lấy danh sách Baseline của revision hiện tại để xác định snapshot nội dung và trạng thái đã chỉnh sửa
+    let currentBaselines = await this.prisma.reviewBaseline.findMany({
+      where: {
+        reviewId: review.id,
+        revisionNumber: review.currentRevisionNumber,
+      },
+      include: {
+        itemVersion: true,
+      },
+    });
+
+    // Nếu chưa có baseline (ví dụ review được seed hoặc legacy), tự động snapshot baseline ban đầu
+    if (
+      currentBaselines.length === 0 &&
+      review.items.length > 0 &&
+      review.status !== ReviewStatus.DRAFT
+    ) {
+      for (const ri of review.items) {
+        const itemVersion = await this.prisma.itemVersion.findFirst({
+          where: { itemId: ri.itemId },
+          orderBy: { versionNumber: 'desc' },
+        });
+        if (itemVersion) {
+          await this.prisma.reviewBaseline
+            .create({
+              data: {
+                reviewId: review.id,
+                revisionNumber: review.currentRevisionNumber,
+                itemVersionId: itemVersion.id,
+                triggerType: BaselineTriggerType.REVIEW_INITIATE,
+              },
+            })
+            .catch(() => {});
+        }
+      }
+      currentBaselines = await this.prisma.reviewBaseline.findMany({
+        where: {
+          reviewId: review.id,
+          revisionNumber: review.currentRevisionNumber,
+        },
+        include: {
+          itemVersion: true,
+        },
+      });
     }
 
     // Lấy trạng thái của toàn bộ items ở revision hiện tại kèm thông tin user
@@ -192,12 +247,15 @@ export class ReviewQueryService {
     let reviewedCount = 0;
     let unmarkedCount = 0;
     let myCommentsCount = 0;
+    let updatedSinceLastRevisionCount = 0;
 
     for (const c of commentsInRevision) {
       if (c.authorId === currentUserId) myCommentsCount++;
     }
 
-    const approversCount = review.participants.filter(p => p.reviewRole === ReviewRole.APPROVER).length;
+    const approversCount = review.participants.filter(
+      p => p.reviewRole === ReviewRole.APPROVER,
+    ).length;
 
     const readingItems = review.items.map(ri => {
       // Trạng thái của current user cho item này
@@ -243,20 +301,61 @@ export class ReviewQueryService {
           avatarUrl: s.user.avatarUrl,
         }));
 
+      // Xác định baseline version & snapshot tương ứng của item cho revision này
+      const baseline = currentBaselines.find(b => b.itemVersion.itemId === ri.itemId);
+      const baselineVersion = baseline
+        ? baseline.itemVersion.versionNumber
+        : ri.itemVersionAtSend?.versionNumber || 1;
+      const baselineSnapshot = baseline
+        ? (baseline.itemVersion.snapshot as Record<string, unknown> | null)
+        : (ri.itemVersionAtSend?.snapshot as Record<string, unknown> | null);
+
+      // QT: Item được đánh dấu edited nếu currentVersion trong database > baseline version
+      const isEdited = ri.item.currentVersion > baselineVersion;
+      if (isEdited) {
+        updatedSinceLastRevisionCount++;
+      }
+
+      // NỘI DUNG HIỂN THỊ TRONG REVIEW: Giữ nguyên nội dung theo baseline của revision hiện tại!
+      // KHÔNG cập nhật ngay cho đến khi Publish new revision.
+      const displayName = (baselineSnapshot?.name as string) || ri.item.name;
+      const displayDescription =
+        baselineSnapshot?.description !== undefined
+          ? (baselineSnapshot.description as string | null)
+          : ri.item.description;
+      const displayCustomFields =
+        (baselineSnapshot?.customFields as Record<string, unknown> | null) ||
+        (ri.item.customFields as Record<string, unknown> | null);
+
       return {
         id: ri.id,
         itemId: ri.itemId,
         itemKey: ri.item.itemKey,
-        name: ri.item.name,
+        name: displayName,
         itemTypeName: ri.item.itemType?.name,
         itemTypeIcon: ri.item.itemType?.icon,
         orderIndex: ri.orderIndex,
-        isContextOnly: ri.isContextOnly,
-        customFields: ri.item.customFields as Record<string, unknown> | null,
-        description: ri.item.description,
+        includeUpstream: ri.includeUpstream,
+        includeDownstream: ri.includeDownstream,
+        customFields: displayCustomFields,
+        description: displayDescription,
         status: statusVal,
         commentCount: itemCommentsCount,
-        hasUpdatedSinceLastRevision: review.currentRevisionNumber > 1,
+        hasUpdatedSinceLastRevision: isEdited,
+        baselineVersion,
+        latestVersion: ri.item.currentVersion,
+        baselineContent: {
+          name: displayName,
+          description: displayDescription,
+          customFields: displayCustomFields,
+        },
+        editedContent: isEdited
+          ? {
+              name: ri.item.name,
+              description: ri.item.description,
+              customFields: ri.item.customFields as Record<string, unknown> | null,
+            }
+          : null,
         overallStatusSummary: {
           approvedCount: itemApprovedCount,
           rejectedCount: itemRejectedCount,
@@ -282,8 +381,7 @@ export class ReviewQueryService {
     }));
 
     const isUserModerator =
-      review.createdBy === currentUserId ||
-      myParticipant?.reviewRole === ReviewRole.MODERATOR;
+      review.createdBy === currentUserId || myParticipant?.reviewRole === ReviewRole.MODERATOR;
 
     const availableRoles: ('MODERATOR' | 'APPROVER' | 'REVIEWER')[] = [];
     if (isUserModerator) {
@@ -338,8 +436,72 @@ export class ReviewQueryService {
         unmarkedCount,
         totalComments: commentsInRevision.length,
         myCommentsCount,
-        updatedSinceLastRevisionCount: review.currentRevisionNumber > 1 ? 2 : 0,
+        updatedSinceLastRevisionCount,
       },
     };
+  }
+
+  /**
+   * Lấy danh sách review templates của dự án (BR-REV-05, QT-07)
+   */
+  async getProjectTemplates(
+    projectId: string,
+    currentUserId: string,
+  ): Promise<ReviewTemplateSummary[]> {
+    if (!projectId) {
+      throw new BadRequestException('projectId is required');
+    }
+
+    let templates = await this.prisma.reviewTemplate.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Nếu dự án chưa có template nào, tự động tạo 2 template mặc định (APPROVAL và PEER)
+    if (templates.length === 0) {
+      await this.prisma.reviewTemplate.createMany({
+        data: [
+          {
+            projectId,
+            name: 'Approval Review',
+            type: ReviewTemplateType.APPROVAL,
+            requiresSignature: true,
+            enableTimeTracking: true,
+            allowApproverAddParticipant: false,
+            allowDelegate: false,
+            isEditableOnCreate: false,
+            createdBy: currentUserId,
+          },
+          {
+            projectId,
+            name: 'Peer Review',
+            type: ReviewTemplateType.PEER,
+            requiresSignature: false,
+            enableTimeTracking: true,
+            allowApproverAddParticipant: true,
+            allowDelegate: true,
+            isEditableOnCreate: true,
+            createdBy: currentUserId,
+          },
+        ],
+      });
+
+      templates = await this.prisma.reviewTemplate.findMany({
+        where: { projectId },
+        orderBy: { createdAt: 'asc' },
+      });
+    }
+
+    return templates.map(t => ({
+      id: t.id,
+      projectId: t.projectId,
+      name: t.name,
+      type: t.type as unknown as import('@aljama/shared').ReviewTemplateType,
+      requiresSignature: t.requiresSignature,
+      enableTimeTracking: t.enableTimeTracking,
+      allowApproverAddParticipant: t.allowApproverAddParticipant,
+      allowDelegate: t.allowDelegate,
+      isEditableOnCreate: t.isEditableOnCreate,
+    }));
   }
 }

@@ -13,7 +13,7 @@ import {
   FolderTree,
   Trash2,
 } from 'lucide-react';
-import { useCreateReviewMutation } from '../hooks/useReviewApi';
+import { useCreateReviewMutation, useReviewTemplates } from '../hooks/useReviewApi';
 import { ReviewRole, ReviewTemplateType, CreateReviewParticipantInput } from '@aljama/shared';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useProjectMeta } from '../../item/hooks/use-project-meta';
@@ -78,7 +78,12 @@ interface StartReviewWizardProps {
   initialItems?: ReviewWizardItemInfo[];
   defaultReviewName?: string;
   sourceFilterName?: string;
-  members?: Array<{ userId: string; fullName: string; username: string; avatarUrl?: string | null }>;
+  members?: Array<{
+    userId: string;
+    fullName: string;
+    username: string;
+    avatarUrl?: string | null;
+  }>;
   onSuccess?: (reviewId: string) => void;
 }
 
@@ -142,17 +147,22 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   const [selectedUpstreamTypes, setSelectedUpstreamTypes] = useState<string[]>([]);
   const [selectedDownstreamTypes, setSelectedDownstreamTypes] = useState<string[]>([]);
 
-  // --- Step 2: Settings State ---
-  const [templateType, setTemplateType] = useState<ReviewTemplateType>(ReviewTemplateType.APPROVAL);
+  // --- Step 2: Settings State (Load from DB template) ---
+  const { data: templates, isLoading: isLoadingTemplates } = useReviewTemplates(projectId);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  const [requireSignature, setRequireSignature] = useState(false);
-  const [enableSignerRole, setEnableSignerRole] = useState(false);
-  const [allowCommentsInProject, setAllowCommentsInProject] = useState(true);
-  const [allowApproversAddParticipants, setAllowApproversAddParticipants] = useState(true);
-  const [allowApproversDelegate, setAllowApproversDelegate] = useState(false);
-  const [enableTimeTracking, setEnableTimeTracking] = useState(true);
-  const [notifyParticipantFinishes, setNotifyParticipantFinishes] = useState(false);
-  const [enableVoting, setEnableVoting] = useState(false);
+  // Auto-select template (ưu tiên APPROVAL nếu có, ngược lại lấy template đầu tiên)
+  useEffect(() => {
+    if (templates && templates.length > 0 && !selectedTemplateId) {
+      const approvalTpl = templates.find(t => t.type === ReviewTemplateType.APPROVAL);
+      setSelectedTemplateId(approvalTpl ? approvalTpl.id : templates[0].id);
+    }
+  }, [templates, selectedTemplateId]);
+
+  const activeTemplate = useMemo(() => {
+    if (!templates || templates.length === 0) return null;
+    return templates.find(t => t.id === selectedTemplateId) || templates[0];
+  }, [templates, selectedTemplateId]);
 
   // --- Step 3: Participants State ---
   const [participantTab, setParticipantTab] = useState<'team' | 'email'>('team');
@@ -284,10 +294,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
   };
 
   // Memoized IDs of currently selected review items
-  const alreadySelectedItemIds = useMemo(
-    () => reviewItems.map(i => i.id),
-    [reviewItems],
-  );
+  const alreadySelectedItemIds = useMemo(() => reviewItems.map(i => i.id), [reviewItems]);
 
   // When items are selected from ProjectItemPickerModal
   const handleAddItemsFromTree = (newItems: ReviewWizardItemInfo[]) => {
@@ -450,6 +457,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
       const result = await createReviewMutation.mutateAsync({
         projectId,
+        templateId: activeTemplate?.id,
         name: name.trim(),
         description: invitationMessage.trim() || undefined,
         deadline: combinedDeadline,
@@ -469,7 +477,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
     }
   };
 
-  const isApproval = templateType === ReviewTemplateType.APPROVAL;
+  const isApproval = activeTemplate?.type === ReviewTemplateType.APPROVAL;
 
   return (
     <>
@@ -567,7 +575,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Deadline (Date + Time side by side) */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Hạn chót (Deadline)</label>
+                  <label className="block font-medium text-slate-700 mb-1">
+                    Hạn chót (Deadline)
+                  </label>
                   <div className="flex items-center gap-3">
                     <div className="relative flex-1 max-w-xs">
                       <input
@@ -627,9 +637,7 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#203a6b] hover:bg-[#162747] text-white text-[11px] font-semibold rounded shadow-2xs transition-colors"
                       >
                         <Plus className="w-3 h-3" />
-                        <span>
-                          {reviewItems.length === 0 ? 'Chọn item từ dự án' : 'Thêm item'}
-                        </span>
+                        <span>{reviewItems.length === 0 ? 'Chọn item từ dự án' : 'Thêm item'}</span>
                       </button>
 
                       {reviewItems.length > 0 && (
@@ -668,7 +676,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                         Chưa có item nào được chọn
                       </div>
                       <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-                        Vui lòng chọn các item từ cây thư mục dự án hoặc bộ lọc để đưa vào review này.
+                        Vui lòng chọn các item từ cây thư mục dự án hoặc bộ lọc để đưa vào review
+                        này.
                       </p>
                       <button
                         type="button"
@@ -696,7 +705,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1.5 pointer-events-none" />
                           </div>
                           <span className="text-[11px] text-slate-500 shrink-0 font-medium">
-                            Hiển thị {filteredReviewItems.length} trên tổng số {reviewItems.length} item
+                            Hiển thị {filteredReviewItems.length} trên tổng số {reviewItems.length}{' '}
+                            item
                           </span>
                         </div>
 
@@ -796,7 +806,8 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                       className="rounded text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="attachments" className="text-slate-700 cursor-pointer">
-                      Đính kèm tệp của item (Reviewer cần có quyền dự án phù hợp để xem tệp đính kèm.)
+                      Đính kèm tệp của item (Reviewer cần có quyền dự án phù hợp để xem tệp đính
+                      kèm.)
                     </label>
                   </div>
 
@@ -939,55 +950,51 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                 {/* Review template selection */}
                 <div>
                   <h4 className="font-semibold text-slate-800 mb-2">Review template</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Approval review Card */}
-                    <div
-                      onClick={() => setTemplateType(ReviewTemplateType.APPROVAL)}
-                      className={`cursor-pointer p-3 border rounded-lg transition-all flex items-start gap-3 ${
-                        isApproval
-                          ? 'border-blue-600 bg-blue-50/30 ring-1 ring-blue-600'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="reviewTemplate"
-                        checked={isApproval}
-                        onChange={() => setTemplateType(ReviewTemplateType.APPROVAL)}
-                        className="mt-1 text-blue-600"
-                      />
-                      <div>
-                        <div className="font-semibold text-slate-900">Approval review</div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Cài đặt chỉ đọc (read-only), được cấu hình trong Review Center admin.
-                        </p>
-                      </div>
+                  {isLoadingTemplates ? (
+                    <div className="py-6 text-center text-slate-400">
+                      <div className="w-5 h-5 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-2" />
+                      Đang tải template từ cơ sở dữ liệu...
                     </div>
-
-                    {/* Peer review Card */}
-                    <div
-                      onClick={() => setTemplateType(ReviewTemplateType.PEER)}
-                      className={`cursor-pointer p-3 border rounded-lg transition-all flex items-start gap-3 ${
-                        !isApproval
-                          ? 'border-blue-600 bg-blue-50/30 ring-1 ring-blue-600'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="reviewTemplate"
-                        checked={!isApproval}
-                        onChange={() => setTemplateType(ReviewTemplateType.PEER)}
-                        className="mt-1 text-blue-600"
-                      />
-                      <div>
-                        <div className="font-semibold text-slate-900">Peer review</div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Cài đặt có thể tuỳ chỉnh, được cấu hình trong Review Center admin.
-                        </p>
-                      </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {templates && templates.length > 0 ? (
+                        templates.map(tpl => {
+                          const isSelected = activeTemplate?.id === tpl.id;
+                          return (
+                            <div
+                              key={tpl.id}
+                              onClick={() => setSelectedTemplateId(tpl.id)}
+                              className={`cursor-pointer p-3 border rounded-lg transition-all flex items-start gap-3 ${
+                                isSelected
+                                  ? 'border-blue-600 bg-blue-50/30 ring-1 ring-blue-600'
+                                  : 'border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="reviewTemplate"
+                                checked={isSelected}
+                                onChange={() => setSelectedTemplateId(tpl.id)}
+                                className="mt-1 text-blue-600 cursor-pointer"
+                              />
+                              <div>
+                                <div className="font-semibold text-slate-900">{tpl.name}</div>
+                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                  {tpl.type === ReviewTemplateType.APPROVAL
+                                    ? 'Cài đặt chỉ đọc (read-only), được cấu hình trong Review Center admin.'
+                                    : 'Cài đặt chỉ đọc (read-only theo template), được cấu hình trong Review Center admin.'}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="col-span-2 text-center py-4 text-slate-400">
+                          Không tìm thấy template nào cho dự án này.
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Electronic signature settings */}
@@ -995,29 +1002,29 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-slate-700">Cài đặt Electronic signature</h4>
                     <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
-                      Chưa định nghĩa (Disabled)
+                      Chỉ đọc theo template (Disabled)
                     </span>
                   </div>
                   <div className="space-y-1.5 pl-1">
                     <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={false}
+                        checked={activeTemplate ? activeTemplate.requiresSignature : false}
                         disabled={true}
                         className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
-                      <span>Yêu cầu electronic signature từ approver (Chưa định nghĩa)</span>
+                      <span>Yêu cầu electronic signature từ approver</span>
                     </label>
 
                     <label className="flex items-center gap-2 pl-6 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={false}
+                        checked={activeTemplate ? activeTemplate.requiresSignature : false}
                         disabled={true}
                         className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>
-                        Bật signer role cho approver. Gắn vai trò người ký với chữ ký của approver. (Chưa định nghĩa)
+                        Bật signer role cho approver. Gắn vai trò người ký với chữ ký của approver.
                       </span>
                     </label>
                   </div>
@@ -1025,57 +1032,45 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Permission settings */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <h4 className="font-semibold text-slate-700">Cài đặt quyền hạn (Permissions)</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-slate-700">
+                      Cài đặt quyền hạn (Permissions)
+                    </h4>
+                    <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                      Chỉ đọc theo template (Disabled)
+                    </span>
+                  </div>
                   <div className="space-y-1.5 pl-1">
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? true : allowCommentsInProject}
-                        disabled={isApproval}
-                        onChange={e => setAllowCommentsInProject(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={true}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>
                         Cho phép comment trong review hiển thị ở single item view trong project
                       </span>
                     </label>
 
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? true : allowApproversAddParticipants}
-                        disabled={isApproval}
-                        onChange={e => setAllowApproversAddParticipants(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={
+                          activeTemplate ? activeTemplate.allowApproverAddParticipant : false
+                        }
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>Cho phép approver thêm reviewer và approver</span>
                     </label>
 
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? true : allowApproversDelegate}
-                        disabled={isApproval}
-                        onChange={e => setAllowApproversDelegate(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={activeTemplate ? activeTemplate.allowDelegate : false}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>Cho phép approver uỷ quyền (delegate) review cho người khác</span>
                     </label>
@@ -1084,55 +1079,41 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Optional settings */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <h4 className="font-semibold text-slate-700">Cài đặt tuỳ chọn (Optional settings)</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-slate-700">
+                      Cài đặt tuỳ chọn (Optional settings)
+                    </h4>
+                    <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                      Chỉ đọc theo template (Disabled)
+                    </span>
+                  </div>
                   <div className="space-y-1.5 pl-1">
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? true : enableTimeTracking}
-                        disabled={isApproval}
-                        onChange={e => setEnableTimeTracking(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={activeTemplate ? activeTemplate.enableTimeTracking : true}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>Bật theo dõi thời gian (time tracking)</span>
                     </label>
 
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? false : notifyParticipantFinishes}
-                        disabled={isApproval}
-                        onChange={e => setNotifyParticipantFinishes(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={false}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>Thông báo khi người tham gia (participant) hoàn thành review</span>
                     </label>
 
-                    <label
-                      className={`flex items-center gap-2 ${
-                        isApproval
-                          ? 'text-slate-400 cursor-not-allowed'
-                          : 'cursor-pointer text-slate-700'
-                      }`}
-                    >
+                    <label className="flex items-center gap-2 text-slate-400 cursor-not-allowed">
                       <input
                         type="checkbox"
-                        checked={isApproval ? false : enableVoting}
-                        disabled={isApproval}
-                        onChange={e => setEnableVoting(e.target.checked)}
-                        className="rounded text-blue-600 disabled:opacity-50"
+                        checked={false}
+                        disabled={true}
+                        className="rounded text-slate-400 disabled:opacity-50 cursor-not-allowed"
                       />
                       <span>Bật bình chọn (voting)</span>
                     </label>
@@ -1155,7 +1136,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
                     ➔
                   </div>
                   <div className="flex-1 flex items-center justify-between pl-2">
-                    <h3 className="font-bold text-slate-900 text-xs">Phân công vai trò (Assignments)</h3>
+                    <h3 className="font-bold text-slate-900 text-xs">
+                      Phân công vai trò (Assignments)
+                    </h3>
                     {assignedParticipants.length > 0 && (
                       <button
                         type="button"
@@ -1391,7 +1374,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
               <div className="space-y-4 text-xs">
                 {/* Participants summary */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Người tham gia (Participants)</label>
+                  <label className="block font-medium text-slate-700 mb-1">
+                    Người tham gia (Participants)
+                  </label>
                   <input
                     type="text"
                     readOnly
@@ -1402,7 +1387,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Subject */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Tiêu đề email (Subject)</label>
+                  <label className="block font-medium text-slate-700 mb-1">
+                    Tiêu đề email (Subject)
+                  </label>
                   <input
                     type="text"
                     value={subject}
@@ -1417,7 +1404,9 @@ export const StartReviewWizard: React.FC<StartReviewWizardProps> = ({
 
                 {/* Message */}
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Nội dung thư (Message)</label>
+                  <label className="block font-medium text-slate-700 mb-1">
+                    Nội dung thư (Message)
+                  </label>
                   <textarea
                     rows={3}
                     value={invitationMessage}

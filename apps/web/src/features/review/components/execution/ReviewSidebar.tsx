@@ -27,25 +27,20 @@ export const ReviewSidebar: React.FC<ReviewSidebarProps> = ({
   filteredItems,
 }) => {
   const totalParticipants = review.participants?.length || 0;
-  const finishedParticipants =
-    review.participants?.filter(p => p.isFinished)?.length || 0;
+  const finishedParticipants = review.participants?.filter(p => p.isFinished)?.length || 0;
   const progressPercent =
-    totalParticipants > 0
-      ? Math.round((finishedParticipants / totalParticipants) * 100)
-      : 0;
+    totalParticipants > 0 ? Math.round((finishedParticipants / totalParticipants) * 100) : 0;
 
   // Counts
   const approvedCount =
-    review.items?.filter(i => i.status === 'APPROVED' || i.status === 'REVIEWED')
-      ?.length || 0;
+    review.items?.filter(i => i.status === 'APPROVED' || i.status === 'REVIEWED')?.length || 0;
   const needsWorkCount =
     review.items?.filter(
       i =>
         i.status === 'REJECTED' ||
         (i.overallStatusSummary && i.overallStatusSummary.rejectedCount > 0),
     )?.length || 0;
-  const withCommentsCount =
-    review.items?.filter(i => i.commentCount > 0)?.length || 0;
+  const withCommentsCount = review.items?.filter(i => i.commentCount > 0)?.length || 0;
 
   return (
     <aside
@@ -234,9 +229,7 @@ export const ReviewSidebar: React.FC<ReviewSidebarProps> = ({
               </div>
 
               <div className="space-y-1">
-                <div className="text-[11px] font-bold text-slate-600 mb-1">
-                  Table of Contents:
-                </div>
+                <div className="text-[11px] font-bold text-slate-600 mb-1">Table of Contents:</div>
                 {review.items?.map((item, idx) => (
                   <button
                     key={item.id}

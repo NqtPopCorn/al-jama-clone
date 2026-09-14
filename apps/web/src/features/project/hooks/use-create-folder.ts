@@ -37,8 +37,7 @@ export function useCreateFolder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ projectId, dto }: CreateFolderParams) =>
-      itemApi.createFolder(projectId, dto),
+    mutationFn: ({ projectId, dto }: CreateFolderParams) => itemApi.createFolder(projectId, dto),
 
     onMutate: async ({ projectId, dto }) => {
       // 1. Cancel any outgoing refetches
@@ -89,10 +88,10 @@ export function useCreateFolder() {
         );
       }
       if (previousMetaFolders) {
-        queryClient.setQueryData<FolderSummary[]>(
-          itemQueryKeys.folders(projectId),
-          [...previousMetaFolders, optimisticFolderSummary],
-        );
+        queryClient.setQueryData<FolderSummary[]>(itemQueryKeys.folders(projectId), [
+          ...previousMetaFolders,
+          optimisticFolderSummary,
+        ]);
       }
 
       return { previousTree, previousFolders, previousMetaFolders, tempId };

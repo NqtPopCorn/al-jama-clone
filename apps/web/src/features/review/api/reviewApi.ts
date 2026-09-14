@@ -2,6 +2,7 @@ import { api } from '../../../lib/api';
 import {
   ReviewSummary,
   ReviewDetail,
+  ReviewTemplateSummary,
   ReviewCommentSummary,
   CreateReviewDto,
   InitiateReviewDto,
@@ -31,6 +32,13 @@ export interface FetchReviewsResponse {
 }
 
 export const reviewApi = {
+  getTemplates: async (projectId: string) => {
+    const res = await api.get<ApiResponse<ReviewTemplateSummary[]>>('/reviews/templates', {
+      params: { projectId },
+    });
+    return res.data.data;
+  },
+
   getReviews: async (params: FetchReviewsParams = {}) => {
     const res = await api.get<ApiResponse<FetchReviewsResponse>>('/reviews', { params });
     return res.data.data;
@@ -88,6 +96,34 @@ export const reviewApi = {
     return res.data.data;
   },
 
+  getAllComments: async (reviewId: string, revisionNumber?: number) => {
+    const res = await api.get<ApiResponse<ReviewCommentSummary[]>>(
+      `/reviews/${reviewId}/comments`,
+      { params: { revisionNumber } },
+    );
+    return res.data.data;
+  },
+
+  resolveComment: async (
+    reviewId: string,
+    commentId: string,
+    isResolved: boolean,
+    resolvedNote?: string,
+  ) => {
+    const res = await api.patch<ApiResponse<ReviewCommentSummary>>(
+      `/reviews/${reviewId}/comments/${commentId}/resolve`,
+      { isResolved, resolvedNote },
+    );
+    return res.data.data;
+  },
+
+  deleteComment: async (reviewId: string, commentId: string) => {
+    const res = await api.delete<ApiResponse<unknown>>(
+      `/reviews/${reviewId}/comments/${commentId}`,
+    );
+    return res.data.data;
+  },
+
   closeForFeedback: async (reviewId: string) => {
     const res = await api.post<ApiResponse<unknown>>(`/reviews/${reviewId}/close-for-feedback`);
     return res.data.data;
@@ -100,6 +136,17 @@ export const reviewApi = {
 
   finalizeReview: async (reviewId: string) => {
     const res = await api.post<ApiResponse<unknown>>(`/reviews/${reviewId}/finalize`);
+    return res.data.data;
+  },
+
+  publishRevision: async (
+    reviewId: string,
+    dto?: { changeDescription?: string; deadline?: string; notifyParticipants?: boolean },
+  ) => {
+    const res = await api.post<ApiResponse<{ success: boolean; newRevisionNumber: number }>>(
+      `/reviews/${reviewId}/publish-revision`,
+      dto || {},
+    );
     return res.data.data;
   },
 };

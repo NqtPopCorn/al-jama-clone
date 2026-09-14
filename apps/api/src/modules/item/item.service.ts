@@ -576,9 +576,18 @@ export class ItemService {
       // Check required fields
       for (const field of item.itemType.fields) {
         if (field.isRequired) {
+          const wasProvided = field.fieldKey in dto.customFields;
           const val = mergedCustomFields[field.fieldKey];
-          if (val === undefined || val === null || val === '') {
-            throw new BadRequestException(`Field "${field.fieldLabel}" is required`);
+          const existingVal = (item.customFields as Record<string, unknown>)?.[field.fieldKey];
+          const hadExistingVal =
+            existingVal !== undefined && existingVal !== null && existingVal !== '';
+
+          // Enforce required check only if caller explicitly provided this field in dto.customFields,
+          // or if the field was previously populated in DB and is now being cleared.
+          if (wasProvided || hadExistingVal) {
+            if (val === undefined || val === null || val === '') {
+              throw new BadRequestException(`Field "${field.fieldLabel}" is required`);
+            }
           }
         }
       }
